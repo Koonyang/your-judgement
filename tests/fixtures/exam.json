@@ -1,0 +1,84 @@
+{
+  "meta": { "id": "exam", "title": "신문 픽스처", "court": "single", "biasType": "none", "truthMemo": "메모", "tutorial": false },
+  "documents": { "indictment": "공소장", "defenseOpinion": "변호인 의견", "facts": "사실", "lawApplied": "적용 법조" },
+  "opening": [
+    { "id": "o1", "speaker": "judge", "text": "개정합니다." },
+    { "id": "o2", "speaker": "prosecutor", "text": "공소장 낭독.", "sets": ["opened"] }
+  ],
+  "cells": [
+    { "id": "act", "name": "행위", "disputed": false },
+    { "id": "intent", "name": "고의", "disputed": true }
+  ],
+  "evidence": [
+    { "id": "e_np", "label": "피고인 진술조서", "submittedBy": "prosecutor", "consent": true, "body": "내용", "cardId": "c_np" },
+    { "id": "e_wit", "label": "점주 진술조서", "submittedBy": "prosecutor", "consent": false, "body": "내용", "cardId": "c_wit" },
+    { "id": "e_cctv", "label": "CCTV 영상", "submittedBy": "prosecutor", "consent": false, "body": "내용", "cardId": "c_cctv" },
+    { "id": "e_receipt", "label": "영수증", "submittedBy": "defense", "consent": false, "body": "내용", "cardId": "c_receipt" }
+  ],
+  "cards": [
+    { "id": "c_rem", "title": "점주의 기억", "text": "", "kind": "fact" },
+    { "id": "c_np", "title": "피고인 진술", "text": "", "kind": "evidence", "confession": true },
+    { "id": "c_wit", "title": "점주 진술조서", "text": "", "kind": "evidence" },
+    { "id": "c_cctv", "title": "CCTV", "text": "", "kind": "evidence" },
+    { "id": "c_receipt", "title": "영수증", "text": "", "kind": "evidence" },
+    { "id": "c_bad", "title": "유도신문 답변", "text": "", "kind": "fact" },
+    { "id": "c_clar", "title": "보충 답변", "text": "", "kind": "fact" },
+    { "id": "c_proxy", "title": "대리 답변", "text": "", "kind": "fact" },
+    { "id": "c_def", "title": "피고인 진술", "text": "", "kind": "fact" }
+  ],
+  "exams": [
+    {
+      "id": "x_owner", "kind": "witness", "name": "점주",
+      "lines": [
+        { "id": "L1", "speaker": "witness", "text": "그날 밤 계산대에 있었습니다.", "yieldsCards": ["c_rem"],
+          "interrupt": { "legit": true, "resumeAt": "L2",
+            "violation": { "id": "v_cut", "text": "정당한 증언을 끊었다", "affectsJudgment": true, "lostCards": ["c_rem"] } } },
+        { "id": "L2", "speaker": "defense", "text": "증인은 원래 거짓말쟁이 아닙니까?",
+          "interrupt": { "legit": false, "resumeAt": "L3", "sets": ["stop_insult"] } },
+        { "id": "L3", "speaker": "witness", "text": "(동요하며) 아까 한 말은 취소하겠습니다.",
+          "when": { "none": ["stop_insult"] }, "revokesCards": ["c_np"] },
+        { "id": "L4", "speaker": "defense", "text": "이의 있습니다. 유도신문입니다.",
+          "objection": { "by": "defense", "correct": "sustain",
+            "onSustain": { "resumeAt": "L6", "sets": ["leading_blocked"] },
+            "onOverrule": { "sets": ["leading_allowed"] },
+            "violation": { "id": "v_leading", "text": "유도신문 이의를 기각했다", "affectsJudgment": false, "lostCards": [] } } },
+        { "id": "L5", "speaker": "witness", "text": "네, 그렇습니다.", "yieldsCards": ["c_bad"] },
+        { "id": "L6", "speaker": "prosecutor", "text": "이상입니다.", "sets": ["owner_done"] }
+      ],
+      "supplementary": [
+        { "id": "q_clar", "cellId": "act", "kind": "clarify", "text": "몇 시였습니까?",
+          "answer": [
+            { "id": "qa1", "speaker": "witness", "text": "열한 시쯤입니다.", "yieldsCards": ["c_clar"], "sets": ["asked_time"] },
+            { "id": "qa2", "speaker": "witness", "text": "(CCTV 언급)", "when": { "all": ["never"] }, "yieldsCards": ["c_bad"] }
+          ] },
+        { "id": "q_proxy", "cellId": "intent", "kind": "proxy", "text": "피고인이 일부러 그랬다는 거죠?",
+          "answer": [ { "id": "qp1", "speaker": "witness", "text": "네.", "yieldsCards": ["c_proxy"] } ],
+          "violation": { "id": "v_proxy", "text": "검사 대신 입증했다", "affectsJudgment": true, "lostCards": ["c_np"] } }
+      ],
+      "unlocksEvidence": [
+        { "evidenceId": "e_cctv", "when": { "all": ["owner_done"] } },
+        { "evidenceId": "e_receipt", "when": { "all": ["never"] } }
+      ]
+    },
+    {
+      "id": "x_def", "kind": "defendant", "name": "피고인",
+      "lines": [
+        { "id": "D1", "speaker": "defendant", "text": "기억이 안 납니다.", "yieldsCards": ["c_def"] }
+      ],
+      "supplementary": []
+    }
+  ],
+  "closing": { "demandMonths": 10, "lines": [
+    { "id": "k1", "speaker": "prosecutor", "text": "징역 10월을 구형합니다." },
+    { "id": "k2", "speaker": "defendant", "text": "죄송합니다." }
+  ] },
+  "appealView": [ { "cellId": "act", "proven": true } ],
+  "sentencing": {
+    "guidelineName": "기준", "statutoryMaxMonths": 72,
+    "ranges": { "mitigated": { "min": 1, "max": 6 }, "basic": { "min": 4, "max": 12 }, "aggravated": { "min": 10, "max": 24 } },
+    "factors": [],
+    "suspensionFactors": [],
+    "suspensionDeviation": 0
+  },
+  "appeal": { "defendant": { "ifImprisoned": true, "ifConvictedWhileDenying": true }, "denies": false }
+}
