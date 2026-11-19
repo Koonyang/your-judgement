@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "id": "ep01",
+    "title": "도시락 두 개",
+    "court": "single",
+    "biasType": "none",
+    "truthMemo": "도시락 두 개 중 하나는 공원 벤치에서 같이 지내던 다른 노인에게 건넸다. 피고인은 그게 변명처럼 들릴까 봐 끝까지 말하지 않았다.",
+    "tutorial": true
+  },
+  "_todoVerify": {
+    "sentencing.statutoryMaxMonths": "형법 §329 법정형 '6년 이하의 징역 또는 1천만원 이하의 벌금' → 72개월. 원문 대조 전 [확인필요]",
+    "sentencing.suspensionDeviation": "30은 [내 판단]. 집유 권고에 반한 선택을 뒷받침하는 데 필요한 근거 무게",
+    "exams.x_owner.unlocksEvidence": "부동의 진술조서의 증거능력(형소법 §312④ 계열) [확인필요]",
+    "exams.x_owner.owner_16": "위압적·모욕적 신문 금지(형소규칙 §74②) [확인필요]",
+    "c_minor": "'피해 경미' 카드는 영수증을 제시한 주신문 답변(owner_8)에서 생긴다. 증거 하나에 카드 하나라는 스키마 제약 때문"
+  },
+  "documents": {
+    "indictment": "피고인은 2026. 3. 14. 21:40경 서울 ○○구 ○○동에 있는 피해자 노은숙 운영의 편의점에서, 진열대에 놓인 도시락 2개, 우유 1개, 빵 1개 합계 12,000원 상당을 계산하지 않고 가지고 나가 이를 절취하였다.\n\n적용법조: 형법 제329조",
+    "defenseOpinion": "피고인은 공소사실을 모두 인정합니다. 피고인은 일용직으로 일해 왔으나 사건 무렵 석 달째 일이 끊겨 끼니를 거르던 중이었습니다. 사건 나흘 뒤 피해자를 찾아가 사과하고 물건값을 갚았으며, 피해자는 처벌을 원하지 않는다는 서면을 써 주었습니다.",
+    "facts": "피고인은 2026. 3. 14. 21:40경 서울 ○○구 ○○동에 있는 피해자 노은숙 운영의 편의점에서, 진열대에 놓인 도시락 2개, 우유 1개, 빵 1개 합계 12,000원 상당을 계산하지 않고 가지고 나가 피해자 소유의 재물을 절취하였다.",
+    "lawApplied": "형법 제329조(징역형 선택)"
+  },
+  "opening": [
+    { "id": "open_1", "speaker": "clerk", "text": "(참여관) 모두절차입니다. 진술거부권 고지, 인정신문, 공소장 낭독, 피고인 의견 순으로 진행됩니다." },
+    { "id": "open_2", "speaker": "judge", "text": "피고인은 진술하지 않거나 개개의 질문에 진술을 거부할 수 있고, 이익이 되는 사실을 진술할 수 있습니다." },
+    { "id": "open_3", "speaker": "judge", "text": "피고인, 이름과 생년월일, 직업, 주거를 말씀하십시오." },
+    { "id": "open_4", "speaker": "defendant", "text": "윤상택, 1962년 5월생입니다. 공사장 일용직이고, 주소는 공소장에 적힌 곳 그대로입니다." },
+    { "id": "open_5", "speaker": "prosecutor", "text": "피고인은 2026. 3. 14. 21:40경 피해자 운영의 편의점에서 도시락 등 합계 12,000원 상당을 계산하지 않고 가지고 나가 절취하였습니다. 적용법조는 형법 제329조입니다." },
+    { "id": "open_6", "speaker": "judge", "text": "피고인, 공소사실을 인정합니까?" },
+    { "id": "open_7", "speaker": "defendant", "text": "네, 인정합니다." },
+    { "id": "open_8", "speaker": "defense", "text": "피고인은 공소사실을 모두 인정합니다. 다만 당시 일이 끊겨 끼니를 거르던 사정을 참작해 주시기 바랍니다.", "yieldsCards": ["c_livelihood"] },
+    { "id": "open_9", "speaker": "clerk", "text": "(참여관) 다툼 없는 사건이라도 자백만으로는 유죄를 인정할 수 없습니다. 이어서 증거조사입니다. 동의한 증거는 바로 편철되고, 부동의한 조서는 진술자를 증인으로 불러 확인합니다." }
+  ],
+  "cells": [
+    { "id": "property", "name": "타인의 재물", "disputed": false },
+    { "id": "taking", "name": "절취(점유 이전)", "disputed": false },
+    { "id": "intent", "name": "고의", "disputed": false },
+    { "id": "appropriation", "name": "불법영득의사", "disputed": false }
+  ],
+  "evidence": [
+    { "id": "e_interrogation", "label": "피의자신문조서(피고인)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_confession",
+      "body": "문: 계산하지 않고 가지고 나간 것이 맞나요?\n답: 네, 맞습니다. 배가 고파서 그랬습니다. 잘못했습니다." },
+    { "id": "e_cctv", "label": "편의점 CCTV 영상 캡처", "submittedBy": "prosecutor", "consent": true, "cardId": "c_cctv",
+      "body": "21:38 피고인이 진열대에서 도시락 2개, 우유, 빵을 집어 점퍼 안에 넣는 장면. 21:40 계산대를 지나쳐 출입문으로 나가는 장면." },
+    { "id": "e_receipt", "label": "피해품 목록 및 영수증", "submittedBy": "prosecutor", "consent": true, "cardId": "c_receipt",
+      "body": "도시락 4,500원 × 2, 우유 1,500원, 빵 1,500원. 합계 12,000원. 피해품은 모두 피해자 편의점의 판매용 재고." },
+    { "id": "e_owner_stmt", "label": "진술조서(노은숙)", "submittedBy": "prosecutor", "consent": false, "cardId": "c_owner_stmt",
+      "body": "다음 날 아침 재고가 맞지 않아 CCTV를 돌려 보았습니다. 그 손님은 동네에서 몇 번 본 사람이었습니다. 계산을 하고 가져가도 된다고 허락한 적은 없습니다." },
+    { "id": "e_record", "label": "수사보고(전과 조회)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_record",
+      "body": "피고인은 최근 5년 내 절도로 벌금형을 3회 받았다(2022, 2023, 2025). 징역형 전과 없음." },
+    { "id": "e_nonpunish", "label": "처벌불원서(노은숙)", "submittedBy": "defense", "consent": true, "cardId": "c_nonpunish",
+      "body": "피고인이 찾아와 사과하고 물건값을 갚았습니다. 피고인의 처벌을 원하지 않습니다. 2026. 3. 18. 노은숙" }
+  ],
+  "cards": [
+    { "id": "c_confession", "title": "피고인의 자백", "text": "피의자신문조서에서 피고인이 범행을 인정했다.", "kind": "evidence", "confession": true },
+    { "id": "c_cctv", "title": "CCTV 영상 캡처", "text": "피고인이 물건을 점퍼에 넣고 계산대를 지나쳐 나가는 장면.", "kind": "evidence" },
+    { "id": "c_receipt", "title": "피해품 목록·영수증", "text": "편의점 판매용 재고, 합계 12,000원.", "kind": "evidence" },
+    { "id": "c_owner_stmt", "title": "점주 진술조서", "text": "재고가 맞지 않아 CCTV로 확인했고, 가져가도 된다고 허락한 적 없다.", "kind": "evidence" },
+    { "id": "c_record", "title": "동종 전과", "text": "최근 5년 내 절도 벌금형 3회.", "kind": "evidence" },
+    { "id": "c_nonpunish", "title": "처벌불원", "text": "피해자가 피고인의 처벌을 원하지 않는다는 서면.", "kind": "evidence" },
+    { "id": "c_livelihood", "title": "생계형 범행", "text": "석 달째 일이 끊겨 끼니를 거르던 중 먹을 것을 가져갔다.", "kind": "fact" },
+    { "id": "c_repaid", "title": "변제", "text": "사건 나흘 뒤 피해자를 찾아가 사과하고 물건값을 갚았다.", "kind": "fact" },
+    { "id": "c_remorse", "title": "진지한 반성", "text": "최후진술에서 전과를 스스로 언급하며 잘못을 인정했다.", "kind": "fact" },
+    { "id": "c_minor", "title": "피해 경미", "text": "피해액 12,000원.", "kind": "fact" }
+  ],
+  "exams": [
+    {
+      "id": "x_owner", "kind": "witness", "name": "증인 노은숙(피해자, 편의점 점주)",
+      "lines": [
+        { "id": "owner_1", "speaker": "judge", "text": "증인은 선서서를 읽어 주십시오." },
+        { "id": "owner_2", "speaker": "witness", "text": "양심에 따라 숨김과 보탬이 없이 사실 그대로 말하고, 만일 거짓말이 있으면 위증의 벌을 받기로 맹세합니다." },
+        { "id": "owner_3", "speaker": "prosecutor", "text": "증인은 ○○동에서 편의점을 운영하고 있지요?" },
+        { "id": "owner_4", "speaker": "witness", "text": "네, 6년째 하고 있습니다." },
+        { "id": "owner_5", "speaker": "prosecutor", "text": "3월 14일 밤, 피고인이 물건을 계산하지 않고 나간 사실은 언제 알았습니까?" },
+        { "id": "owner_6", "speaker": "witness", "text": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." },
+        { "id": "owner_7", "speaker": "prosecutor", "text": "증 제3호 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
+        { "id": "owner_8", "speaker": "witness", "text": "네, 그렇습니다.", "yieldsCards": ["c_minor"] },
+        { "id": "owner_9", "speaker": "prosecutor", "text": "그 전에도 가게에서 물건이 여러 번 없어진 적이 있었지요?",
+          "objection": {
+            "by": "defense", "correct": "sustain",
+            "onSustain": { "resumeAt": "owner_11" },
+            "violation": { "id": "v_owner_other_crimes", "text": "기소되지 않은 여죄를 묻는 신문에 대한 이의를 기각했다", "affectsJudgment": false, "lostCards": [] }
+          } },
+        { "id": "owner_10", "speaker": "witness", "text": "몇 번 있었습니다. 누가 그랬는지는 모르지만요." },
+        { "id": "owner_11", "speaker": "prosecutor", "text": "이상입니다." },
+        { "id": "owner_12", "speaker": "judge", "text": "변호인, 반대신문하십시오." },
+        { "id": "owner_13", "speaker": "defense", "text": "증인, 기억 잘 더듬어 보세요. 사건 뒤에 피고인이 가게로 찾아와서 뭐라고 했습니까?",
+          "interrupt": {
+            "legit": true, "resumeAt": "owner_16",
+            "violation": { "id": "v_cut_repaid", "text": "변호인의 정당한 반대신문(사과·변제 경위)을 제지했다", "affectsJudgment": true, "lostCards": ["c_nonpunish"] }
+          } },
+        { "id": "owner_14", "speaker": "witness", "text": "고개를 숙이고 미안하다고 했습니다. 그 자리에서 물건값 12,000원을 내놓더군요.", "yieldsCards": ["c_repaid"] },
+        { "id": "owner_15", "speaker": "witness", "text": "그래서 처벌불원서도 써 준 겁니다." },
+        { "id": "owner_16", "speaker": "defense", "text": "솔직히 사장님도 관리를 소홀히 하신 것 아닙니까? 손님이 들고 나가도 모를 정도면요.",
+          "interrupt": { "legit": false, "resumeAt": "owner_18", "sets": ["stop_insult"] } },
+        { "id": "owner_17", "speaker": "witness", "text": "지금 제 탓이라는 겁니까? 그 서면도 사실 마지못해 써 준 겁니다. 처벌을 원합니다.",
+          "when": { "none": ["stop_insult"] }, "revokesCards": ["c_nonpunish"], "sets": ["nonpunish_withdrawn"] },
+        { "id": "owner_18", "speaker": "defense", "text": "이상입니다." }
+      ],
+      "supplementary": [
+        { "id": "q_owner_items", "cellId": "appropriation", "kind": "clarify", "text": "피고인이 가져간 물건이 정확히 무엇이었습니까?",
+          "answer": [ { "id": "owner_q1_1", "speaker": "witness", "text": "도시락 두 개, 우유 하나, 빵 하나입니다. 전부 먹을 것이었어요." } ] },
+        { "id": "q_owner_when", "cellId": "property", "kind": "clarify", "text": "물건값을 돌려받은 것은 사건 며칠 뒤였습니까?",
+          "answer": [ { "id": "owner_q2_1", "speaker": "witness", "text": "나흘 뒤였던 걸로 기억합니다." } ] }
+      ],
+      "unlocksEvidence": [ { "evidenceId": "e_owner_stmt" } ]
+    },
+    {
+      "id": "x_def", "kind": "defendant", "name": "피고인 윤상택",
+      "lines": [
+        { "id": "def_1", "speaker": "judge", "text": "피고인신문을 하겠습니다. 검사, 신문하십시오." },
+        { "id": "def_2", "speaker": "prosecutor", "text": "피고인은 최근 5년 동안 절도로 벌금을 세 번 받았지요?",
+          "interrupt": {
+            "legit": true, "resumeAt": "def_6", "sets": ["cut_prosecutor"],
+            "violation": { "id": "v_cut_prosecutor", "text": "검사의 정당한 피고인신문(전과 추궁)을 제지했다", "affectsJudgment": false, "lostCards": [] }
+          } },
+        { "id": "def_3", "speaker": "defendant", "text": "……네." },
+        { "id": "def_4", "speaker": "prosecutor", "text": "세 번을 받고도 또 그랬습니다. 그때마다 무슨 생각을 했습니까?" },
+        { "id": "def_5", "speaker": "defendant", "text": "배가 고프면 그 생각이 안 났습니다. 핑계인 줄 압니다." },
+        { "id": "def_6", "speaker": "prosecutor", "text": "이상입니다." },
+        { "id": "def_7", "speaker": "defense", "text": "피고인, 사건 무렵 생활은 어땠습니까?" },
+        { "id": "def_8", "speaker": "defendant", "text": "공사장 일이 석 달째 끊겼습니다. 혼자 살고, 그날은 이틀째 제대로 못 먹은 상태였습니다.", "yieldsCards": ["c_livelihood"] },
+        { "id": "def_9", "speaker": "defense", "text": "이상입니다." }
+      ],
+      "supplementary": [
+        { "id": "q_def_meal", "cellId": "appropriation", "kind": "clarify", "text": "가져간 도시락은 어떻게 했습니까?",
+          "answer": [ { "id": "def_q1_1", "speaker": "defendant", "text": "가게 앞 공원 벤치에서 먹었습니다." } ] }
+      ]
+    }
+  ],
+  "closing": {
+    "demandMonths": 12,
+    "lines": [
+      { "id": "close_1", "speaker": "judge", "text": "증거조사와 피고인신문을 마치겠습니다. 검사, 의견을 진술하십시오." },
+      { "id": "close_2", "speaker": "prosecutor", "text": "동종 전과가 있음에도 다시 범행했습니다. 피고인에게 징역 1년을 선고해 주시기 바랍니다." },
+      { "id": "close_3", "speaker": "defense", "text": "피고인은 범행을 모두 인정하고 피해자에게 물건값을 갚았습니다. 생계가 막막했던 사정을 헤아려 선처해 주시기 바랍니다." },
+      { "id": "close_4", "speaker": "judge", "text": "피고인, 마지막으로 하고 싶은 말을 하십시오." },
+      { "id": "close_5", "speaker": "defendant", "text": "검사님 말씀이 맞습니다. 세 번이나 그러고도 또 그랬습니다. 다시는 남의 물건에 손대지 않겠습니다.",
+        "when": { "none": ["cut_prosecutor"] }, "yieldsCards": ["c_remorse"] },
+      { "id": "close_6", "speaker": "defendant", "text": "죄송합니다. 선처 부탁드립니다.", "when": { "all": ["cut_prosecutor"] } },
+      { "id": "close_7", "speaker": "judge", "text": "변론을 종결합니다. 선고는 2주 뒤 오후 2시에 하겠습니다." },
+      { "id": "close_8", "speaker": "clerk", "text": "(참여관) 선고 전까지 기록을 다시 볼 수 있습니다. 쟁점 보드의 칸마다 증거를 연결하고 증명됐는지 판단하십시오." }
+    ]
+  },
+  "appealView": [
+    { "cellId": "property", "proven": true },
+    { "cellId": "taking", "proven": true },
+    { "cellId": "intent", "proven": true },
+    { "cellId": "appropriation", "proven": true }
+  ],
+  "sentencing": {
+    "guidelineName": "절도범죄 > 일반재산 절도 > 제2유형(일반절도)",
+    "statutoryMaxMonths": 72,
+    "ranges": {
+      "mitigated": { "min": 4, "max": 10 },
+      "basic": { "min": 6, "max": 18 },
+      "aggravated": { "min": 10, "max": 24 }
+    },
+    "factors": [
+      { "id": "f_livelihood", "name": "생계형 범죄", "tier": "special", "nature": "act", "direction": "mitigate", "requiresAnyCard": ["c_livelihood"], "weight": 30 },
+      { "id": "f_nonpunish", "name": "처벌불원 또는 실질적 피해 회복", "tier": "special", "nature": "actor", "direction": "mitigate", "actEquivalent": true, "requiresAnyCard": ["c_nonpunish"], "weight": 30 },
+      { "id": "f_remorse", "name": "진지한 반성", "tier": "general", "nature": "actor", "direction": "mitigate", "requiresAnyCard": ["c_remorse"], "weight": 10 },
+      { "id": "f_recovery", "name": "상당한 피해 회복", "tier": "general", "nature": "actor", "direction": "mitigate", "requiresAnyCard": ["c_repaid"], "weight": 10 },
+      { "id": "f_prior", "name": "누범에 해당하지 않는 동종 전과", "tier": "general", "nature": "actor", "direction": "aggravate", "requiresAnyCard": ["c_record"], "weight": 10 }
+    ],
+    "suspensionFactors": [
+      { "id": "s_livelihood", "name": "생계형 범죄", "tier": "major", "direction": "positive", "requiresAnyCard": ["c_livelihood"] },
+      { "id": "s_nonpunish", "name": "처벌불원 또는 실질적 피해 회복", "tier": "major", "direction": "positive", "requiresAnyCard": ["c_nonpunish"] },
+      { "id": "s_prior", "name": "동종 전과(5년 이내 3회 이상 벌금)", "tier": "major", "direction": "negative", "requiresAnyCard": ["c_record"] },
+      { "id": "s_minor", "name": "피해 경미", "tier": "general", "direction": "positive", "requiresAnyCard": ["c_minor"] },
+      { "id": "s_remorse", "name": "진지한 반성", "tier": "general", "direction": "positive", "requiresAnyCard": ["c_remorse"] },
+      { "id": "s_recovery", "name": "상당한 피해 회복", "tier": "general", "direction": "positive", "requiresAnyCard": ["c_repaid"] }
+    ],
+    "suspensionDeviation": 30
+  },
+  "appeal": {
+    "defendant": { "ifImprisoned": true, "ifConvictedWhileDenying": false },
+    "denies": false
+  }
+}
