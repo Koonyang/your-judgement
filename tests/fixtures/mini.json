@@ -1,0 +1,39 @@
+{
+  "meta": { "id": "mini", "title": "미니", "court": "single", "biasType": "none", "truthMemo": "메모", "tutorial": true },
+  "documents": { "indictment": "공소장", "defenseOpinion": "변호인 의견", "facts": "사실", "lawApplied": "적용 법조" },
+  "opening": [
+    { "id": "o1", "speaker": "judge", "text": "개정합니다." }
+  ],
+  "cells": [ { "id": "c1", "name": "행위", "disputed": true } ],
+  "evidence": [
+    { "id": "e1", "label": "증거1", "submittedBy": "prosecutor", "consent": true, "body": "내용", "cardId": "k1" }
+  ],
+  "cards": [ { "id": "k1", "title": "카드", "text": "내용", "kind": "evidence" } ],
+  "exams": [
+    {
+      "id": "x1", "kind": "witness", "name": "증인",
+      "lines": [
+        { "id": "l1", "speaker": "witness", "text": "말", "yieldsCards": ["k1"] },
+        { "id": "l2", "speaker": "witness", "text": "끝" }
+      ],
+      "supplementary": [
+        { "id": "s1", "cellId": "c1", "kind": "clarify", "text": "질문", "answer": [ { "id": "s1a", "speaker": "witness", "text": "답" } ] }
+      ],
+      "unlocksEvidence": [ { "evidenceId": "e1" } ]
+    }
+  ],
+  "closing": { "demandMonths": 12, "lines": [ { "id": "c_l1", "speaker": "prosecutor", "text": "구형" } ] },
+  "appealView": [ { "cellId": "c1", "proven": true } ],
+  "sentencing": {
+    "guidelineName": "기준", "statutoryMaxMonths": 60,
+    "ranges": { "mitigated": { "min": 1, "max": 6 }, "basic": { "min": 6, "max": 12 }, "aggravated": { "min": 12, "max": 24 } },
+    "factors": [
+      { "id": "f1", "name": "요소", "tier": "general", "nature": "actor", "direction": "mitigate", "requiresAnyCard": ["k1"], "weight": 1 }
+    ],
+    "suspensionFactors": [
+      { "id": "sf1", "name": "집유요소", "tier": "general", "direction": "positive", "requiresAnyCard": ["k1"] }
+    ],
+    "suspensionDeviation": 0
+  },
+  "appeal": { "defendant": { "ifImprisoned": true, "ifConvictedWhileDenying": true }, "denies": false }
+}
