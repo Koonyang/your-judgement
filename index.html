@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Judgement</title>
+    <style>
+      html, body { margin: 0; background: #111; height: 100%; }
+      #stage { position: relative; width: 1280px; height: 720px; margin: 0 auto; }
+      #game, #ui-root { position: absolute; inset: 0; }
+      #ui-root { pointer-events: none; }
+      #ui-root > * { pointer-events: auto; }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="game"></div>
+      <div id="ui-root"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
