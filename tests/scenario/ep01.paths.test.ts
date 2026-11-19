@@ -148,6 +148,16 @@ describe('1화 경로', () => {
     expect(out.result).toBe('dismissed');
   });
 
+  it('정당 대목 제지 + 모욕 방치: 처벌불원 없음, 범위 4~10월, 끝까지 진행', () => {
+    const { s, out } = run({ legit: 'cut', insult: 'ignore' });
+    expect(s.heldCards).not.toContain('c_nonpunish');
+    expect(s.heldCards).not.toContain('c_repaid');
+    expect(s.flags).toContain('nonpunish_withdrawn');
+    expect(s.violations.map((v) => v.id)).toEqual(['v_cut_repaid']);
+    expect(rangeOf(s)).toEqual({ min: 4, max: 10 });
+    expect(out.result).toBe('final');
+  });
+
   it('검사 추궁 제지: 반성 카드 없음, 판결 영향 없는 위반 1건', () => {
     const { s, out } = run({ grill: 'cut' });
     expect(s.flags).toContain('cut_prosecutor');

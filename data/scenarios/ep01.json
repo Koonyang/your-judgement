@@ -11,6 +11,7 @@
     "sentencing.statutoryMaxMonths": "형법 §329 법정형 '6년 이하의 징역 또는 1천만원 이하의 벌금' → 72개월. 원문 대조 전 [확인필요]",
     "sentencing.suspensionDeviation": "30은 [내 판단]. 집유 권고에 반한 선택을 뒷받침하는 데 필요한 근거 무게",
     "exams.x_owner.unlocksEvidence": "부동의 진술조서의 증거능력(형소법 §312④ 계열) [확인필요]",
+    "exams.x_owner.owner_1": "선서 전 위증의 벌 경고(형소법 §158), 인정 확인 문구 [확인필요]",
     "exams.x_owner.owner_16": "위압적·모욕적 신문 금지(형소규칙 §74②) [확인필요]",
     "c_minor": "'피해 경미' 카드는 영수증을 제시한 주신문 답변(owner_8)에서 생긴다. 증거 하나에 카드 하나라는 스키마 제약 때문"
   },
@@ -29,7 +30,7 @@
     { "id": "open_6", "speaker": "judge", "text": "피고인, 공소사실을 인정합니까?" },
     { "id": "open_7", "speaker": "defendant", "text": "네, 인정합니다." },
     { "id": "open_8", "speaker": "defense", "text": "피고인은 공소사실을 모두 인정합니다. 다만 당시 일이 끊겨 끼니를 거르던 사정을 참작해 주시기 바랍니다.", "yieldsCards": ["c_livelihood"] },
-    { "id": "open_9", "speaker": "clerk", "text": "(참여관) 다툼 없는 사건이라도 자백만으로는 유죄를 인정할 수 없습니다. 이어서 증거조사입니다. 동의한 증거는 바로 편철되고, 부동의한 조서는 진술자를 증인으로 불러 확인합니다." }
+    { "id": "open_9", "speaker": "clerk", "text": "(참여관) 다툼 없는 사건이라도 자백만으로는 유죄를 인정할 수 없습니다. 이어서 증거조사입니다. 동의한 증거는 채택해 조사하고(요지 고지), 부동의한 조서는 진술자를 증인으로 불러 확인합니다." }
   ],
   "cells": [
     { "id": "property", "name": "타인의 재물", "disputed": false },
@@ -67,13 +68,13 @@
     {
       "id": "x_owner", "kind": "witness", "name": "증인 노은숙(피해자, 편의점 점주)",
       "lines": [
-        { "id": "owner_1", "speaker": "judge", "text": "증인은 선서서를 읽어 주십시오." },
+        { "id": "owner_1", "speaker": "judge", "text": "증인 노은숙 씨 맞습니까? 사실대로 진술하지 않으면 위증의 벌을 받을 수 있습니다. 일어서서 선서서를 낭독해 주십시오." },
         { "id": "owner_2", "speaker": "witness", "text": "양심에 따라 숨김과 보탬이 없이 사실 그대로 말하고, 만일 거짓말이 있으면 위증의 벌을 받기로 맹세합니다." },
         { "id": "owner_3", "speaker": "prosecutor", "text": "증인은 ○○동에서 편의점을 운영하고 있지요?" },
         { "id": "owner_4", "speaker": "witness", "text": "네, 6년째 하고 있습니다." },
         { "id": "owner_5", "speaker": "prosecutor", "text": "3월 14일 밤, 피고인이 물건을 계산하지 않고 나간 사실은 언제 알았습니까?" },
         { "id": "owner_6", "speaker": "witness", "text": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." },
-        { "id": "owner_7", "speaker": "prosecutor", "text": "증 제3호 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
+        { "id": "owner_7", "speaker": "prosecutor", "text": "증거목록 3번 피해품 목록 및 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
         { "id": "owner_8", "speaker": "witness", "text": "네, 그렇습니다.", "yieldsCards": ["c_minor"] },
         { "id": "owner_9", "speaker": "prosecutor", "text": "그 전에도 가게에서 물건이 여러 번 없어진 적이 있었지요?",
           "objection": {
@@ -84,7 +85,7 @@
         { "id": "owner_10", "speaker": "witness", "text": "몇 번 있었습니다. 누가 그랬는지는 모르지만요." },
         { "id": "owner_11", "speaker": "prosecutor", "text": "이상입니다." },
         { "id": "owner_12", "speaker": "judge", "text": "변호인, 반대신문하십시오." },
-        { "id": "owner_13", "speaker": "defense", "text": "증인, 기억 잘 더듬어 보세요. 사건 뒤에 피고인이 가게로 찾아와서 뭐라고 했습니까?",
+        { "id": "owner_13", "speaker": "defense", "text": "증인, 정확히 기억하시는 거 맞아요? 다시 잘 생각해 보세요. 피고인이 찾아와서 사과하고 돈을 갚았지요?",
           "interrupt": {
             "legit": true, "resumeAt": "owner_16",
             "violation": { "id": "v_cut_repaid", "text": "변호인의 정당한 반대신문(사과·변제 경위)을 제지했다", "affectsJudgment": true, "lostCards": ["c_nonpunish"] }
@@ -132,7 +133,7 @@
     "demandMonths": 12,
     "lines": [
       { "id": "close_1", "speaker": "judge", "text": "증거조사와 피고인신문을 마치겠습니다. 검사, 의견을 진술하십시오." },
-      { "id": "close_2", "speaker": "prosecutor", "text": "동종 전과가 있음에도 다시 범행했습니다. 피고인에게 징역 1년을 선고해 주시기 바랍니다." },
+      { "id": "close_2", "speaker": "prosecutor", "text": "동종 전과가 있음에도 다시 범행했습니다. 피고인에게 징역 1년을 구형합니다." },
       { "id": "close_3", "speaker": "defense", "text": "피고인은 범행을 모두 인정하고 피해자에게 물건값을 갚았습니다. 생계가 막막했던 사정을 헤아려 선처해 주시기 바랍니다." },
       { "id": "close_4", "speaker": "judge", "text": "피고인, 마지막으로 하고 싶은 말을 하십시오." },
       { "id": "close_5", "speaker": "defendant", "text": "검사님 말씀이 맞습니다. 세 번이나 그러고도 또 그랬습니다. 다시는 남의 물건에 손대지 않겠습니다.",
