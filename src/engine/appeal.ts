@@ -1,6 +1,7 @@
 // 항소 발생과 항소심 판정. phaser/DOM 비의존, 무작위 없음.
 import { boardFindings, verdictOf } from './board';
-import { DOUBLE_COUNT_FACTOR, PROSECUTOR_APPEAL_RATIO } from './config';
+import { evalCond } from './cond';
+import { DOUBLE_COUNT_FACTOR, PROSECUTOR_APPEAL_RATIO, SUSPENSION_MAX_MONTHS } from './config';
 import {
   availableFactors, deviationPercent, leeway, recommendedRange, suspensionRecommendation,
 } from './sentencing';
@@ -9,9 +10,6 @@ import type { AppealOutcome, Appellants, GameState } from './state';
 
 type Reason = AppealOutcome['reasons'][number];
 type NewSentence = NonNullable<AppealOutcome['newSentence']>;
-
-/** 집행유예 가능한 형의 상한(개월) */
-const SUSPENSION_MAX_MONTHS = 36;
 
 export function whoAppeals(sc: Scenario, s: GameState): Appellants {
   const guilty = verdictOf(s.board) === 'guilty';
@@ -43,7 +41,8 @@ function review(sc: Scenario, s: GameState, appellants: Appellants): Omit<Appeal
   const guilty = verdictOf(s.board) === 'guilty';
 
   // 1. 법리·사실오인 (직권)
-  const bf = boardFindings(s.board, sc.cards, sc.appealView, new Set(s.flags));
+  const flags = new Set(s.flags);
+  const bf = boardFindings(s.board, sc.cards, sc.appealView, flags);
   if (guilty && bf.corroborationViolation) {
     reasons.push({ code: 'law', text: '자백만으로 유죄를 인정했다 (보강법칙 위반)' });
   }
@@ -90,8 +89,12 @@ function review(sc: Scenario, s: GameState, appellants: Appellants): Omit<Appeal
   if (reasons.length === 0) return { appellants, result: 'dismissed', reasons, remarks, newSentence: null };
 
   // 파기자판
+  // 법리·사실오인 파기면 유무죄는 항소심 판단(appealView, when 충족분)을 따른다 (R7)
+  const appellateGuilty = sc.appealView.filter((v) => evalCond(v.when, flags)).every((v) => v.proven);
+  const lawOrFact = reasons.some((r) => r.code === 'law' || r.code === 'fact');
+  const guiltyOnAppeal = lawOrFact ? appellateGuilty : guilty;
   let newSentence: NewSentence;
-  if (!guilty && !convictOnAppeal) {
+  if (!guiltyOnAppeal) {
     newSentence = { verdict: 'acquitted', months: null, suspended: false };
   } else {
     const base = months ?? range.min;

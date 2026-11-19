@@ -188,6 +188,37 @@ describe('reviewAppeal', () => {
     expect(reviewAppeal(sc, t).reasons.map((r) => r.code)).toEqual(['law']);
   });
 
+  it('R7: 자백만으로 유죄 + appealView 전부 증명 → law 파기, 유죄 자판', () => {
+    const s = guilty(5, true);
+    s.board.c_act.cards = ['c_conf'];
+    const o = reviewAppeal(sc, s);
+    expect(o.result).toBe('reversed');
+    expect(o.reasons.map((r) => r.code)).toEqual(['law']);
+    expect(o.newSentence).toEqual({ verdict: 'guilty', months: 5, suspended: true });
+  });
+
+  it('R7: 자백만으로 유죄 + appealView 한 칸 의심 → law 파기, 무죄 자판', () => {
+    const sc2 = { ...sc, appealView: [{ cellId: 'c_act', proven: true }, { cellId: 'c_intent', proven: false }] } as Scenario;
+    const s = guilty(5, true);
+    s.board.c_act.cards = ['c_conf'];
+    const o = reviewAppeal(sc2, s);
+    expect(o.result).toBe('reversed');
+    expect(o.reasons.map((r) => r.code)).toEqual(['law']);
+    expect(o.newSentence).toEqual({ verdict: 'acquitted', months: null, suspended: false });
+  });
+
+  it('R7: when이 맞지 않는 의심 판단은 무시한다', () => {
+    const sc2 = { ...sc, appealView: [
+      { cellId: 'c_act', proven: true }, { cellId: 'c_intent', proven: true },
+      { cellId: 'c_intent', proven: false, when: { all: ['flag_x'] } },
+    ] } as Scenario;
+    const s = guilty(5, true);
+    s.board.c_intent.cards = [];
+    expect(reviewAppeal(sc2, s).newSentence?.verdict).toBe('guilty');
+    s.flags = ['flag_x'];
+    expect(reviewAppeal(sc2, s).newSentence?.verdict).toBe('acquitted');
+  });
+
   it('불이익변경금지: 피고인만 항소, 자판이 더 무거우면 dismissed', () => {
     // 가중 특별인자 → 범위 10~24. 7월 실형 → 피고인만 항소. 파기 시 10월이 되지만 증형 불가
     const s = guilty(7, false, ['c_conf', 'c_cctv', 'c_aggr']);

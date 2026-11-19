@@ -1,5 +1,6 @@
 // 판결서 조립. phaser/DOM 비의존, 순수 함수.
 import { verdictOf } from './board';
+import { SUSPENSION_PERIOD_YEARS } from './config';
 import type { Scenario } from './scenario/schema';
 import type { GameState } from './state';
 
@@ -39,7 +40,7 @@ export function assembleJudgment(sc: Scenario, s: GameState): JudgmentDoc {
     order.push('피고인은 무죄.');
   } else if (s.sentencing.months !== null) {
     order.push(`피고인을 ${formatSentence(s.sentencing.months)}에 처한다.`);
-    if (s.sentencing.suspended) order.push('다만, 이 판결 확정일부터 1년간 위 형의 집행을 유예한다.');
+    if (s.sentencing.suspended) order.push(`다만, 이 판결 확정일부터 ${SUSPENSION_PERIOD_YEARS}년간 위 형의 집행을 유예한다.`);
   }
 
   const doc: JudgmentDoc = {
