@@ -35,8 +35,11 @@ export function createDialoguePanel(c: Controller): Panel {
     if (!line) return;
     const sel = window.getSelection();
     const picked = sel && text.contains(sel.anchorNode) && text.contains(sel.focusNode) ? sel.toString().trim() : '';
-    c.dispatch({ type: 'HIGHLIGHT', docId: 'closing', text: picked || line.text });
+    const t = picked || line.text;
     sel?.removeAllRanges();
+    // 이미 같은 문장을 표시했으면 무시(리듀서도 중복을 거르지만 의도를 분명히 한다).
+    if (c.state.highlights.some((x) => x.docId === 'closing' && x.text === t)) return;
+    c.dispatch({ type: 'HIGHLIGHT', docId: 'closing', text: t });
   });
   hlClosing.addEventListener('mousedown', (e) => e.preventDefault());
   const suppEnd = button('btn-supp-end', '묻지 않음', () => c.dispatch({ type: 'END_SUPP' }));
@@ -79,7 +82,6 @@ export function createDialoguePanel(c: Controller): Panel {
       show(suppEnd, examSupp);
       const closingStmt = s.phase === 'closing' && line?.speaker === 'defendant';
       show(hlClosing, closingStmt);
-      hlClosing.disabled = closingStmt && s.highlights.some((x) => x.docId === 'closing' && x.text === line!.text);
       show(next, !objection && !examSupp);
       next.textContent = !line && NARRATION[s.phase] ? NARRATION[s.phase]!.next : '다음';
     },

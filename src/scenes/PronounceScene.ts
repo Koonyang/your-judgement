@@ -55,7 +55,7 @@ export class PronounceScene extends Phaser.Scene {
     this.cameras.main.shake(180, 0.008);
     const box = this.add.container(930, 470).setAngle(-8);
     box.add(this.add.rectangle(0, 0, 96, 96).setStrokeStyle(6, 0xb0302a));
-    box.add(this.add.text(0, 0, '판사\n之印', { fontFamily: FONT_STACK, fontSize: '22px', color: '#b0302a', align: 'center' }).setOrigin(0.5));
+    box.add(this.add.text(0, 0, '판사', { fontFamily: FONT_STACK, fontSize: '28px', color: '#b0302a', align: 'center' }).setOrigin(0.5));
     box.setScale(1.6).setAlpha(0);
     this.tweens.add({ targets: box, scale: 1, alpha: 1, duration: 120, ease: 'Quad.easeIn' });
   }

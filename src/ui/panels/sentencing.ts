@@ -4,27 +4,17 @@
 import type { Controller } from '../../game/controller';
 import { formatSentence } from '../../engine/judgment';
 import type { Factor, Scenario, SuspFactor } from '../../engine/scenario/schema';
-import {
-  availableFactors, leeway, recommendedRange, suspensionRecommendation, validateSentence, type Area,
-} from '../../engine/sentencing';
-import type { GameState } from '../../engine/state';
-import { button, h } from '../dom';
+import { leeway, validateSentence, type Area } from '../../engine/sentencing';
+import { button, h, show } from '../dom';
+import { recordBasis, sameBasis, selectedBasis, type Basis } from '../sentencingBasis';
 import { createRangeBar, scaleMaxOf } from './rangebar';
 import type { Panel } from './types';
 
 export const AREA_LABEL: Record<Area, string> = { mitigated: '감경영역', basic: '기본영역', aggravated: '가중영역' };
 export const SUSP_LABEL = { suspend: '집유 권고', prison: '실형 권고', discretion: '종합 판단' } as const;
 
-/** 선택한 특별인자(보유 카드로 뒷받침되는 것만)로 권고범위를 계산. 판결서 패널도 같이 쓴다. */
-export function currentRange(sc: Scenario, s: GameState) {
-  const held = new Set(s.heldCards);
-  const special = availableFactors(sc.sentencing.factors, held).filter((f) => f.tier === 'special' && s.sentencing.special.includes(f.id));
-  return recommendedRange(sc.sentencing, special);
-}
-
-export function currentSuspRec(sc: Scenario, s: GameState) {
-  const held = new Set(s.heldCards);
-  return suspensionRecommendation(availableFactors(sc.sentencing.suspensionFactors, held).filter((f) => s.sentencing.susp.includes(f.id)));
+function areaText(b: Basis): string {
+  return `${AREA_LABEL[b.area]}${b.adjusted ? ' (특별조정)' : ''}`;
 }
 
 /** 숫자 입력값 → months. 빈 칸이면 null, 숫자가 아니면 NaN(오류 문구로 이어짐). */
@@ -39,7 +29,7 @@ export function createSentencingPanel(c: Controller): Panel {
   const el = h('section', { class: 'panel stage sentencing', testid: 'panel-sentencing' });
   let built: null | {
     factorRows: Map<string, Row>; suspRows: Map<string, Row>;
-    area: HTMLElement; bar: ReturnType<typeof createRangeBar>; susRec: HTMLElement;
+    area: HTMLElement; bar: ReturnType<typeof createRangeBar>; susRec: HTMLElement; selected: HTMLElement;
     months: HTMLInputElement; monthsText: HTMLElement; suspended: HTMLInputElement; error: HTMLElement; confirm: HTMLButtonElement;
   } = null;
 
@@ -77,6 +67,7 @@ export function createSentencingPanel(c: Controller): Panel {
     const area = h('div', { class: 'area', testid: 'sentencing-area' });
     const bar = createRangeBar('sentencing-bar');
     const susRec = h('div', { class: 'susp-rec', testid: 'susp-recommendation' });
+    const selected = h('p', { class: 'muted small selected-basis', testid: 'selected-basis' });
     const months = h('input', { type: 'number', min: '1', step: '1', inputmode: 'numeric', testid: 'input-months', class: 'num' });
     months.addEventListener('input', () => c.dispatch({ type: 'SET_SENTENCING', patch: { months: parseMonths(months.value) } }));
     const monthsText = h('span', { class: 'muted', testid: 'months-text' });
@@ -91,8 +82,9 @@ export function createSentencingPanel(c: Controller): Panel {
       h('h3', {}, '집행유예 참작사유'), ...S.suspensionFactors.map(suspRow),
     );
     const right = h('div', { class: 'col' },
-      h('h3', {}, '권고형량'), area, bar.el,
-      h('h3', {}, '집행유예'), susRec,
+      h('h3', {}, '기록상 권고 (항소심 기준)'), area, bar.el,
+      h('div', { class: 'susp-line' }, h('span', {}, '집행유예: '), susRec),
+      selected,
       h('h3', {}, '선고형'),
       h('div', { class: 'sentence-input' }, h('span', {}, '징역'), months, h('span', {}, '개월'), monthsText),
       h('label', { class: 'check' }, suspended, h('span', {}, '집행유예')),
@@ -103,10 +95,10 @@ export function createSentencingPanel(c: Controller): Panel {
       h('h2', {}, '양형'),
       h('p', { class: 'guideline' }, h('span', { class: 'muted small' }, '양형기준 유형 '), h('span', { testid: 'guideline-name' }, S.guidelineName),
         h('span', { class: 'muted small' }, ` · 법정형 상한 ${formatSentence(S.statutoryMaxMonths)}`)),
-      h('p', { class: 'muted small' }, '근거 카드가 없는 인자는 고를 수 없습니다. 체크한 인자는 판결서의 양형 이유에 쓸 수 있습니다.'),
+      h('p', { class: 'muted small' }, '기록에 근거가 있는 인자는 모두 권고 계산에 반영됩니다. 체크한 인자는 판결서의 양형 이유에 쓸 수 있습니다. 근거 카드가 없는 인자는 고를 수 없습니다.'),
       h('div', { class: 'cols' }, left, right),
     );
-    return { factorRows, suspRows, area, bar, susRec, months, monthsText, suspended, error, confirm };
+    return { factorRows, suspRows, area, bar, susRec, selected, months, monthsText, suspended, error, confirm };
   }
 
   return {
@@ -127,8 +119,8 @@ export function createSentencingPanel(c: Controller): Panel {
       sync(b.factorRows, [...s.sentencing.special, ...s.sentencing.general]);
       sync(b.suspRows, s.sentencing.susp);
 
-      const rr = currentRange(sc, s);
-      b.area.textContent = `${AREA_LABEL[rr.area]}${rr.adjusted ? ' (특별조정)' : ''}${rr.judgmentCall ? ' · 행위자 인자가 우세해 종합 판단 필요' : ''}`;
+      const rr = recordBasis(sc, s);
+      b.area.textContent = `${areaText(rr)}${rr.judgmentCall ? ' · 행위자 인자가 우세해 종합 판단 필요' : ''}`;
       const months = s.sentencing.months;
       const hasAddendum = s.judgment.addendum !== '';
       b.bar.update({
@@ -136,9 +128,15 @@ export function createSentencingPanel(c: Controller): Panel {
         months: months !== null && Number.isFinite(months) ? months : null,
         scaleMax: scaleMaxOf(sc.sentencing.ranges.aggravated.max, sc.closing.demandMonths, months),
       });
-      const rec = currentSuspRec(sc, s);
-      b.susRec.textContent = SUSP_LABEL[rec];
-      b.susRec.dataset.rec = rec;
+      b.susRec.textContent = SUSP_LABEL[rr.susp];
+      b.susRec.dataset.rec = rr.susp;
+      // 체크한 인자만으로 본 결과는 기록상 권고와 다를 때만 보조로 보인다.
+      const sel = selectedBasis(sc, s);
+      const differs = !sameBasis(sel, rr);
+      show(b.selected, differs);
+      b.selected.textContent = differs
+        ? `선택한 인자 기준: ${areaText(sel)} ${sel.range.min}~${sel.range.max}개월 · ${SUSP_LABEL[sel.susp]}`
+        : '';
 
       // 사용자가 입력 중인 값(예: "6.")을 덮어쓰지 않도록, 값이 다를 때만 반영.
       if (parseMonths(b.months.value) !== months && !(months !== null && Number.isNaN(months))) b.months.value = months === null ? '' : String(months);

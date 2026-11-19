@@ -217,3 +217,5 @@
 .judgment .judgment-doc { flex: 1; min-height: 0; max-height: none; }
 .judgment .reason-rows { max-height: none; }
 .rangebar { padding: 0 8px; }
+.susp-line { margin-top: 10px; }
+.selected-basis { margin: 6px 0 0; }

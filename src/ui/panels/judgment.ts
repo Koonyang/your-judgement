@@ -9,7 +9,8 @@ import { availableFactors, leeway } from '../../engine/sentencing';
 import type { GameState } from '../../engine/state';
 import { button, h, show } from '../dom';
 import { createRangeBar, scaleMaxOf } from './rangebar';
-import { AREA_LABEL, currentRange } from './sentencing';
+import { recordBasis } from '../sentencingBasis';
+import { AREA_LABEL } from './sentencing';
 import type { Panel } from './types';
 
 type Key = 'evidenceSlots' | 'favorable' | 'unfavorable' | 'deviationSlots';
@@ -37,7 +38,7 @@ export function createJudgmentPanel(c: Controller): Panel {
     h('h3', {}, '양형의 이유'),
     h('p', { class: 'muted small' }, '양형 인자·양형 카드·형광펜 문장을 유리한 정상 또는 불리한 정상에 끼웁니다.'),
     reasonsBox,
-    h('h3', {}, '권고범위'), rangeInfo, bar.el,
+    h('h3', {}, '권고범위 (항소심 기준)'), rangeInfo, bar.el,
   );
   const left = h('div', { class: 'col' },
     evidenceSec, sentencingSec, clerk, devSec,
@@ -126,10 +127,11 @@ export function createJudgmentPanel(c: Controller): Panel {
       const months = s.sentencing.months;
       let outside = false;
       if (guilty && months !== null) {
-        const rr = currentRange(sc, s);
+        // 범위 밖·여유폭·참여관 안내는 기록상 권고(항소심 기준)로 판단한다 (R11).
+        const rr = recordBasis(sc, s);
         const lw = leeway(rr.range, j.addendum !== '');
         outside = months < lw.min || months > lw.max;
-        rangeInfo.textContent = `${AREA_LABEL[rr.area]} · 선고형 ${formatSentence(months)}${s.sentencing.suspended ? ' (집행유예)' : ''}${outside ? ' · 범위 밖' : ''}`;
+        rangeInfo.textContent = `기록상 권고 ${AREA_LABEL[rr.area]} ${rr.range.min}~${rr.range.max}개월 · 선고형 ${formatSentence(months)}${s.sentencing.suspended ? ' (집행유예)' : ''}${outside ? ' · 범위 밖' : ''}`;
         bar.update({
           range: rr.range, leeway: j.addendum !== '' ? lw : null, demand: sc.closing.demandMonths, months,
           scaleMax: scaleMaxOf(sc.sentencing.ranges.aggravated.max, sc.closing.demandMonths, months),
