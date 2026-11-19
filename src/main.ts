@@ -4,6 +4,7 @@ import { loadScenario } from './engine/scenario/load';
 import { Controller } from './game/controller';
 import { BootScene } from './scenes/BootScene';
 import { CourtroomScene } from './scenes/CourtroomScene';
+import { PronounceScene } from './scenes/PronounceScene';
 import { mountOverlay } from './ui/overlay';
 import './ui/style.css';
 
@@ -17,7 +18,7 @@ const game = new Phaser.Game({
   height: 720,
   backgroundColor: '#1a1a2e',
   pixelArt: true,
-  scene: [BootScene, CourtroomScene],
+  scene: [BootScene, CourtroomScene, PronounceScene],
   callbacks: { preBoot: (g) => g.registry.set('controller', controller) },
 });
 

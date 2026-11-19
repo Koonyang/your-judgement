@@ -106,3 +106,114 @@
 .supp { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .btn.q { text-align: left; padding: 3px 12px; font-size: 15px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: auto; }
+
+/* ── 판단 단계(Task 10) ── */
+.stage { position: absolute; left: 24px; right: 24px; top: 56px; bottom: 16px; }
+.main.wide { width: 780px; max-height: 620px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.col > h3:first-child { margin-top: 0; }
+.stage-foot { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
+.clerk-note { background: var(--wood-dark); color: var(--mark); padding: 6px 10px; border-left: 4px solid var(--brass); margin: 10px 0; }
+.error { color: var(--warn); min-height: 1.4em; font-size: 14px; }
+
+/* 칩(토글 버튼) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn.chip { padding: 2px 10px; font-size: 14px; background: #f7f0de; }
+.btn.chip.on { background: var(--brass); box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.3); }
+.btn.chip.sm { padding: 0 8px; font-size: 13px; }
+
+/* 쟁점 보드 */
+.board-cells { display: flex; flex-direction: column; gap: 8px; }
+.cell { border: 2px solid var(--paper-dark); background: #fbf6ea; padding: 6px 10px; }
+.cell.proven { border-color: #4f7a45; }
+.cell.doubt { border-color: var(--warn); }
+.cell-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.cell-name { font-weight: bold; margin-right: auto; }
+.btn.mark { padding: 1px 10px; font-size: 14px; }
+.btn.mark.proven.on { background: #4f7a45; color: var(--paper); }
+.btn.mark.doubt.on { background: var(--warn); color: var(--paper); }
+.board-foot { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 12px; }
+.board-verdict { margin: 0; font-weight: bold; }
+.board-main .cell { padding: 10px 14px; }
+.board-main .board-cells { gap: 12px; }
+
+/* 모두절차 끝 보드 확인 모달 */
+.modal { position: absolute; inset: 0; background: rgba(13, 10, 8, 0.7); display: flex; align-items: center; justify-content: center; }
+.modal-box { width: 640px; background: var(--paper); border: 3px solid var(--brass); padding: 0 0 14px; }
+.modal-box > .panel { border: 0; box-shadow: none; }
+.modal-box > .stage-foot { padding: 0 20px; margin-top: 0; }
+
+/* 양형 */
+.guideline { margin: 0 0 4px; }
+.check { display: flex; align-items: center; gap: 8px; padding: 2px 0; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--wood-light); }
+.check .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--paper-dark); padding: 0 4px; }
+.check.disabled { color: var(--muted); cursor: default; }
+.check .why { margin-left: auto; }
+.area { font-weight: bold; margin-bottom: 4px; }
+.susp-rec { display: inline-block; padding: 0 10px; background: var(--paper-dark); font-weight: bold; }
+.susp-rec[data-rec="suspend"] { background: #cfe0c3; }
+.susp-rec[data-rec="prison"] { background: #e7c1b8; }
+.sentence-input { display: flex; align-items: center; gap: 8px; }
+.num, .text-input {
+  font: inherit; border: 2px solid var(--wood-dark); background: #fffaf0; color: var(--ink); padding: 3px 6px; border-radius: 0;
+}
+.num { width: 80px; }
+.text-input { width: 100%; box-sizing: border-box; }
+
+/* 권고범위 막대 */
+.rangebar { margin: 26px 0 4px; }
+.rb-track { position: relative; height: 22px; background: #e4d9c0; border: 2px solid var(--wood-dark); }
+.rb-leeway, .rb-range { position: absolute; top: 0; bottom: 0; }
+.rb-leeway { background: rgba(201, 164, 92, 0.45); }
+.rb-range { background: var(--brass); border-left: 2px solid var(--wood-dark); border-right: 2px solid var(--wood-dark); box-sizing: border-box; }
+.rb-demand, .rb-months { position: absolute; top: -6px; bottom: -6px; width: 0; }
+.rb-demand { border-left: 3px dashed var(--warn); }
+.rb-months { border-left: 3px solid var(--ink); }
+.rb-demand span, .rb-months span { position: absolute; left: 4px; font-size: 12px; white-space: nowrap; }
+.rb-demand span { top: -18px; color: var(--warn); }
+.rb-months span { bottom: -18px; color: var(--ink); }
+.rb-ticks { position: relative; height: 18px; margin-top: 18px; font-size: 11px; color: var(--muted); }
+.rb-tick { position: absolute; transform: translateX(-50%); }
+.rb-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); }
+.lg::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; }
+.lg.range::before { background: var(--brass); }
+.lg.leeway::before { background: rgba(201, 164, 92, 0.45); }
+.lg.demand::before { border-left: 3px dashed var(--warn); width: 0; }
+
+/* 판결서 */
+.reason-rows { display: flex; flex-direction: column; gap: 3px; max-height: 190px; overflow-y: auto; }
+.reason-row { display: grid; grid-template-columns: 64px 1fr auto auto; gap: 6px; align-items: center; font-size: 14px; }
+.reason-row .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.judgment-doc { background: #fbf6ea; border: 1px solid var(--paper-dark); padding: 12px 16px; font-size: 14px; max-height: 500px; overflow-y: auto; }
+.jd-title { text-align: center; font-size: 20px; letter-spacing: 0.4em; margin-bottom: 6px; }
+.jd-sec { margin-top: 8px; }
+.jd-h { font-weight: bold; }
+.jd-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.jd-sec p, .jd-sec ol { margin: 2px 0; }
+.jd-sec ol { padding-left: 20px; }
+.jd-add { font-style: italic; }
+
+/* 선고 */
+.btn.skip { position: absolute; right: 24px; bottom: 20px; }
+
+/* 항소 결과·기록실 */
+.appellants { font-size: 18px; margin: 0 0 6px; }
+.result-kind { display: inline-block; font-size: 22px; padding: 2px 14px; margin: 0 0 6px; background: var(--paper-dark); }
+.result-kind.reversed { background: var(--warn); color: var(--paper); }
+.result-kind.final { background: #cfe0c3; }
+.code { color: var(--warn); }
+.record-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.record-entry { border: 2px solid var(--paper-dark); background: #fbf6ea; padding: 6px 12px; }
+.record-entry.current { border-color: var(--brass); }
+.rec-head { display: flex; justify-content: space-between; font-weight: bold; }
+.rec-result { color: var(--warn); }
+.rec-remarks { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
+/* 판결서: 패널은 고정, 두 열이 각각 스크롤 */
+.stage.judgment { display: flex; flex-direction: column; overflow: hidden; }
+.judgment .cols { flex: 1; min-height: 0; align-items: stretch; }
+.judgment .col { min-height: 0; overflow-y: auto; padding-right: 6px; }
+.judgment .col:last-child { display: flex; flex-direction: column; overflow: hidden; }
+.judgment .judgment-doc { flex: 1; min-height: 0; max-height: none; }
+.judgment .reason-rows { max-height: none; }
+.rangebar { padding: 0 8px; }

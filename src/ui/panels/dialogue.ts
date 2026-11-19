@@ -29,8 +29,18 @@ export function createDialoguePanel(c: Controller): Panel {
   const interrupt = button('btn-interrupt', '제지', () => c.dispatch({ type: 'INTERRUPT' }), 'btn warn');
   const sustain = button('btn-sustain', '인용', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'sustain' }));
   const overrule = button('btn-overrule', '기각', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'overrule' }));
+  // 결심의 최후진술은 형광펜으로 표시할 수 있다(문장 일부를 드래그하거나, 선택이 없으면 대사 전체).
+  const hlClosing = button('btn-highlight-closing', '형광펜', () => {
+    const line = c.shownLine();
+    if (!line) return;
+    const sel = window.getSelection();
+    const picked = sel && text.contains(sel.anchorNode) && text.contains(sel.focusNode) ? sel.toString().trim() : '';
+    c.dispatch({ type: 'HIGHLIGHT', docId: 'closing', text: picked || line.text });
+    sel?.removeAllRanges();
+  });
+  hlClosing.addEventListener('mousedown', (e) => e.preventDefault());
   const suppEnd = button('btn-supp-end', '묻지 않음', () => c.dispatch({ type: 'END_SUPP' }));
-  const actions = h('div', { class: 'actions' }, interrupt, sustain, overrule, suppEnd, next);
+  const actions = h('div', { class: 'actions' }, hlClosing, interrupt, sustain, overrule, suppEnd, next);
   const el = h('section', { class: 'dialogue', testid: 'panel-dialogue' }, speaker, text, note, supp, actions);
 
   return {
@@ -47,7 +57,7 @@ export function createDialoguePanel(c: Controller): Panel {
       else text.textContent = NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
       text.classList.toggle('narration', !line);
 
-      note.textContent = objection ? `${objection.by === 'defense' ? '변호인' : '검사'}이 이의를 제기했습니다.` : '';
+      note.textContent = objection ? `${objection.by === 'defense' ? '변호인이' : '검사가'} 이의를 제기했습니다.` : '';
       show(note, !!objection);
 
       show(supp, examSupp);
@@ -67,6 +77,9 @@ export function createDialoguePanel(c: Controller): Panel {
       show(sustain, !!objection);
       show(overrule, !!objection);
       show(suppEnd, examSupp);
+      const closingStmt = s.phase === 'closing' && line?.speaker === 'defendant';
+      show(hlClosing, closingStmt);
+      hlClosing.disabled = closingStmt && s.highlights.some((x) => x.docId === 'closing' && x.text === line!.text);
       show(next, !objection && !examSupp);
       next.textContent = !line && NARRATION[s.phase] ? NARRATION[s.phase]!.next : '다음';
     },

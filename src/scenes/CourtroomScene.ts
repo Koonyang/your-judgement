@@ -12,6 +12,7 @@ export class CourtroomScene extends Phaser.Scene {
   private dim!: Phaser.GameObjects.Rectangle;
   private bob?: Phaser.Tweens.Tween;
   private unsubscribe?: () => void;
+  private lastPhase: GameState['phase'] | null = null;
 
   constructor() {
     super('court');
@@ -78,6 +79,9 @@ export class CourtroomScene extends Phaser.Scene {
     w.img.setTexture(defendantAtStand ? 'defendant' : 'witness');
 
     this.dim.setVisible(!COURT_PHASES.has(s.phase));
+    // 선고 연출은 별도 장면. 끝나면(FINISH_PRONOUNCE·건너뛰기) 장면이 스스로 멈춘다.
+    if (s.phase === 'pronounce' && this.lastPhase !== 'pronounce') this.scene.launch('pronounce');
+    this.lastPhase = s.phase;
 
     const line = c.shownLine();
     let seat: SeatKey | null = line?.speaker ?? null;

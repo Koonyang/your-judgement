@@ -1,9 +1,10 @@
 // 게임 컨트롤러: GameState를 들고 액션을 순수 엔진(reduce)에 넘긴 뒤 구독자에게 알린다.
 // DOM·Phaser 비의존 (Vitest node 환경에서 테스트).
+import { reviewAppeal } from '../engine/appeal';
 import { evalCond } from '../engine/cond';
 import { currentLine, reduce, suppFlag } from '../engine/reducer';
 import type { Line, Scenario, Speaker } from '../engine/scenario/schema';
-import { initialState, type Action, type GameState } from '../engine/state';
+import { initialState, type Action, type AppealOutcome, type GameState } from '../engine/state';
 
 /** 화면에 보여 줄 한 줄. 엔진 라인이거나, 보충신문 재생용 줄(질문·답변). */
 export type ShownLine = Pick<Line, 'speaker' | 'text'> & Partial<Pick<Line, 'id' | 'objection'>>;
@@ -22,6 +23,8 @@ export class Controller {
    * 화면은 질문과 답변을 이 큐로 한 줄씩 보여 준다(엔진 상태와 무관한 표시 전용).
    */
   private replay: ShownLine[] = [];
+  /** 항소 판정 결과. 리듀서는 outcome을 채우지 않으므로 appeal 단계에 들어설 때 여기서 계산해 둔다. */
+  private outcome: AppealOutcome | null = null;
 
   constructor(readonly sc: Scenario, from: GameState = initialState(sc)) {
     this.s = from;
@@ -29,6 +32,11 @@ export class Controller {
 
   get state(): GameState {
     return this.s;
+  }
+
+  /** appeal 단계 진입 시 계산한 reviewAppeal 결과(그 전에는 null). */
+  get appealOutcome(): AppealOutcome | null {
+    return this.outcome;
   }
 
   get replaying(): boolean {
@@ -40,6 +48,7 @@ export class Controller {
     const next = reduce(this.sc, this.s, a);
     if (next === this.s) return;
     if (a.type === 'ASK_SUPP') this.replay = this.suppReplay(a.questionId, this.s);
+    if (next.phase === 'appeal' && this.s.phase !== 'appeal') this.outcome = reviewAppeal(this.sc, next);
     this.s = next;
     this.emit();
   }

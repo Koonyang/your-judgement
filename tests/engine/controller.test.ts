@@ -1,7 +1,8 @@
 import raw from '../../data/scenarios/ep01.json';
 import { Controller } from '../../src/game/controller';
 import { loadScenario } from '../../src/engine/scenario/load';
-import type { GameState } from '../../src/engine/state';
+import { reviewAppeal } from '../../src/engine/appeal';
+import { initialState, type GameState } from '../../src/engine/state';
 
 const sc = loadScenario(raw);
 
@@ -59,5 +60,20 @@ describe('Controller', () => {
     const c = new Controller(sc);
     expect(c.speakerName('judge')).toBe('재판장');
     expect(c.speakerName('witness')).toBe('증인');
+  });
+
+  it('appeal 단계에 들어설 때 reviewAppeal 결과를 계산해 들고, 엔진 상태는 건드리지 않는다', () => {
+    const base = initialState(sc);
+    const board = Object.fromEntries(sc.cells.map((x) => [x.id, { cards: ['c_cctv'], mark: 'proven' as const }]));
+    const from: GameState = {
+      ...base, phase: 'pronounce', heldCards: ['c_cctv'], board,
+      sentencing: { ...base.sentencing, months: 6, suspended: true },
+    };
+    const c = new Controller(sc, from);
+    expect(c.appealOutcome).toBeNull();
+    c.dispatch({ type: 'FINISH_PRONOUNCE' });
+    expect(c.state.phase).toBe('appeal');
+    expect(c.state.outcome).toBeNull();
+    expect(c.appealOutcome).toEqual(reviewAppeal(sc, c.state));
   });
 });
