@@ -299,47 +299,61 @@
 .jd-sec.drop-target { outline: 1px dashed var(--hanji-2); outline-offset: 1px; }
 
 /* 양형 숙고(AR): 종이가 아니라 법정 위 허공에 떠 있는 빛의 선 */
-.panel.sentencing {
+.panel.sentencing.weigh {
   --holo: #ffe0b0; --holo-line: rgb(255 205 140 / 0.75); --holo-glow: rgb(255 196 120 / 0.45);
   background: transparent; border: 0; box-shadow: none; color: var(--holo);
   text-shadow: 0 0 3px var(--holo-glow); animation: holo-in 0.5s ease-out;
 }
-.panel.sentencing::before { /* 주사선 */
+.panel.sentencing.weigh::before { /* 주사선 */
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: repeating-linear-gradient(transparent 0 2px, rgb(255 210 150 / 0.04) 2px 3px);
 }
 @keyframes holo-in { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: none; } }
-.panel.sentencing h2 { border-color: var(--holo-line); }
-.panel.sentencing .muted, .panel.sentencing .pan-cap, .panel.sentencing .pan-chip .src, .panel.sentencing .rb-ticks,
-.panel.sentencing .calc.off { color: rgb(255 224 176 / 0.55); }
-.panel.sentencing .btn, .panel.sentencing .pan-chip, .panel.sentencing .num, .panel.sentencing .susp-rec {
+.panel.sentencing.weigh h2 { border-color: var(--holo-line); }
+.panel.sentencing.weigh .muted, .panel.sentencing.weigh .pan-cap, .panel.sentencing.weigh .pan-chip .src, .panel.sentencing.weigh .rb-ticks,
+.panel.sentencing.weigh .calc.off { color: rgb(255 224 176 / 0.55); }
+.panel.sentencing.weigh .btn, .panel.sentencing.weigh .pan-chip, .panel.sentencing.weigh .num, .panel.sentencing.weigh .susp-rec {
   background: rgb(255 196 120 / 0.08); color: var(--holo); border: 1px solid var(--holo-line);
   box-shadow: 0 0 4px var(--holo-glow); text-shadow: inherit;
 }
-.panel.sentencing .btn.primary { background: rgb(255 196 120 / 0.28); }
-.panel.sentencing .pan-chip.hl { border-style: dashed; }
-.panel.sentencing .scale .post, .panel.sentencing .scale .beam { animation: float 3s ease-in-out infinite; } /* 접시는 고정(누르기 쉽게) */
+.panel.sentencing.weigh .btn.primary { background: rgb(255 196 120 / 0.28); }
+.panel.sentencing.weigh .pan-chip.hl { border-style: dashed; }
+.panel.sentencing.weigh .scale .post, .panel.sentencing.weigh .scale .beam { animation: float 3s ease-in-out infinite; } /* 접시는 고정(누르기 쉽게) */
 @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1px; } }
-.panel.sentencing .scale .post, .panel.sentencing .scale .post::after, .panel.sentencing .scale .beam {
+.panel.sentencing.weigh .scale .post, .panel.sentencing.weigh .scale .post::after, .panel.sentencing.weigh .scale .beam {
   background: var(--holo-line); box-shadow: 0 0 4px var(--holo-glow);
 }
-.panel.sentencing .pan { background: rgb(255 196 120 / 0.06); border-color: var(--holo-line); box-shadow: 0 2px 6px var(--holo-glow); }
-.panel.sentencing .calc-lines { border: 1px dashed var(--holo-line); }
-.panel.sentencing .rb-track { background: transparent; border-color: var(--holo-line); box-shadow: 0 0 4px var(--holo-glow); }
-.panel.sentencing .rb-range { background: rgb(255 196 120 / 0.35); border-color: var(--holo-line); }
-.panel.sentencing .rb-months { border-color: var(--holo); }
-.panel.sentencing .rb-months span { color: var(--holo); }
-.panel.sentencing .check input { accent-color: var(--accent); }
-.panel.sentencing .scale.wobble .beam { animation: float 3s ease-in-out infinite, wobble 1.2s ease-in-out infinite; }
+.panel.sentencing.weigh .pan { background: rgb(255 196 120 / 0.06); border-color: var(--holo-line); box-shadow: 0 2px 6px var(--holo-glow); }
+.panel.sentencing.weigh .calc-lines { border: 1px dashed var(--holo-line); }
+.panel.sentencing.weigh .rb-track { background: transparent; border-color: var(--holo-line); box-shadow: 0 0 4px var(--holo-glow); }
+.panel.sentencing.weigh .rb-range { background: rgb(255 196 120 / 0.35); border-color: var(--holo-line); }
+.panel.sentencing.weigh .rb-months { border-color: var(--holo); }
+.panel.sentencing.weigh .rb-months span { color: var(--holo); }
+.panel.sentencing.weigh .check input { accent-color: var(--accent); }
+.panel.sentencing.weigh .scale.wobble .beam { animation: float 3s ease-in-out infinite, wobble 1.2s ease-in-out infinite; }
 #ui-root.ar .nameplate { display: none; }
 /* 양형 1단계 저울질: 천칭이 주인공. 카드와 수치 없는 막대만 곁에 둔다 */
 .sentencing.weigh .decide-only, .sentencing:not(.weigh) .weigh-only { display: none; }
-.sentencing.weigh .sent-grid { grid-template-columns: 130px 1fr; height: calc(100% - 26px); }
-.sentencing.weigh .scale { height: 220px; transform: scale(1.8); transform-origin: top center; margin: 8px 0 0; }
-.sentencing.weigh .pan-tray { margin-top: 30px; }
 .weigh-foot { position: absolute; right: 10px; bottom: 8px; }
 .rangebar.bare .rb-ticks, .rangebar.bare .rb-legend, .rangebar.bare .rb-demand, .rangebar.bare .rb-months, .rangebar.bare .rb-leeway { display: none; }
 .rangebar.bare { margin-top: 4px; }
 .sentencing .scale { pointer-events: none; } .sentencing .scale .pan { pointer-events: auto; } /* 확대된 천칭 상자가 카드 줄을 가리지 않게 */
-.sentencing:not(.weigh) .sent-grid { grid-template-columns: 1fr 140px; } /* 판결 단계: 카드 줄이 빠진 두 칸 */
 .sentencing .stage-foot { flex-wrap: wrap; } .sentencing .stage-foot .btn { white-space: nowrap; padding: 1px 5px; }
+/* 저울질 배치: 천칭이 화면 가운데, 대기 카드는 책상 위 종이 카드, 판결은 서류(.weigh가 없으면 보통 종이 패널) */
+.sentencing:not(.weigh) .scale { display: none; }
+.sentencing:not(.weigh) .sent-grid { grid-template-columns: 1fr 140px; }
+.sentencing.weigh .sent-grid { display: block; }
+.sentencing.weigh .sent-grid > .col:nth-child(2) { position: absolute; left: 0; right: 0; top: 0; }
+.sentencing.weigh .scale { height: 165px; transform: scale(1.5); transform-origin: top center; margin: 16px 0 0; }
+.sentencing.weigh .rangebar { width: 280px; margin: 0 auto; }
+.sentencing.weigh .pan-tray {
+  position: absolute; left: 20px; right: 120px; top: 202px; flex-direction: row; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.panel.sentencing.weigh .pan-tray .pan-chip { /* 책상 위 실물 카드: 빛의 선이 아니라 종이 */
+  width: 92px; height: 52px; white-space: normal; overflow: hidden; text-overflow: clip; text-shadow: none;
+  background: var(--hanji); color: var(--ink); border: 1px solid var(--ink); box-shadow: 2px 2px 0 rgb(0 0 0 / 0.45);
+  font-size: 9px; padding: 3px 4px; transform: rotate(-1.5deg);
+}
+.panel.sentencing.weigh .pan-tray .pan-chip:nth-child(even) { transform: rotate(1.2deg); }
+.panel.sentencing.weigh .pan-tray .pan-chip .src { display: block; color: var(--muted); }
+.panel.sentencing.weigh .pan-tray .pan-chip.hl { background: #efe2b8; border-style: solid; }
