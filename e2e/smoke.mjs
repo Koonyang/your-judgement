@@ -78,8 +78,13 @@ try {
   await tid('chk-suspended').check();
   await tid('btn-confirm-sentencing').click();
 
-  // 판결서
-  for (const id of ['slot-evidence-c_cctv', 'slot-evidence-c_receipt', 'slot-fav-f_livelihood', 'slot-fav-f_nonpunish', 'slot-unfav-c_record']) {
+  // 판결서: CCTV 카드는 끌어다 놓기로. 먼저 밖(제목)에 놓아 변화가 없는지 본 뒤 증거의 요지에 놓는다.
+  const cctv = tid('slot-evidence-c_cctv');
+  await cctv.dragTo(page.locator('[data-testid="panel-judgment"] h2'));
+  if ((await cctv.getAttribute('aria-pressed')) !== 'false') throw new Error('밖에 놓았는데 끼워짐');
+  await cctv.dragTo(tid('drop-evidence'));
+  if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('드래그로 끼워지지 않음');
+  for (const id of ['slot-evidence-c_receipt', 'slot-fav-f_livelihood', 'slot-fav-f_nonpunish', 'slot-unfav-c_record']) {
     if (await vis(id)) await tid(id).click();
   }
   await tid('btn-confirm-judgment').click();

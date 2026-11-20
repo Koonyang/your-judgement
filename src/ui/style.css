@@ -258,3 +258,12 @@
 .rangebar { padding: 0 4px; }
 .susp-line { margin-top: 5px; }
 .selected-basis { margin: 3px 0 0; }
+
+/* 끌어다 놓기 */
+.drag-source { cursor: grab; user-select: none; }
+.drag-source.dragging { opacity: 0.4; }
+.drag-source.selected { outline: 1px dashed var(--seal); outline-offset: 1px; }
+.ghost { box-shadow: 3px 3px 0 rgb(0 0 0 / 0.45); }
+.card-tray { margin-bottom: 4px; padding: 3px; border: 1px dashed var(--hanji-2); }
+.btn.chip.card { background: var(--hanji-2); }
+.jd-sec.drop-target { outline: 1px dashed var(--hanji-2); outline-offset: 1px; }

@@ -7,6 +7,7 @@ import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
 import { button, h } from '../dom';
 import type { Panel } from './types';
+import { createDnd } from '../drag';
 
 export type BoardMode = 'main' | 'drawer' | 'readonly';
 
@@ -15,6 +16,8 @@ const MARK_LABEL: Record<Exclude<CellMark, null>, string> = { proven: '증명됨
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   // 서랍 인스턴스는 유무죄 판단 화면과 testid가 겹치지 않게 접두어를 붙인다.
   const pre = mode === 'drawer' ? 'drawer-' : '';
+  const dnd = createDnd();
+  const tray = h('div', { class: 'chips card-tray', testid: `${pre}board-tray` });
   const cells = h('div', { class: 'board-cells' });
   const verdictLine = h('p', { class: 'board-verdict', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
   const confirm = button('btn-confirm-verdict', '판단 확정', () => c.dispatch({ type: 'CONFIRM_VERDICT' }), 'btn primary');
@@ -26,6 +29,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     { class: `panel board board-${mode}`, testid: `panel-board-${mode}` },
     h('h2', {}, '쟁점 보드'),
     h('p', { class: 'muted small' }, intro),
+    ...(mode === 'readonly' ? [] : [tray]),
     cells,
     ...(mode === 'main' ? [h('div', { class: 'board-foot' }, verdictLine, confirm)] : []),
   );
@@ -60,8 +64,11 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       b.title = card.text;
       return b;
     });
-    return h('div', { class: `cell ${st.mark ?? 'unmarked'}`, testid: `${pre}board-cell-${cellId}` }, head,
+    const cell = h('div', { class: `cell ${st.mark ?? 'unmarked'}`, testid: `${pre}board-cell-${cellId}` }, head,
       h('div', { class: 'chips' }, ...(chips.length ? chips : [h('span', { class: 'muted small' }, '연결할 수 있는 증거가 없습니다.')])));
+    // 위 카드 줄에서 칸으로 끌어다 놓으면 연결(이미 연결돼 있으면 그대로).
+    dnd.target(cell, (cardId) => { if (!(c.state.board[cellId]?.cards ?? []).includes(cardId)) c.dispatch({ type: 'LINK_CARD', cellId, cardId }); });
+    return cell;
   }
 
   return {
@@ -71,6 +78,13 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       lastBoard = s.board;
       lastHeld = s.heldCards;
       cells.replaceChildren(...sc.cells.map((cell) => cellView(s, sc, cell.id, cell.name)));
+      if (mode !== 'readonly') {
+        tray.replaceChildren(...sc.cards.filter((x) => x.kind === 'evidence' && s.heldCards.includes(x.id)).map((card) => {
+          const t = h('span', { class: 'btn chip card', testid: `${pre}board-tray-${card.id}`, title: card.text }, card.title);
+          dnd.source(t, card.id);
+          return t;
+        }));
+      }
       if (mode === 'main') {
         const ok = canConfirmVerdict(s.board);
         confirm.disabled = !ok;

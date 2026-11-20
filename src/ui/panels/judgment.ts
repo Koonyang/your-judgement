@@ -10,6 +10,7 @@ import type { GameState } from '../../engine/state';
 import { button, h, show } from '../dom';
 import { createRangeBar, scaleMaxOf } from './rangebar';
 import { recordBasis } from '../sentencingBasis';
+import { createDnd } from '../drag';
 import { AREA_LABEL } from './sentencing';
 import type { Panel } from './types';
 
@@ -20,10 +21,11 @@ const HL_SRC: Record<string, string> = { indictment: '공소장', defenseOpinion
 const tid = (id: string) => id.replace(/:/g, '-');
 
 export function createJudgmentPanel(c: Controller): Panel {
+  const dnd = createDnd();
   const el = h('section', { class: 'panel stage judgment', testid: 'panel-judgment' });
   const evidenceBox = h('div', { class: 'chips' });
   const reasonsBox = h('div', { class: 'reason-rows' });
-  const devBox = h('div', { class: 'chips' });
+  const devBox = h('div', { class: 'chips', testid: 'drop-deviation' });
   const sentencingSec = h('div', {});
   const devSec = h('div', {}, h('h3', {}, '이탈 사유'), h('p', { class: 'muted small' }, '권고범위와 여유폭을 넘어선 형의 근거가 될 양형 인자를 끼웁니다.'), devBox);
   const clerk = h('p', { class: 'clerk-note', testid: 'judgment-clerk-note' }, '참여관: 양형기준을 벗어나면 판결서에 이유를 적어야 합니다.');
@@ -56,6 +58,11 @@ export function createJudgmentPanel(c: Controller): Panel {
     if (!on && key === 'unfavorable') patch.favorable = j.favorable.filter((x) => x !== id);
     c.dispatch({ type: 'SET_JUDGMENT', patch });
   };
+  /** 끌어다 놓기: 슬롯에 넣기만 한다(이미 있으면 그대로). 켜진 칩을 밖에 놓으면 뺀다. */
+  const add = (key: Key, id: string) => { if (!c.state.judgment[key].includes(id)) toggle(key, id); };
+  const dragChip = (b: HTMLElement, key: Key, id: string) =>
+    dnd.source(b, id, { outside: () => { if (c.state.judgment[key].includes(id)) toggle(key, id); } });
+  dnd.target(devBox, (id) => add('deviationSlots', id));
   const chip = (testid: string, label: string, on: boolean, onClick: () => void, cls = 'btn chip') => {
     const b = button(testid, label, onClick, cls);
     b.classList.toggle('on', on);
@@ -75,6 +82,12 @@ export function createJudgmentPanel(c: Controller): Panel {
     return [...factors, ...cards, ...hls];
   }
 
+  function evidenceDrop(el: HTMLElement): HTMLElement {
+    el.dataset.testid = 'drop-evidence';
+    dnd.target(el, (id) => add('evidenceSlots', id));
+    return el;
+  }
+
   function renderPreview(s: GameState, sc: Scenario) {
     const d = assembleJudgment(sc, s);
     const sec = (t: string, ...body: (Node | string)[]) => h('div', { class: 'jd-sec' }, h('div', { class: 'jd-h' }, t), ...body);
@@ -90,7 +103,7 @@ export function createJudgmentPanel(c: Controller): Panel {
     } else {
       parts.push(
         sec('범죄사실', h('p', {}, d.facts)),
-        sec('증거의 요지', list(d.evidenceSummary, '(비어 있음)')),
+        evidenceDrop(sec('증거의 요지', list(d.evidenceSummary, '(비어 있음)'))),
         sec('법령의 적용', h('p', {}, d.lawApplied)),
         sec('양형의 이유',
           h('div', { class: 'jd-sub' }, '유리한 정상'), list(d.sentencingReasons.favorable, '(비어 있음)'),
@@ -113,8 +126,11 @@ export function createJudgmentPanel(c: Controller): Panel {
       const j = s.judgment;
 
       const evCards = sc.cards.filter((x) => x.kind === 'evidence' && s.heldCards.includes(x.id));
-      evidenceBox.replaceChildren(...evCards.map((x) =>
-        chip(`slot-evidence-${x.id}`, x.title, j.evidenceSlots.includes(x.id), () => toggle('evidenceSlots', x.id))));
+      evidenceBox.replaceChildren(...evCards.map((x) => {
+        const b = chip(`slot-evidence-${x.id}`, x.title, j.evidenceSlots.includes(x.id), () => toggle('evidenceSlots', x.id));
+        dragChip(b, 'evidenceSlots', x.id);
+        return b;
+      }));
 
       reasonsBox.replaceChildren(...reasonCandidates(s, sc).map((x) => h('div', { class: 'reason-row' },
         h('span', { class: 'src small muted' }, x.src),
@@ -142,8 +158,11 @@ export function createJudgmentPanel(c: Controller): Panel {
       show(devSec, outside && !tutorial);
       if (outside && !tutorial) {
         const avail = availableFactors(sc.sentencing.factors, new Set(s.heldCards));
-        devBox.replaceChildren(...avail.map((f) =>
-          chip(`slot-dev-${f.id}`, f.name, j.deviationSlots.includes(f.id), () => toggle('deviationSlots', f.id))));
+        devBox.replaceChildren(...avail.map((f) => {
+          const b = chip(`slot-dev-${f.id}`, f.name, j.deviationSlots.includes(f.id), () => toggle('deviationSlots', f.id));
+          dragChip(b, 'deviationSlots', f.id);
+          return b;
+        }));
       }
 
       if (document.activeElement !== addendum && addendum.value !== j.addendum) addendum.value = j.addendum;
