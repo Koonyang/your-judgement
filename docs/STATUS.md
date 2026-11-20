@@ -4,7 +4,7 @@
 
 ## 검수 사이트 (아티팩트 "Your Judgement", 고정됨)
 - 첫 화면 = 안내 페이지(검수 시작 링크 + 패치 내역·현재 상황 영수증), 게임은 `game/index.html`
-- 반영 방법: `npx vite build --base ./` → `dist/assets/*`를 `game/assets/`로, `game/index.html`은 창 맞춤 래퍼(#ui-root 640×360 scale(2))에서 해시 파일명만 교체 → 같은 URL로 다시 게시. 영수증의 커밋·패치 내역도 같이 갱신
+- 반영 방법: `deploy/build-artifact.sh <폴더>` → 그 폴더를 같은 아티팩트 URL로 게시(index.html + game/index.html + game/assets/*, 이전 해시 파일은 삭제). 영수증은 `deploy/artifact/index.html`에서 커밋·패치 내역 갱신. 게임 래퍼 `deploy/artifact/game.template.html`: 창 맞춤, 휴대폰 첫 터치에 전체 화면·가로 잠금 시도, 세로면 무대를 90도 돌려 표시
 
 ## 확정된 것
 - 장르: 2D 도트 감성 재판 게임. 플레이어는 대한민국 판사

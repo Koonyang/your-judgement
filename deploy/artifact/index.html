@@ -1,0 +1,162 @@
+<title>Your Judgement</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<style>
+/* 법정은 늘 어둡다: 먹색 바탕 위에 한지색 영수증 한 장. 단일 테마(의도) */
+:root {
+  --ground: #0e0f13;
+  --ground-2: #15161c;
+  --paper: #e8dcc2;
+  --paper-2: #d6c7a6;
+  --ink: #2a221b;
+  --muted: #7a6c5a;
+  --seal: #b8382e;
+  --lamp: #e0b060;
+  --display: "Nanum Myeongjo", "Batang", serif;
+  --mono: "Nanum Gothic Coding", "D2Coding", ui-monospace, monospace;
+  color-scheme: dark;
+}
+html { background: var(--ground); }
+body {
+  background: radial-gradient(ellipse 70% 45% at 50% 0%, #2a2018 0%, var(--ground) 70%) var(--ground);
+  color: var(--paper);
+  font: 15px/1.6 var(--mono);
+  min-height: 100vh;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+.head { text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.head h1 { margin: 0; font: 800 34px/1.15 var(--display); letter-spacing: 0.02em; text-wrap: balance; }
+.head p { margin: 0; color: var(--paper-2); font-size: 13px; }
+
+.enter {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; text-decoration: none; color: var(--ground);
+  background: var(--lamp); border: 1px solid #f3d08a; box-shadow: 0 0 0 4px rgb(224 176 96 / 0.15), 0 10px 30px rgb(224 176 96 / 0.18);
+  font: 700 18px/1.2 var(--mono);
+}
+.enter small { display: block; font-weight: 400; font-size: 12px; opacity: 0.75; margin-top: 4px; }
+.enter .arrow { font-size: 24px; }
+.enter:hover { filter: brightness(1.06); }
+.enter:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+/* 영수증: 위아래 톱니 가장자리 */
+.receipt {
+  --tooth: 8px;
+  background: var(--paper); color: var(--ink); padding: 26px 22px;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--tooth) * 2) 100%,
+                conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(var(--tooth) * 2) 100%;
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+  font-size: 13px;
+}
+.r-title { text-align: center; font: 800 18px var(--display); letter-spacing: 0.3em; margin: 0; }
+.r-sub { text-align: center; color: var(--muted); font-size: 11px; margin: 4px 0 0; }
+.cut { border: 0; border-top: 1px dashed var(--muted); margin: 14px 0; }
+.r-h { font-weight: 700; letter-spacing: 0.12em; margin: 0 0 8px; }
+dl.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+.ok { color: #3f6a37; font-weight: 700; }
+ul.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+ul.items li { display: grid; grid-template-columns: 1.2em 1fr; gap: 4px; }
+ul.items li::before { content: "·"; color: var(--muted); }
+ul.items.todo li::before { content: "□"; }
+.day { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin: 12px 0 6px; }
+.day:first-of-type { margin-top: 0; }
+.total { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; }
+.stamp {
+  display: inline-block; margin: 16px auto 0; padding: 4px 10px; border: 2px solid var(--seal); color: var(--seal);
+  font: 800 13px var(--display); letter-spacing: 0.2em; transform: rotate(-4deg);
+}
+.foot { text-align: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .enter { transition: filter 0.15s; }
+}
+@media (max-width: 420px) {
+  .head h1 { font-size: 28px; }
+  .receipt { padding: 22px 16px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1>Your Judgement</h1>
+    <p>2D 도트 재판 게임 · 1화 「도시락 두 개」 검수판</p>
+  </header>
+
+  <a class="enter" href="game/index.html">
+    <span>검수 시작<small>1화를 처음부터 진행합니다 · 휴대폰은 가로로 들고 보세요</small></span>
+    <span class="arrow" aria-hidden="true">→</span>
+  </a>
+
+  <article class="receipt" aria-label="패치 내역과 현재 상황">
+    <p class="r-title">검 수 영 수 증</p>
+    <p class="r-sub">2026. 11. 20. 반영 · 커밋 11856b2</p>
+    <hr class="cut">
+
+    <p class="r-h">현재 상황</p>
+    <dl class="kv">
+      <dt>진행 범위</dt><dd>1화 사건 대기열 → 판결 기록실</dd>
+      <dt>단위 테스트</dt><dd class="ok">154 / 154 통과</dd>
+      <dt>1화 자동 진행(e2e)</dt><dd class="ok">통과</dd>
+      <dt>브랜치</dt><dd>ccr-2d3777f9-6euads</dd>
+      <dt>main 병합</dt><dd>대기</dd>
+    </dl>
+    <hr class="cut">
+
+    <p class="r-h">패치 내역</p>
+    <div class="day"><span>2026. 11. 20. (2차)</span><span>대화·제지</span></div>
+    <ul class="items">
+      <li>대사 줄을 화면 맨 아래로 내리고 글자를 키움</li>
+      <li>선택지가 없으면 화면 아무 데나 눌러 다음 대사로</li>
+      <li>제지는 책상 위 마이크: 누르면 「재판장: 잠깐.」</li>
+      <li>재판장 본인이 말하는 중에는 제지 불가</li>
+      <li>휴대폰 가로 고정: 첫 터치에 전체 화면·가로 잠금 시도, 막히면 세로에서도 화면을 돌려 가로로 표시</li>
+    </ul>
+    <div class="day"><span>2026. 11. 20.</span><span>화면 틀</span></div>
+    <ul class="items">
+      <li>판사 시점 법정: 법대에서 내려다보는 구도, 판사는 화면에 없음</li>
+      <li>화면 3단: 법정 / 초상화 대사 줄 / 내 책상, 640×360 도트를 2배로</li>
+      <li>팔레트 「스탠드 빛」: 먹색 법정, 책상에만 따뜻한 불빛, 한지색 서류</li>
+      <li>책상의 서류를 집어 읽기. 서류는 세로 85%, 양옆으로 법정이 보임</li>
+      <li>법정 인물이 저마다 숨쉬듯 미세하게 움직임</li>
+      <li>증거목록을 실제 양식(B1280) 칸 배치로, ○/× 표시</li>
+      <li>판결서·쟁점 보드에 카드 끌어다 끼우기 (클릭도 가능)</li>
+      <li>양형 ① 저울질: 허공의 천칭에 책상 위 카드를 올림, 수치 없는 권고 막대</li>
+      <li>양형 ② 판결: 주문 빈칸을 채우는 서류, 권고·인자 설명은 참고로</li>
+      <li>평가 용어 「기울어짐」→「편향」</li>
+      <li>수정: 끼운 카드가 슬롯 밖에 놓이면 빠지던 문제, 접시 카드 클릭으로 내리기</li>
+    </ul>
+    <div class="day"><span>2026. 11. 19.</span><span>1화 수직 슬라이스</span></div>
+    <ul class="items">
+      <li>1화 시나리오 데이터, 판정 엔진, 공판~기록실 전체 흐름</li>
+    </ul>
+    <hr class="cut">
+
+    <p class="r-h">검수해 볼 것</p>
+    <ul class="items todo">
+      <li>휴대폰에서 대사 넘기기·마이크 제지·이의 결정 버튼이 잘 눌리는지</li>
+      <li>신문 중 서류를 펼쳐도 법정이 살아 있게 느껴지는지</li>
+      <li>저울질: 카드를 올릴 때 천칭과 막대가 함께 움직이는지, 반대 접시는 튕기는지</li>
+      <li>판결 서류에서 주문을 채우고 확정하기까지 흐름</li>
+    </ul>
+    <hr class="cut">
+
+    <p class="r-h">남은 일</p>
+    <ul class="items">
+      <li>증거목록 ○/× 직접 기입: 게임 규칙 결정 대기</li>
+      <li>법정 좌석 좌우 배치 고증 확인</li>
+      <li>최종 도트 그림 (지금은 플레이스홀더)</li>
+      <li>2화 데이터 전: 질문 id 중복 검사</li>
+      <li>터치 조작 다듬기 (탭이 드래그로 잡히는 문제 등)</li>
+    </ul>
+    <hr class="cut">
+
+    <div class="total"><span>이번 반영</span><span>커밋 18건</span></div>
+    <div class="foot"><span class="stamp">검 수 대 기</span></div>
+  </article>
+</div>

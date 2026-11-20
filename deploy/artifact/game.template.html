@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Judgement</title>
+<style>
+html,body{margin:0;height:100%;background:#07080a;overflow:hidden;color-scheme:dark}
+#fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1280px;height:720px;position:relative;flex:none;transform-origin:center center;box-shadow:0 0 0 1px #3a2c20}
+#game{position:absolute;inset:0}
+#ui-root{position:absolute;left:0;top:0;width:640px;height:360px;transform:scale(2);transform-origin:0 0;pointer-events:none}
+#ui-root>*{pointer-events:auto}
+#back{position:fixed;left:10px;top:8px;font:12px sans-serif;color:#8d8272;text-decoration:none;z-index:10}
+#back:hover{color:#e0b060}
+body.rotated #back{display:none}
+</style>
+<link rel="stylesheet" href="./assets/__CSS__">
+</head>
+<body>
+<a id="back" href="../index.html">← 검수 안내</a>
+<div id="fit"><div id="stage"><div id="game"></div><div id="ui-root"></div></div></div>
+<script>
+// 창 맞춤 + 가로 고정. 휴대폰 첫 터치에 전체 화면·가로 잠금을 시도하고(뷰어가 막으면 실패),
+// 그래도 세로로 들고 있으면 무대를 90도 돌려 가로로 보여 준다.
+(function(){
+  var s=document.getElementById('stage');
+  function f(){
+    var portrait=innerHeight>innerWidth, W=portrait?innerHeight:innerWidth, H=portrait?innerWidth:innerHeight;
+    var k=Math.min(W/1280,H/720,1);
+    s.style.transform=(portrait?'rotate(90deg) ':'')+'scale('+k+')';
+    document.body.classList.toggle('rotated',portrait);
+  }
+  addEventListener('resize',f);addEventListener('orientationchange',f);f();
+  if(matchMedia('(pointer: coarse)').matches){
+    addEventListener('pointerdown',function(){
+      var d=document.documentElement,p=d.requestFullscreen?d.requestFullscreen():null;
+      Promise.resolve(p).then(function(){return screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');}).catch(function(){});
+    },{once:true});
+  }
+})();
+</script>
+<script type="module" src="./assets/__JS__"></script>
+</body>
+</html>
