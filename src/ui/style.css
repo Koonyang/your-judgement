@@ -93,6 +93,9 @@
 
 .main, .drawer, .stage { position: absolute; left: 6px; right: 6px; top: 6px; bottom: 6px; z-index: 10; }
 #ui-root.dl-on .main, #ui-root.dl-on .drawer, #ui-root.dl-on .stage { bottom: 56px; }
+/* 기록·증거목록·쟁점 메모: 화면을 덮지 않는 종이. 넘치는 내용은 종이 안에서 스크롤 */
+#ui-root.paper .drawer { left: 110px; right: 110px; top: 122px; transform: rotate(-0.4deg); box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5); }
+#ui-root.paper .zoom-dim, #ui-root.ar .zoom-dim { top: 150px; background: rgb(7 8 10 / 0.35); }
 #ui-root.zoomed .dialogue { top: 310px; }
 .docket { text-align: center; }
 .case-file {
@@ -294,3 +297,38 @@
 .card-tray { margin-bottom: 4px; padding: 3px; border: 1px dashed var(--hanji-2); }
 .btn.chip.card { background: var(--hanji-2); }
 .jd-sec.drop-target { outline: 1px dashed var(--hanji-2); outline-offset: 1px; }
+
+/* 양형 숙고(AR): 종이가 아니라 법정 위 허공에 떠 있는 빛의 선 */
+.panel.sentencing {
+  --holo: #ffe0b0; --holo-line: rgb(255 205 140 / 0.75); --holo-glow: rgb(255 196 120 / 0.45);
+  background: transparent; border: 0; box-shadow: none; color: var(--holo);
+  text-shadow: 0 0 3px var(--holo-glow); animation: holo-in 0.5s ease-out;
+}
+.panel.sentencing::before { /* 주사선 */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 2px, rgb(255 210 150 / 0.04) 2px 3px);
+}
+@keyframes holo-in { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: none; } }
+.panel.sentencing h2 { border-color: var(--holo-line); }
+.panel.sentencing .muted, .panel.sentencing .pan-cap, .panel.sentencing .pan-chip .src, .panel.sentencing .rb-ticks,
+.panel.sentencing .calc.off { color: rgb(255 224 176 / 0.55); }
+.panel.sentencing .btn, .panel.sentencing .pan-chip, .panel.sentencing .num, .panel.sentencing .susp-rec {
+  background: rgb(255 196 120 / 0.08); color: var(--holo); border: 1px solid var(--holo-line);
+  box-shadow: 0 0 4px var(--holo-glow); text-shadow: inherit;
+}
+.panel.sentencing .btn.primary { background: rgb(255 196 120 / 0.28); }
+.panel.sentencing .pan-chip.hl { border-style: dashed; }
+.panel.sentencing .scale .post, .panel.sentencing .scale .beam { animation: float 3s ease-in-out infinite; } /* 접시는 고정(누르기 쉽게) */
+@keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -1px; } }
+.panel.sentencing .scale .post, .panel.sentencing .scale .post::after, .panel.sentencing .scale .beam {
+  background: var(--holo-line); box-shadow: 0 0 4px var(--holo-glow);
+}
+.panel.sentencing .pan { background: rgb(255 196 120 / 0.06); border-color: var(--holo-line); box-shadow: 0 2px 6px var(--holo-glow); }
+.panel.sentencing .calc-lines { border: 1px dashed var(--holo-line); }
+.panel.sentencing .rb-track { background: transparent; border-color: var(--holo-line); box-shadow: 0 0 4px var(--holo-glow); }
+.panel.sentencing .rb-range { background: rgb(255 196 120 / 0.35); border-color: var(--holo-line); }
+.panel.sentencing .rb-months { border-color: var(--holo); }
+.panel.sentencing .rb-months span { color: var(--holo); }
+.panel.sentencing .check input { accent-color: var(--accent); }
+.panel.sentencing .scale.wobble .beam { animation: float 3s ease-in-out infinite, wobble 1.2s ease-in-out infinite; }
+#ui-root.ar .nameplate { display: none; }

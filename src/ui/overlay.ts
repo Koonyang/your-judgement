@@ -130,6 +130,9 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     // 확대 보기가 열리면 대사 줄은 맨 아래로 내려가고(y310–360) 확대 서류가 그 위를 쓴다.
     root.classList.toggle('zoomed', stageOpen || (drawer !== null && !modal) || modal);
     root.classList.toggle('dl-on', dialogueOn);
+    // 판결 단계 밖에서 집어 든 서류는 작은 종이로: 위로 법정이 보이게 한다. 양형은 허공에 뜬 숙고(AR).
+    root.classList.toggle('paper', !stageOpen && drawer !== null && !modal);
+    root.classList.toggle('ar', s.phase === 'sentencing');
     show(dim, root.classList.contains('zoomed'));
     for (const p of panels) p.render(s, sc);
   }

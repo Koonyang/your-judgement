@@ -26,6 +26,11 @@ export class CourtroomScene extends Phaser.Scene {
     for (const key of Object.keys(SEATS) as SeatKey[]) {
       const seat = SEATS[key];
       const img = this.add.image(seat.x, seat.y, key).setScale(seat.scale ?? 1);
+      // 숨쉬기: 사람마다 박자를 달리해 아주 조금 들썩인다(서류 너머로도 법정이 살아 있게).
+      this.tweens.add({
+        targets: img, scaleY: (seat.scale ?? 1) * 1.04, duration: 1400 + Math.random() * 900,
+        delay: Math.random() * 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
       const label = this.add
         .text(seat.x, seat.y + (SPRITE_H * (seat.scale ?? 1)) / 2 + 1, seat.label, { fontFamily: FONT_STACK, fontSize: '9px', color: '#8d8272' })
         .setOrigin(0.5, 0)
@@ -69,13 +74,15 @@ export class CourtroomScene extends Phaser.Scene {
     };
     for (const [key, a] of this.actors) {
       a.img.setVisible(visible[key]);
-      a.label.setVisible(visible[key]);
+      a.label.setVisible(visible[key] && COURT_PHASES.has(s.phase)); // 법정 밖(숙고·판결)에서는 이름표가 겹쳐 보이지 않게
     }
     const w = this.actors.get('witness')!;
     w.label.setText(exam ? c.speakerName(exam.kind) : SEATS.witness.label);
     w.img.setTexture(defendantAtStand ? 'defendant' : 'witness');
 
     this.dim.setVisible(!COURT_PHASES.has(s.phase));
+    // 양형 숙고는 법정 위에 떠 있는 생각이라 법정을 희미하게 남긴다.
+    this.dim.setFillStyle(0x07080a, s.phase === 'sentencing' ? 0.55 : 0.85);
     // 선고 연출은 별도 장면. 끝나면(FINISH_PRONOUNCE·건너뛰기) 장면이 스스로 멈춘다.
     if (s.phase === 'pronounce' && this.lastPhase !== 'pronounce') this.scene.launch('pronounce');
     this.lastPhase = s.phase;
