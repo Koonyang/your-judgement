@@ -114,17 +114,25 @@ try {
   if (await vis('input-months')) throw new Error('저울질 중에 선고형 입력이 보임');
   await shot('6-weigh');
   await tid('btn-scale-done').click();
-  await tid('input-months').fill('6');
+
+  // 판결서 작성: 빈 판결서의 항목을 누르면 문단이 나타나고 오른쪽 도구가 바뀐다.
+  if (await vis('tool-order')) throw new Error('누르기 전에 주문 도구가 보임');
+  await tid('btn-confirm-judgment').click(); // 형을 정하지 않고 확정 → 막히고 주문으로
+  if (!(await vis('tool-order'))) throw new Error('형 없이 확정했는데 주문으로 가지 않음');
+  // 주문: 스크롤(슬라이더)로 형량, +1개월로 미세 조정
+  await tid('input-months').evaluate((el) => { el.value = '5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await tid('btn-months-inc').click();
+  if (!(await text('order-line')).includes('징역 6월')) throw new Error(`주문 문장 ${await text('order-line')}`);
   await tid('chk-suspended').check();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(300);
   await shot('6-sentencing');
-  await tid('btn-confirm-sentencing').click();
+  await tid('sec-evidence').click();
 
   // 판결서: CCTV 카드는 끌어다 놓기로. 먼저 밖(제목)에 놓아 변화가 없는지 본 뒤 증거의 요지에 놓는다.
   const cctv = tid('slot-evidence-c_cctv');
-  await cctv.dragTo(page.locator('[data-testid="panel-judgment"] h2'));
+  await cctv.dragTo(page.locator('[data-testid="tool-evidence"] h3'));
   if ((await cctv.getAttribute('aria-pressed')) !== 'false') throw new Error('밖에 놓았는데 끼워짐');
-  await cctv.dragTo(tid('drop-evidence'));
+  await cctv.dragTo(tid('sec-evidence'));
   if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('드래그로 끼워지지 않음');
   // 끼운 카드를 끌다 슬롯을 놓쳐도(목록 위에 놓기) 빠지면 안 된다.
   await cctv.dragTo(tid('slot-evidence-c_confession'));
@@ -132,6 +140,8 @@ try {
   for (const id of ['slot-evidence-c_receipt']) {
     if (await vis(id)) await tid(id).click();
   }
+  await tid('sec-reasons').click();
+  if (!(await text('judgment-preview')).includes('생계형 범죄')) throw new Error('천칭의 유리한 정상이 판결서에 없음');
   await shot('7-judgment');
   await tid('btn-confirm-judgment').click();
 

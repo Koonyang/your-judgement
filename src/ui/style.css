@@ -349,12 +349,10 @@
 .panel.sentencing.weigh .scale.wobble .beam { animation: float 3s ease-in-out infinite, wobble 1.2s ease-in-out infinite; }
 #ui-root.ar .nameplate { display: none; }
 /* 양형 1단계 저울질: 천칭이 주인공. 카드와 수치 없는 막대만 곁에 둔다 */
-.sentencing.weigh .decide-only, .sentencing:not(.weigh) .weigh-only { display: none; }
 .weigh-foot { position: absolute; right: 10px; bottom: 8px; }
 .rangebar.bare .rb-ticks, .rangebar.bare .rb-legend, .rangebar.bare .rb-demand, .rangebar.bare .rb-months, .rangebar.bare .rb-leeway { display: none; }
 .rangebar.bare { margin-top: 4px; }
 .sentencing .scale { pointer-events: none; } .sentencing .scale .pan { pointer-events: auto; } /* 확대된 천칭 상자가 카드 줄을 가리지 않게 */
-.sentencing .stage-foot { flex-wrap: wrap; } .sentencing .stage-foot .btn { white-space: nowrap; padding: 1px 5px; }
 /* 저울질 배치: 천칭이 화면 가운데, 대기 카드는 책상 위 종이 카드, 판결은 서류(.weigh가 없으면 보통 종이 패널) */
 .sentencing.weigh .sent-grid { display: block; }
 .sentencing.weigh .sent-grid > .col:nth-child(2) { position: absolute; left: 0; right: 0; top: 0; }
@@ -371,15 +369,23 @@
 .panel.sentencing.weigh .pan-tray .pan-chip:nth-child(even) { transform: rotate(1.2deg); }
 .panel.sentencing.weigh .pan-tray .pan-chip .src { display: block; color: var(--muted); }
 .panel.sentencing.weigh .pan-tray .pan-chip.hl { background: #efe2b8; border-style: solid; }
-/* 판결: 주문 쓰기가 가운데 주인공 */
-.order { text-align: center; margin: 8px auto 8px; padding: 8px 12px 6px; max-width: 470px; border: 1px solid var(--ink); background: #f1e8d4; box-shadow: 3px 3px 0 rgb(0 0 0 / 0.25); }
-.order-title { font-size: 15px; font-weight: bold; letter-spacing: 0.6em; margin-bottom: 6px; }
-.order-line { font-size: 13px; margin: 4px 0; }
-.order .num { width: 40px; font-size: 13px; text-align: center; }
-.order label.order-line { justify-content: center; font-size: 11px; }
-.order-note { min-height: 12px; font-size: 9px; }
-.ref { border-top: 1px dashed var(--hanji-2); margin-top: 4px; padding-top: 2px; }
-.ref h3 { margin: 2px 0; color: var(--muted); }
+/* 판결서 작성: 왼쪽 빈 판결서(누르면 문단이 나타남), 오른쪽은 누른 항목을 채우는 도구 */
+.stage.judgment { display: flex; flex-direction: column; overflow: hidden; }
+.write-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.1fr 1fr; gap: 10px; }
+.judgment .judgment-doc { max-height: none; min-height: 0; overflow-y: auto; }
+.jd-sec { cursor: pointer; padding: 3px 5px; margin: 2px -5px; border: 1px solid transparent; }
+.jd-sec:hover { border-color: var(--hanji-2); }
+.jd-sec.active { border-color: var(--accent); background: rgb(224 176 96 / 0.12); }
+.jd-sec:focus-visible { outline: 1px solid var(--accent); }
+.jd-blank { margin: 2px 0; color: var(--muted); font-size: 9px; border-bottom: 1px dashed var(--hanji-2); }
+.tool-col { min-height: 0; display: flex; flex-direction: column; }
+.tool { flex: 1; min-height: 0; overflow-y: auto; }
+.tool-body h3:first-child { margin-top: 0; }
+.order-line { font-size: 13px; font-weight: bold; margin: 4px 0 8px; }
+.scroll { position: relative; }
+.months-slider { position: absolute; left: 4px; right: 4px; top: 13px; width: calc(100% - 8px); margin: 0; height: 11px; opacity: 0; cursor: ew-resize; }
+.months-slider:focus-visible { opacity: 0.25; }
+.stepper { display: flex; gap: 6px; margin: 2px 0 6px; }
+.btn.sm { padding: 1px 8px; font-size: 9px; }
 .ref-line { margin: 2px 0; font-size: 9px; }
-.ref .area { display: inline; font-weight: bold; margin: 0; }
-.sentencing .stage-foot.decide-only { position: sticky; bottom: -8px; background: var(--hanji); padding: 4px 0; margin: 0; border-top: 1px solid var(--hanji-2); } /* 주문 확정은 늘 보이게 */
+.ref-line .area { font-weight: bold; }

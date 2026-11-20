@@ -45,8 +45,9 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const dialogue = createDialoguePanel(c);
   const boardMain = createBoardPanel(c, 'main');
   const boardIntro = createBoardPanel(c, 'readonly');
-  const sentencing = createSentencingPanel(c);
-  const judgment = createJudgmentPanel(c);
+  // 양형: 저울질(AR) → [저울질을 마친다] → 판결서 작성(judgment 패널, 양형 단계에서 시작).
+  const sentencing = createSentencingPanel(c, () => render(c.state));
+  const judgment = createJudgmentPanel(c, () => sentencing.setWeighing(true));
   const result = createResultPanel(c);
   const record = createRecordPanel();
   const panels: Panel[] = [docket, docs, evidence, boardDrawer, dialogue, boardMain, boardIntro, sentencing, judgment, result, record];
@@ -132,8 +133,9 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : []), ...(micOn ? [mic] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict');
-    show(sentencing.el, s.phase === 'sentencing');
-    show(judgment.el, s.phase === 'judgment');
+    const weighing = s.phase === 'sentencing' && sentencing.weighing();
+    show(sentencing.el, weighing);
+    show(judgment.el, s.phase === 'judgment' || (s.phase === 'sentencing' && !weighing));
     show(result.el, s.phase === 'appeal');
     show(record.el, s.phase === 'record');
     show(skip, s.phase === 'pronounce');
@@ -151,7 +153,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     root.classList.toggle('dl-on', dialogueOn);
     // 판결 단계 밖에서 집어 든 서류는 작은 종이로: 위로 법정이 보이게 한다. 양형은 허공에 뜬 숙고(AR).
     root.classList.toggle('paper', !stageOpen && drawer !== null && !modal);
-    root.classList.toggle('ar', s.phase === 'sentencing');
+    root.classList.toggle('ar', s.phase === 'sentencing' && sentencing.weighing());
     show(dim, root.classList.contains('zoomed'));
     for (const p of panels) p.render(s, sc);
   }

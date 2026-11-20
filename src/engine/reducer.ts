@@ -117,11 +117,9 @@ export function reduce(sc: Scenario, s: GameState, a: Action): GameState {
       if (validateSentence({ months, suspended }, sc.sentencing.statutoryMaxMonths) !== null) return s;
       return { ...s, phase: 'judgment' };
     }
-    case 'SET_JUDGMENT': {
-      // 양형 천칭(UI)은 양형 단계에서 판결서 유리/불리 칸을 같이 채운다. 그 밖의 칸은 판결서 단계에서만.
-      const reasonsOnly = Object.keys(a.patch).every((k) => k === 'favorable' || k === 'unfavorable');
-      return s.phase === 'judgment' || (s.phase === 'sentencing' && reasonsOnly) ? { ...s, judgment: { ...s.judgment, ...a.patch } } : s;
-    }
+    case 'SET_JUDGMENT':
+      // 판결서 작성 화면은 양형 단계(저울질 뒤)에서 시작한다. 확정은 CONFIRM_SENTENCING → CONFIRM_JUDGMENT 순.
+      return s.phase === 'sentencing' || s.phase === 'judgment' ? { ...s, judgment: { ...s.judgment, ...a.patch } } : s;
     case 'CONFIRM_JUDGMENT': return s.phase === 'judgment' ? { ...s, phase: 'pronounce' } : s;
     case 'FINISH_PRONOUNCE': return s.phase === 'pronounce' ? { ...s, phase: 'appeal' } : s;
     case 'FINISH_APPEAL': return s.phase === 'appeal' ? { ...s, phase: 'record' } : s;
