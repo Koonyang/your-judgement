@@ -1,14 +1,14 @@
-// 법정 장면: 좌석 플레이스홀더를 그리고 현재 화자 자리를 강조한다. 상태는 컨트롤러 구독으로 받는다.
+// 법정 장면(판사 시점, 위 150px 띠): 좌석 플레이스홀더를 그리고 현재 화자만 밝힌다. 상태는 컨트롤러 구독으로 받는다.
 import Phaser from 'phaser';
 import type { Controller } from '../game/controller';
 import type { GameState } from '../engine/state';
-import { FONT_STACK, SEATS, SPRITE_H, SPRITE_W, type SeatKey } from './seats';
+import { COURT_H, FONT_STACK, SEATS, SPRITE_H, type SeatKey } from './seats';
 
 const COURT_PHASES = new Set<GameState['phase']>(['opening', 'evidence', 'exam', 'closing']);
 
 export class CourtroomScene extends Phaser.Scene {
   private actors = new Map<SeatKey, { img: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text }>();
-  private glow!: Phaser.GameObjects.Rectangle;
+  private glow!: Phaser.GameObjects.Ellipse;
   private dim!: Phaser.GameObjects.Rectangle;
   private bob?: Phaser.Tweens.Tween;
   private unsubscribe?: () => void;
@@ -21,43 +21,40 @@ export class CourtroomScene extends Phaser.Scene {
   create(): void {
     const c = this.registry.get('controller') as Controller;
     this.drawRoom();
-    this.glow = this.add.rectangle(0, 0, SPRITE_W + 12, SPRITE_H + 12).setStrokeStyle(3, 0xf2d27a).setVisible(false);
+    // 화자 자리에 비치는 스탠드 빛 (#ffc478)
+    this.glow = this.add.ellipse(0, 0, 46, 30, 0xffc478, 0.14).setVisible(false);
     for (const key of Object.keys(SEATS) as SeatKey[]) {
       const seat = SEATS[key];
-      const img = this.add.image(seat.x, seat.y, key);
-      // 법대 뒤 재판장은 이름표를 옆에 둔다(아래는 법대에 가려진다).
-      const [lx, ly, ox, oy] = seat.labelSide
-        ? [seat.x + SPRITE_W / 2 + 10, seat.y - 10, 0, 0.5]
-        : [seat.x, seat.y + SPRITE_H / 2 + 22, 0.5, 0];
+      const img = this.add.image(seat.x, seat.y, key).setScale(seat.scale ?? 1);
       const label = this.add
-        .text(lx, ly, seat.label, { fontFamily: FONT_STACK, fontSize: '15px', color: '#f3ead6' })
-        .setOrigin(ox, oy)
-        .setBackgroundColor('#1d1611')
-        .setPadding(4, 2, 4, 2);
+        .text(seat.x, seat.y + (SPRITE_H * (seat.scale ?? 1)) / 2 + 1, seat.label, { fontFamily: FONT_STACK, fontSize: '9px', color: '#8d8272' })
+        .setOrigin(0.5, 0)
+        .setDepth(5);
+      if (seat.back) img.setDepth(4); // 참여관은 자기 책상보다 내 쪽에 앉아 등을 보인다
       this.actors.set(key, { img, label });
     }
     this.drawDesks();
-    this.dim = this.add.rectangle(640, 360, 1280, 720, 0x0d0a08, 0.72).setDepth(10);
+    this.dim = this.add.rectangle(320, COURT_H / 2, 640, COURT_H, 0x07080a, 0.85).setDepth(10);
     this.unsubscribe = c.subscribe(() => this.sync(c));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsubscribe?.());
     this.sync(c);
   }
 
   private drawRoom(): void {
-    this.add.rectangle(640, 150, 1280, 300, 0x3b2819); // 뒷벽 (나무 판넬)
-    for (let x = 40; x < 1280; x += 80) this.add.rectangle(x, 150, 4, 300, 0x2e1f13);
-    this.add.rectangle(640, 510, 1280, 420, 0x5b4632); // 바닥
-    for (let y = 320; y < 720; y += 40) this.add.rectangle(640, y, 1280, 2, 0x4c3a29);
+    this.add.rectangle(320, 34, 640, 68, 0x0e0f13); // 뒷벽
+    for (let r = 0; r < 2; r++) // 방청석 (실루엣)
+      for (let x = 24 + r * 9; x < 620; x += 22) if ((x + r) % 5) this.add.rectangle(x, 34 + r * 14, 9, 9, 0x15161c);
+    this.add.rectangle(320, 66, 640, 3, 0x1d1f26); // 방청석 난간
+    this.add.rectangle(320, 109, 640, 82, 0x0b0c0f); // 바닥
   }
 
   private drawDesks(): void {
-    const desk = (x: number, y: number, w: number, h: number, color = 0x6b4a2e) =>
-      this.add.rectangle(x, y, w, h, color).setStrokeStyle(2, 0x24170d);
-    desk(640, 176, 760, 40, 0x4e341f); // 법대
-    desk(640, 270, 220, 22); // 참여관석
-    desk(230, 372, 220, 26); // 검사석
-    desk(1065, 372, 260, 26); // 변호인·피고인석
-    desk(640, 444, 120, 24, 0x7a5a3a); // 증언대
+    const desk = (x: number, y: number, w: number, h: number) =>
+      this.add.rectangle(x, y, w, h, 0x2a2018).setStrokeStyle(1, 0x3a2c20);
+    desk(92, 112, 120, 14); // 검사석
+    desk(540, 112, 120, 14); // 변호인·피고인석
+    desk(320, 116, 52, 16); // 증언대
+    desk(320, 128, 120, 8); // 참여관석 (법대 바로 아래, 참여관 너머)
   }
 
   private sync(c: Controller): void {
@@ -66,7 +63,7 @@ export class CourtroomScene extends Phaser.Scene {
     // 피고인신문 때는 피고인이 증언대로 나온다.
     const defendantAtStand = exam?.kind === 'defendant';
     const visible: Record<SeatKey, boolean> = {
-      judge: true, clerk: true, prosecutor: true, defense: true,
+      judge: false, clerk: true, prosecutor: true, defense: true,
       defendant: !defendantAtStand,
       witness: exam !== null,
     };
@@ -88,12 +85,15 @@ export class CourtroomScene extends Phaser.Scene {
     if (seat === 'defendant' && defendantAtStand) seat = 'witness';
     this.bob?.stop();
     this.actors.forEach((a, key) => a.img.setY(SEATS[key].y));
-    if (!seat || !visible[seat]) {
+    const lit = seat && visible[seat] && !SEATS[seat].hidden ? seat : null;
+    // 말하는 사람만 밝고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
+    this.actors.forEach((a, key) => a.img.setAlpha(lit === null ? 0.7 : key === lit ? 1 : 0.35));
+    if (!lit) {
       this.glow.setVisible(false);
       return;
     }
-    const a = this.actors.get(seat)!;
-    this.glow.setPosition(a.img.x, a.img.y).setVisible(true);
-    this.bob = this.tweens.add({ targets: a.img, y: a.img.y - 4, duration: 180, yoyo: true, repeat: 1 });
+    const a = this.actors.get(lit)!;
+    this.glow.setPosition(a.img.x, a.img.y + 4).setVisible(true);
+    this.bob = this.tweens.add({ targets: a.img, y: a.img.y - 1, duration: 180, yoyo: true, repeat: 1 });
   }
 }

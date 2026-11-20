@@ -11,11 +11,13 @@ export class BootScene extends Phaser.Scene {
     for (const [key, seat] of Object.entries(SEATS) as [SeatKey, (typeof SEATS)[SeatKey]][]) {
       if (this.textures.exists(key)) continue;
       const g = this.make.graphics({}, false);
-      // 몸통
-      g.fillStyle(seat.color, 1).fillRect(4, 28, SPRITE_W - 8, SPRITE_H - 28);
-      // 머리
-      g.fillStyle(0xd9b48f, 1).fillRect(16, 4, SPRITE_W - 32, 26);
-      g.fillStyle(0x1d1611, 1).fillRect(16, 4, SPRITE_W - 32, 8);
+      g.fillStyle(seat.color, 1).fillRect(1, 8, SPRITE_W - 2, SPRITE_H - 8); // 몸통
+      if (seat.back) {
+        g.fillStyle(0x0b0b0e, 1).fillRect(3, 0, SPRITE_W - 6, 9); // 뒤통수
+      } else {
+        g.fillStyle(0x6d625a, 1).fillRect(3, 0, SPRITE_W - 6, 9); // 얼굴
+        g.fillStyle(0x0b0b0e, 1).fillRect(3, 0, SPRITE_W - 6, 3).fillRect(5, 4, 1, 1).fillRect(SPRITE_W - 6, 4, 1, 1);
+      }
       g.generateTexture(key, SPRITE_W, SPRITE_H);
       g.destroy();
     }

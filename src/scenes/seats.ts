@@ -6,15 +6,20 @@ export type SeatKey = Speaker;
 export const FONT_STACK =
   '"Galmuri11", "DungGeunMo", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "NanumGothic", "WenQuanYi Zen Hei", sans-serif';
 
-/** 방청석에서 법대를 바라보는 구도. 좌석 위치 고증은 [확인필요] (task-9 보고서 참조). */
-export const SEATS: Record<SeatKey, { x: number; y: number; label: string; color: number; labelSide?: boolean }> = {
-  judge: { x: 640, y: 112, label: '재판장', color: 0x2b2b3a, labelSide: true },
-  clerk: { x: 640, y: 236, label: '참여관', color: 0x4a5a6a },
-  prosecutor: { x: 230, y: 330, label: '검사', color: 0x3a4a6e },
-  defense: { x: 1000, y: 330, label: '변호인', color: 0x5a4a3a },
-  defendant: { x: 1130, y: 350, label: '피고인', color: 0x6e6a5a },
-  witness: { x: 640, y: 400, label: '증인', color: 0x6a5a7a },
+/**
+ * 판사 시점(법대에서 내려다봄), 법정 띠 640×150 논리 좌표. 재판장은 플레이어라 그리지 않는다(hidden).
+ * 좌우 배치(검사 왼쪽, 변호인·피고인 오른쪽)는 임시 [확인필요].
+ */
+export const SEATS: Record<SeatKey, { x: number; y: number; label: string; color: number; hidden?: boolean; back?: boolean; scale?: number }> = {
+  judge: { x: 320, y: 160, label: '재판장', color: 0x16171c, hidden: true },
+  clerk: { x: 320, y: 140, label: '참여관', color: 0x1d2028, back: true },
+  prosecutor: { x: 92, y: 98, label: '검사', color: 0x1d2633 },
+  defense: { x: 520, y: 98, label: '변호인', color: 0x2a2620 },
+  defendant: { x: 566, y: 100, label: '피고인', color: 0x3a3a3a },
+  witness: { x: 320, y: 92, label: '증인', color: 0x2f3440, scale: 1.5 },
 };
 
-export const SPRITE_W = 56;
-export const SPRITE_H = 80;
+export const SPRITE_W = 14;
+export const SPRITE_H = 22;
+/** 법정 띠 높이(논리 픽셀). 그 아래는 HTML 대사 줄과 책상. */
+export const COURT_H = 150;
