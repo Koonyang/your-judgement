@@ -76,8 +76,10 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     open: () => {
       c.dispatch({ type: 'INTERRUPT' });
       say.hidden = false;
+      const btn = root.querySelector('[data-testid="btn-interrupt"]');
+      btn?.classList.add('on'); // 표시등이 켜진다
       clearTimeout(sayTimer);
-      sayTimer = window.setTimeout(() => { say.hidden = true; }, 900);
+      sayTimer = window.setTimeout(() => { say.hidden = true; btn?.classList.remove('on'); }, 900);
     },
   };
   const putDown = () => { drawer = null; render(c.state); };
