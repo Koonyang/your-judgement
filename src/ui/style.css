@@ -97,23 +97,28 @@
 .ev-body { margin: 1px 0 0; font-size: 9px; }
 .ev.locked .ev-label { color: var(--muted); }
 
-/* 대사창 */
+/* 대사 줄 (y150–200) */
 .dialogue {
-  position: absolute; left: 12px; right: 12px; bottom: 8px; min-height: 92px;
-  background: var(--box); border: 1.5px solid var(--accent);
-  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 1.5px rgba(0, 0, 0, 0.5);
-  padding: 7px 10px 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;
+  position: absolute; left: 0; right: 0; top: 150px; height: 50px; box-sizing: border-box;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 6px; padding: 4px 6px;
+  background: var(--box); border-top: 1px solid var(--box-line); border-bottom: 1px solid var(--box-line); z-index: 20;
 }
-.speaker {
-  align-self: flex-start; background: var(--accent); color: var(--ink);
-  padding: 0 5px; font-size: 9px;
+.portrait {
+  width: 40px; height: 40px; border: 1px solid var(--box-line); color: var(--hanji-2);
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold;
 }
-.text { font-size: 11px; min-height: 2.4em; }
+.dl-body { overflow-y: auto; min-width: 0; }
+.speaker { display: inline; background: var(--seal); color: var(--hanji); padding: 0 3px; margin-right: 4px; }
+.text { display: inline; }
 .text.narration { color: var(--hanji-2); font-style: italic; }
-.note { color: var(--mark); font-size: 9px; }
-.supp { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
-.btn.q { text-align: left; padding: 1.5px 6px; font-size: 9px; }
-.actions { display: flex; justify-content: flex-end; gap: 4px; margin-top: auto; }
+.note { color: var(--accent); font-size: 9px; }
+.supp {
+  position: absolute; left: 52px; bottom: 100%; display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+  background: var(--box); border: 1px solid var(--box-line); border-bottom: 0; padding: 4px;
+}
+.btn.q { text-align: left; padding: 1px 6px; }
+.actions { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.actions .btn { padding: 1px 8px; }
 
 /* ── 판단 단계(Task 10) ── */
 .stage { position: absolute; left: 12px; right: 12px; top: 28px; bottom: 8px; }

@@ -1,9 +1,10 @@
-// 대사창: 화자 + 대사, [다음]·[제지]·이의 결정·보충신문 질문.
+// 대사 줄(y150–200): 초상 + 화자·대사, [다음]·[제지]·이의 결정·보충신문 질문(줄 위로 펼침).
 // 설계 규칙: 어떤 라인이 제지 가능한지 표시하지 않는다. 제지가 무시돼도 반응하지 않는다.
 import type { Controller } from '../../game/controller';
 import { suppFlag } from '../../engine/reducer';
 import type { GameState } from '../../engine/state';
 import { button, h, show } from '../dom';
+import { SEATS } from '../../scenes/seats';
 import type { Panel } from './types';
 
 /** 라인이 없는 단계의 안내문과 [다음] 버튼 문구. */
@@ -44,7 +45,9 @@ export function createDialoguePanel(c: Controller): Panel {
   hlClosing.addEventListener('mousedown', (e) => e.preventDefault());
   const suppEnd = button('btn-supp-end', '묻지 않음', () => c.dispatch({ type: 'END_SUPP' }));
   const actions = h('div', { class: 'actions' }, hlClosing, interrupt, sustain, overrule, suppEnd, next);
-  const el = h('section', { class: 'dialogue', testid: 'panel-dialogue' }, speaker, text, note, supp, actions);
+  const portrait = h('div', { class: 'portrait', testid: 'dialogue-portrait' });
+  const body = h('div', { class: 'dl-body' }, h('div', {}, speaker, text), note);
+  const el = h('section', { class: 'dialogue', testid: 'panel-dialogue' }, portrait, body, actions, supp);
 
   return {
     el,
@@ -55,6 +58,13 @@ export function createDialoguePanel(c: Controller): Panel {
 
       speaker.textContent = line ? c.speakerName(line.speaker) : '';
       show(speaker, !!line);
+      // 초상 플레이스홀더: 좌석 색 + 이름 첫 글자. 나중에 같은 화자 키로 그림 교체.
+      show(portrait, !!line);
+      if (line) {
+        portrait.dataset.speaker = line.speaker;
+        portrait.style.background = `#${SEATS[line.speaker].color.toString(16).padStart(6, '0')}`;
+        portrait.textContent = speaker.textContent.slice(0, 1);
+      }
       if (line) text.textContent = line.text;
       else if (examSupp) text.textContent = '보충신문. 재판장이 직접 물어볼 것이 있으면 고르십시오.';
       else text.textContent = NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
