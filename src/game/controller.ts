@@ -1,9 +1,9 @@
 // 게임 컨트롤러: GameState를 들고 액션을 순수 엔진(reduce)에 넘긴 뒤 구독자에게 알린다.
 // DOM·Phaser 비의존 (Vitest node 환경에서 테스트).
 import { reviewAppeal } from '../engine/appeal';
-import { evalCond } from '../engine/cond';
-import { currentLine, reduce, suppFlag } from '../engine/reducer';
-import type { Line, Scenario, Speaker } from '../engine/scenario/schema';
+import { heardEntries } from '../engine/flow/lines';
+import { currentLine, reduce } from '../engine/reducer';
+import type { Exam, Line, Scenario, Speaker } from '../engine/scenario/schema';
 import { initialState, type Action, type AppealOutcome, type GameState } from '../engine/state';
 
 /** 화면에 보여 줄 한 줄. 엔진 라인이거나, 보충신문 재생용 줄(질문·답변). */
@@ -11,9 +11,20 @@ export type ShownLine = Pick<Line, 'speaker' | 'text'> & Partial<Pick<Line, 'id'
 
 type Listener = (s: GameState) => void;
 
-const SPEAKER_NAMES: Record<Speaker, string> = {
+export const SPEAKER_NAMES: Record<Speaker, string> = {
   judge: '재판장', clerk: '참여관', prosecutor: '검사', defense: '변호인', witness: '증인', defendant: '피고인',
 };
+
+/** 신문 대상 표시 이름(괄호 설명 제외). */
+export const examineeName = (exam: Pick<Exam, 'name'>) => exam.name.replace(/\s*\(.*\)\s*$/, '');
+
+/** 신문 중 증인/피고인 화자면 신문 대상 이름, 아니면 기본 화자 이름. */
+export function speakerLabel(sp: Speaker, exam: Exam | null | undefined): string {
+  if (exam && ((sp === 'witness' && exam.kind === 'witness') || (sp === 'defendant' && exam.kind === 'defendant'))) {
+    return examineeName(exam);
+  }
+  return SPEAKER_NAMES[sp];
+}
 
 export class Controller {
   private s: GameState;
@@ -47,7 +58,8 @@ export class Controller {
   dispatch(a: Action): void {
     const next = reduce(this.sc, this.s, a);
     if (next === this.s) return;
-    if (a.type === 'ASK_SUPP') this.replay = this.suppReplay(a.questionId, this.s);
+    // 보충신문: 엔진이 이번에 들은 것(질문 + when 충족 답변)을 그대로 재생한다.
+    if (a.type === 'ASK_SUPP') this.replay = heardEntries(this.sc, next, this.s.heard.length).map(({ line }) => ({ speaker: line.speaker, text: line.text }));
     if (next.phase === 'appeal' && this.s.phase !== 'appeal') this.outcome = reviewAppeal(this.sc, next);
     this.s = next;
     this.emit();
@@ -79,25 +91,7 @@ export class Controller {
 
   /** 화자 표시 이름. 신문 중 증인/피고인은 신문 대상 이름(괄호 설명 제외). */
   speakerName(sp: Speaker): string {
-    const exam = this.currentExam();
-    if (exam && ((sp === 'witness' && exam.kind === 'witness') || (sp === 'defendant' && exam.kind === 'defendant'))) {
-      return exam.name.replace(/\s*\(.*\)\s*$/, '');
-    }
-    return SPEAKER_NAMES[sp];
-  }
-
-  private suppReplay(questionId: string, before: GameState): ShownLine[] {
-    const q = this.sc.exams[before.cursor.examIndex]?.supplementary.find((x) => x.id === questionId);
-    if (!q) return [];
-    // 엔진(askSupp)과 같은 순서로 when을 평가한다.
-    const flags = new Set([...before.flags, suppFlag(q.id)]);
-    const answers: ShownLine[] = [];
-    for (const l of q.answer) {
-      if (!evalCond(l.when, flags)) continue;
-      l.sets?.forEach((f) => flags.add(f));
-      answers.push({ speaker: l.speaker, text: l.text });
-    }
-    return [{ speaker: 'judge', text: q.text }, ...answers];
+    return speakerLabel(sp, this.currentExam());
   }
 
   private emit(): void {

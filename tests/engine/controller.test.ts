@@ -56,6 +56,26 @@ describe('Controller', () => {
     expect(c.shownLine()).toBeNull();
   });
 
+  it('보충신문 재생 큐는 엔진이 새로 들은 진술(heard)과 같다', () => {
+    const c = new Controller(sc);
+    for (let i = 0; i < 200 && !(c.state.phase === 'exam' && c.state.cursor.inSupp); i++) {
+      const line = c.shownLine();
+      c.dispatch(line?.objection ? { type: 'RULE_OBJECTION', ruling: line.objection.correct } : { type: 'ADVANCE' });
+    }
+    const before = c.state.heard.length;
+    const q = sc.exams[0].supplementary[0];
+    c.dispatch({ type: 'ASK_SUPP', questionId: q.id });
+    const fresh = c.state.heard.slice(before);
+    expect(fresh[0]).toBe(q.id);
+    const texts: string[] = [];
+    while (c.replaying) {
+      texts.push(c.shownLine()!.text);
+      c.ack();
+    }
+    const answerText = (id: string) => q.answer.find((l) => l.id === id)!.text;
+    expect(texts).toEqual([q.text, ...fresh.slice(1).map(answerText)]);
+  });
+
   it('화자 이름: 증인은 현재 신문의 이름', () => {
     const c = new Controller(sc);
     expect(c.speakerName('judge')).toBe('재판장');

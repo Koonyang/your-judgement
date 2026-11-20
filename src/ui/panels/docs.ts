@@ -1,12 +1,10 @@
 // 기록: 공소장·피고인 의견서(공판 전부터), 공판조서(선고기일 전 재검토부터). 문장을 골라 [형광펜]을 누르면 HIGHLIGHT.
 //
-// 공판조서는 근사치다: 엔진은 "들은 라인" 목록을 따로 남기지 않으므로, 모두절차·각 신문·결심 라인 중
-// 현재 플래그로 `when`이 충족되는 것과 물어본 보충신문(질문·답변)을 시나리오 순서대로 나열한다.
-// 제지로 끊은 라인도 `when`만 맞으면 들어갈 수 있다(표시 전용, 판정에 쓰지 않음).
-import type { Controller } from '../../game/controller';
-import { evalCond } from '../../engine/cond';
-import { suppFlag } from '../../engine/reducer';
-import type { Line, Scenario, Speaker } from '../../engine/scenario/schema';
+// 공판조서는 엔진의 `heard`(실제로 들은 진술, 들은 순서)를 그대로 옮긴다. 제지로 끊은 진술이나
+// 이의 인용으로 막은 답변은 들은 적이 없으므로 조서에도 없다(판사가 본 것만 본다).
+import { examineeName, speakerLabel, type Controller } from '../../game/controller';
+import { heardEntries } from '../../engine/flow/lines';
+import type { Scenario } from '../../engine/scenario/schema';
 import { PHASES, type GameState } from '../../engine/state';
 import { button, h } from '../dom';
 import type { Panel } from './types';
@@ -16,34 +14,24 @@ const DOCS = [
   { id: 'defenseOpinion', title: '피고인 의견서' },
 ] as const;
 const HL_TITLES: Record<string, string> = { indictment: '공소장', defenseOpinion: '피고인 의견서', closing: '최후진술', transcript: '공판조서' };
-const SPEAKERS: Record<Speaker, string> = {
-  judge: '재판장', clerk: '참여관', prosecutor: '검사', defense: '변호인', witness: '증인', defendant: '피고인',
-};
 const showTranscript = (s: GameState) => PHASES.indexOf(s.phase) >= PHASES.indexOf('review');
 
-/** 공판조서(근사). 위 파일 머리 주석 참조. */
+/** 공판조서: heard를 들은 순서대로, 절차가 바뀔 때마다 머리줄을 단다. */
 export function transcriptText(sc: Scenario, s: GameState): string {
-  const flags = new Set(s.flags);
   const out: string[] = [];
-  const say = (sp: Speaker, text: string, who?: string) => out.push(`${who ?? SPEAKERS[sp]}: ${text}`);
-  const lines = (ls: Line[], who?: (sp: Speaker) => string | undefined) => {
-    for (const l of ls) if (evalCond(l.when, flags)) say(l.speaker, l.text, who?.(l.speaker));
-  };
-  out.push('[모두절차]');
-  lines(sc.opening);
-  for (const ex of sc.exams) {
-    const name = ex.name.replace(/\s*\(.*\)\s*$/, '');
-    const who = (sp: Speaker) => ((sp === 'witness' && ex.kind === 'witness') || (sp === 'defendant' && ex.kind === 'defendant') ? name : undefined);
-    out.push('', ex.kind === 'witness' ? `[증인신문 · ${name}]` : '[피고인신문]');
-    lines(ex.lines, who);
-    for (const q of ex.supplementary) {
-      if (!flags.has(suppFlag(q.id))) continue;
-      say('judge', q.text);
-      lines(q.answer, who);
+  let section = '';
+  for (const e of heardEntries(sc, s)) {
+    const exam = e.block === 'exam' ? sc.exams[e.examIndex] : undefined;
+    const head = e.block === 'opening' ? '[모두절차]' : e.block === 'closing' ? '[결심]'
+      : exam?.kind === 'witness' ? `[증인신문 · ${examineeName(exam)}]` : '[피고인신문]';
+    const key = `${e.block}:${e.examIndex}`;
+    if (key !== section) {
+      if (out.length) out.push('');
+      out.push(head);
+      section = key;
     }
+    out.push(`${speakerLabel(e.line.speaker, exam)}: ${e.line.text}`);
   }
-  out.push('', '[결심]');
-  lines(sc.closing.lines);
   return out.join('\n');
 }
 
@@ -101,15 +89,15 @@ export function createDocsPanel(c: Controller): Panel {
     list,
   );
   let last: GameState['highlights'] | null = null;
-  let lastFlags: GameState['flags'] | null = null;
+  let lastHeard: GameState['heard'] | null = null;
   let lastShowT = false;
   return {
     el,
     render(s, sc) {
       const showT = showTranscript(s);
-      if (s.highlights === last && (!showT || s.flags === lastFlags) && showT === lastShowT) return;
+      if (s.highlights === last && (!showT || s.heard === lastHeard) && showT === lastShowT) return;
       last = s.highlights;
-      lastFlags = s.flags;
+      lastHeard = s.heard;
       lastShowT = showT;
       for (const d of DOCS) {
         const marks = s.highlights.filter((x) => x.docId === d.id).map((x) => x.text);

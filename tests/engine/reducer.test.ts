@@ -199,6 +199,31 @@ describe('supplementary questioning', () => {
   });
 });
 
+describe('heard (들은 진술 기록)', () => {
+  it('initialState는 빈 heard', () => {
+    expect(initialState(sc).heard).toEqual([]);
+  });
+  it('끝까지 들으면(이의는 바른 결정=인용) 들은 라인을 순서대로 기록한다', () => {
+    const s = until(toExam(), (x) => x.cursor.inSupp);
+    expect(s.heard).toEqual(['o1', 'o2', 'L1', 'L2', 'L3', 'L4', 'L6']);
+  });
+  it('제지한 라인은 기록하지 않는다', () => {
+    const s = R(toExam(), { type: 'INTERRUPT' });
+    expect(s.heard).toEqual(['o1', 'o2']);
+  });
+  it('이의 라인은 결정과 함께 기록, 인용으로 건너뛴 답변은 기록하지 않는다', () => {
+    const atL4 = until(toExam(), (x) => lineId(x) === 'L4');
+    const s = until(R(atL4, { type: 'RULE_OBJECTION', ruling: 'sustain' }), (x) => x.cursor.inSupp);
+    expect(s.heard.slice(-2)).toEqual(['L4', 'L6']);
+    expect(s.heard).not.toContain('L5');
+  });
+  it('보충신문: 질문 id와 when 충족 답변만 기록한다', () => {
+    const s0 = until(toExam(), (x) => x.cursor.inSupp);
+    const s = R(s0, { type: 'ASK_SUPP', questionId: 'q_clar' });
+    expect(s.heard.slice(s0.heard.length)).toEqual(['q_clar', 'qa1']);
+  });
+});
+
 describe('notes and board', () => {
   it('HIGHLIGHT appends, duplicate ignored', () => {
     const s = R(initialState(sc), { type: 'HIGHLIGHT', docId: 'indictment', text: '공소' });

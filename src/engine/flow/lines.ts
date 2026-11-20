@@ -2,7 +2,7 @@
 import { evalCond } from '../cond';
 import { END_SENTINEL } from '../scenario/load';
 import type { Line, Scenario, Violation } from '../scenario/schema';
-import type { GameState } from '../state';
+import type { GameState, LineBlock } from '../state';
 
 export function addUnique(arr: string[], items: readonly string[] | undefined): string[] {
   const add = (items ?? []).filter((x, i, a) => !arr.includes(x) && a.indexOf(x) === i);
@@ -30,9 +30,44 @@ export function addCards(s: GameState, ids: readonly string[] | undefined): Game
   return next === s.heldCards ? s : { ...s, heldCards: next };
 }
 
-/** 라인을 "들은 것"으로 처리: sets → yieldsCards → revokesCards. */
+/** 라인을 "들은 것"으로 처리: heard에 기록 → sets → yieldsCards → revokesCards. */
 export function hear(s: GameState, line: Line): GameState {
-  return removeCards(addCards(addFlags(s, line.sets), line.yieldsCards), line.revokesCards);
+  const t = { ...s, heard: [...s.heard, line.id] };
+  return removeCards(addCards(addFlags(t, line.sets), line.yieldsCards), line.revokesCards);
+}
+
+/** heard 항목 하나의 출처. 보충신문 질문은 재판장 발언 라인으로 본다. */
+export type HeardEntry = { line: Line; block: LineBlock; examIndex: number; questionId?: string };
+
+const indexCache = new WeakMap<Scenario, Map<string, HeardEntry>>();
+
+/** 시나리오의 모든 라인·보충신문 질문을 id로 찾는 색인(시나리오별 캐시, 결정적). */
+export function lineIndex(sc: Scenario): Map<string, HeardEntry> {
+  let m = indexCache.get(sc);
+  if (m) return m;
+  m = new Map();
+  for (const l of sc.opening) m.set(l.id, { line: l, block: 'opening', examIndex: 0 });
+  sc.exams.forEach((ex, examIndex) => {
+    for (const l of ex.lines) m!.set(l.id, { line: l, block: 'exam', examIndex });
+    for (const q of ex.supplementary) {
+      m!.set(q.id, { line: { id: q.id, speaker: 'judge', text: q.text }, block: 'exam', examIndex, questionId: q.id });
+      for (const l of q.answer) m!.set(l.id, { line: l, block: 'exam', examIndex, questionId: q.id });
+    }
+  });
+  for (const l of sc.closing.lines) m.set(l.id, { line: l, block: 'closing', examIndex: 0 });
+  indexCache.set(sc, m);
+  return m;
+}
+
+/** heard를 출처 항목으로 풀어 낸다(들은 순서). from부터. */
+export function heardEntries(sc: Scenario, s: GameState, from = 0): HeardEntry[] {
+  const idx = lineIndex(sc);
+  return s.heard.slice(from).flatMap((id) => idx.get(id) ?? []);
+}
+
+/** 들은 라인이 철회(revokesCards)한 카드. */
+export function revokedCards(sc: Scenario, s: GameState): Set<string> {
+  return new Set(heardEntries(sc, s).flatMap((e) => e.line.revokesCards ?? []));
 }
 
 /** 위반 기록. R2: lostCards는 heldCards에서 제거(항소심 복원은 이후 태스크). */

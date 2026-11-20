@@ -73,7 +73,8 @@ function askSupp(sc: Scenario, s: GameState, questionId: string): GameState {
   if (s.phase !== 'exam' || !s.cursor.inSupp) return s;
   const q = sc.exams[s.cursor.examIndex]?.supplementary.find((x) => x.id === questionId);
   if (!q || s.flags.includes(suppFlag(q.id))) return s;
-  let t = addFlags(s, [suppFlag(q.id)]);
+  // 질문(재판장 발언)도 들은 것으로 기록한 뒤 답변을 듣는다.
+  let t = addFlags({ ...s, heard: [...s.heard, q.id] }, [suppFlag(q.id)]);
   for (const l of q.answer) if (evalCond(l.when, new Set(t.flags))) t = hear(t, l);
   if (q.kind !== 'clarify') t = recordViolation(t, q.violation);
   return t;

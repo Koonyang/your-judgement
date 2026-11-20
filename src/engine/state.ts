@@ -33,6 +33,12 @@ export type GameState = {
   violations: Violation[];
   highlights: { docId: string; text: string }[];
   /**
+   * 법정에서 실제로 들은 진술 id(들은 순서). 라인(모두절차·신문·결심·이의 라인)과
+   * 보충신문 질문 id(재판장 발언) 및 그 답변 라인. 제지로 끊은 라인, 이의 인용으로 건너뛴 라인은 없다.
+   * 공판조서와 항소심의 철회 카드 판정이 이것을 쓴다.
+   */
+  heard: string[];
+  /**
    * lineId: 현재(아직 듣지 않은) 라인 id. `when`이 충족되는 라인으로 항상 정규화되어 있고,
    * null이면 블록의 라인이 소진됐거나 라인 블록이 아닌 단계다.
    * inSupp: exam 블록에서 라인이 소진되면 true(보충신문). END_SUPP로 다음 Exam.
@@ -64,6 +70,7 @@ export function initialState(sc: Scenario): GameState {
     unlockedEvidence: [],
     violations: [],
     highlights: [],
+    heard: [],
     cursor: { block: 'opening', examIndex: 0, lineId: null, inSupp: false },
     board: initBoard(sc.cells),
     sentencing: { special: [], general: [], susp: [], months: null, suspended: false },
