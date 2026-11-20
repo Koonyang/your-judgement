@@ -1,0 +1,99 @@
+// 1화 E2E 스모크: vite preview를 띄우고 정석 경로를 기록실까지 클릭 진행한다.
+// 실행: npm run build && npm run e2e
+import { createRequire } from 'node:module';
+import { spawn, execSync } from 'node:child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+
+const { chromium } = createRequire(import.meta.url)('playwright');
+const PORT = 4173;
+const URL = `http://localhost:${PORT}/`;
+const SHOT = 'e2e/artifacts/failure.png';
+
+if (!existsSync('dist')) execSync('npm run build', { stdio: 'inherit' });
+const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
+const stop = () => { try { process.kill(-server.pid, 'SIGKILL'); } catch {} };
+process.on('exit', stop);
+
+const waitForServer = async () => {
+  for (let i = 0; i < 60; i++) {
+    try { if ((await fetch(URL)).ok) return; } catch {}
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error('preview 서버가 뜨지 않음');
+};
+
+let browser, page, code = 1;
+const errors = [];
+try {
+  await waitForServer();
+  browser = await chromium.launch();
+  page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  page.setDefaultTimeout(15000);
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); }); // GPU stall 등은 warning이라 제외됨
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  await page.goto(URL);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  const tid = (id) => page.locator(`[data-testid="${id}"]`);
+  const vis = async (id) => (await tid(id).count()) > 0 && (await tid(id).first().isVisible());
+  const text = async (id) => ((await vis(id)) ? tid(id).innerText() : '');
+
+  // 공판: 이의 인용, 모욕 대목 제지, 보충신문, 최후진술 형광펜
+  await tid('btn-open-case').click();
+  const asked = new Set();
+  for (let i = 0; i < 300 && (await text('phase-title')) !== '선고기일 전 재검토'; i++) {
+    if (await vis('board-intro')) { await tid('btn-board-intro-ok').click(); continue; }
+    if (await vis('btn-sustain')) { await tid('btn-sustain').click(); continue; }
+    if (await vis('btn-supp-end')) {
+      const want = ['btn-supp-q_owner_items', 'btn-supp-q_def_meal'].find((id) => !asked.has(id));
+      if (want && (await vis(want)) && (await tid(want).isEnabled())) { asked.add(want); await tid(want).click(); continue; }
+      await tid('btn-supp-end').click(); continue;
+    }
+    const cur = await text('dialogue-text');
+    if (cur.startsWith('솔직히 사장님도')) { await tid('btn-interrupt').click(); continue; }
+    if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
+    await tid('btn-next').click();
+  }
+  await tid('btn-next').click();
+
+  // 유무죄: 4칸에 자백 외 증거 연결 + 증명됨
+  for (const cell of ['property', 'taking', 'intent', 'appropriation']) {
+    for (const card of ['c_cctv', 'c_receipt', 'c_owner_stmt']) {
+      if (await vis(`board-card-${cell}-${card}`)) { await tid(`board-card-${cell}-${card}`).click(); break; }
+    }
+    await tid(`board-mark-${cell}-proven`).click();
+  }
+  await tid('btn-confirm-verdict').click();
+
+  // 양형: 생계형 + 처벌불원, 징역 6월 집유
+  for (const id of ['factor-f_livelihood', 'factor-f_nonpunish', 'susp-s_livelihood', 'susp-s_nonpunish']) await tid(id).check();
+  await tid('input-months').fill('6');
+  await tid('chk-suspended').check();
+  await tid('btn-confirm-sentencing').click();
+
+  // 판결서
+  for (const id of ['slot-evidence-c_cctv', 'slot-evidence-c_receipt', 'slot-fav-f_livelihood', 'slot-fav-f_nonpunish', 'slot-unfav-c_record']) {
+    if (await vis(id)) await tid(id).click();
+  }
+  await tid('btn-confirm-judgment').click();
+
+  // 선고 → 항소 결과 → 기록실
+  await tid('btn-skip-pronounce').click();
+  await tid('panel-result').waitFor({ state: 'visible' });
+  await tid('btn-finish-appeal').click();
+  await tid('record-entry').first().waitFor({ state: 'visible' });
+
+  const n = await tid('record-entry').count();
+  if (n < 1) throw new Error('record-entry 없음');
+  if (errors.length) throw new Error(`콘솔 오류:\n${errors.join('\n')}`);
+  console.log(`E2E PASS (record-entry=${n})`);
+  code = 0;
+} catch (e) {
+  console.error('E2E FAIL:', e.message);
+  if (page) { mkdirSync('e2e/artifacts', { recursive: true }); await page.screenshot({ path: SHOT }).catch(() => {}); console.error(`스크린샷: ${SHOT}`); }
+} finally {
+  await browser?.close().catch(() => {});
+  stop();
+}
+process.exit(code);
