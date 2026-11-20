@@ -1,6 +1,7 @@
 // 항소 발생과 항소심 판정. phaser/DOM 비의존, 무작위 없음.
 import { boardFindings, verdictOf } from './board';
 import { evalCond } from './cond';
+import { revokedCards } from './flow/lines';
 import { DOUBLE_COUNT_FACTOR, PROSECUTOR_APPEAL_RATIO, SUSPENSION_MAX_MONTHS } from './config';
 import {
   availableFactors, deviationPercent, leeway, recommendedRange, suspensionRecommendation,
@@ -22,10 +23,12 @@ export function whoAppeals(sc: Scenario, s: GameState): Appellants {
   return { prosecutor, defendant };
 }
 
-/** 근거 무게: 이탈 슬롯 인자 무게 합. 방향 반대 0, 원심 영역 결정에 쓴 특별인자는 감쇠. */
-function supportWeight(sc: Scenario, s: GameState, dir: Factor['direction']): number {
+/**
+ * 근거 무게: 이탈 슬롯 인자 무게 합. 방향 반대 0.
+ * 권고영역 결정에 쓰인 특별인자(R11: 플레이어 체크와 무관하게 기록상 인정되는 특별인자 전부)는 감쇠.
+ */
+function supportWeight(sc: Scenario, s: GameState, dir: Factor['direction'], usedSpecial: ReadonlySet<string>): number {
   const byId = new Map(sc.sentencing.factors.map((x) => [x.id, x]));
-  const usedSpecial = new Set(s.sentencing.special);
   let w = 0;
   for (const id of s.judgment.deviationSlots) {
     const fac = byId.get(id);
@@ -60,11 +63,16 @@ function review(sc: Scenario, s: GameState, appellants: Appellants): Omit<Appeal
     else remarks.push(v.text);
   }
 
-  // 항소심 인자: 판결에 영향을 미친 위반으로 잃은 카드를 복원한 뒤 계산
+  // 항소심 인자: 판결에 영향을 미친 위반으로 잃은 카드를 복원한 뒤 계산.
+  // 들은 진술이 철회한 카드(예: 처벌불원 철회)는 위반이 없었어도 남지 않았을 것이므로 복원하지 않는다 (R9).
   const held = new Set(s.heldCards);
-  for (const v of s.violations) if (v.affectsJudgment) for (const c of v.lostCards) held.add(c);
-  const factors = availableFactors(sc.sentencing.factors, held);
-  const { range } = recommendedRange(sc.sentencing, factors.filter((x) => x.tier === 'special'));
+  const revoked = revokedCards(sc, s);
+  for (const v of s.violations) {
+    if (v.affectsJudgment) for (const c of v.lostCards) if (!revoked.has(c)) held.add(c);
+  }
+  const special = availableFactors(sc.sentencing.factors, held).filter((x) => x.tier === 'special');
+  const usedSpecial = new Set(special.map((x) => x.id));
+  const { range } = recommendedRange(sc.sentencing, special);
   const rec = suspensionRecommendation(availableFactors(sc.sentencing.suspensionFactors, held));
 
   // 3. 양형부당
@@ -75,12 +83,12 @@ function review(sc: Scenario, s: GameState, appellants: Appellants): Omit<Appeal
     let unfair = false;
     if (months < lw.min || months > lw.max) {
       const { dir, pct } = deviationPercent(range, months);
-      const w = supportWeight(sc, s, dir === 'above' ? 'aggravate' : 'mitigate');
+      const w = supportWeight(sc, s, dir === 'above' ? 'aggravate' : 'mitigate', usedSpecial);
       if (w < pct) unfair = true;
     }
     const suspAgainst = (rec === 'prison' && suspended) || (rec === 'suspend' && !suspended);
     if (suspAgainst) {
-      const w = supportWeight(sc, s, suspended ? 'mitigate' : 'aggravate');
+      const w = supportWeight(sc, s, suspended ? 'mitigate' : 'aggravate', usedSpecial);
       if (w < sc.sentencing.suspensionDeviation) unfair = true;
     }
     if (unfair) reasons.push({ code: 'sentencing', text: '권고범위를 벗어난 형에 근거가 모자란다 (양형부당)' });

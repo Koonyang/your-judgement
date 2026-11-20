@@ -158,6 +158,26 @@ describe('1화 경로', () => {
     expect(out.result).toBe('final');
   });
 
+  it('R9: 정당 대목 제지 + 모욕 방치, 2월 집유 → 검사 항소, 철회된 처벌불원은 복원하지 않아 4월로 파기자판', () => {
+    const { s, out } = run({ legit: 'cut', insult: 'ignore', sentence: { months: 2, suspended: true } });
+    expect(s.heard).toContain('owner_17'); // 처벌불원 철회 진술을 들었다
+    expect(out.appellants).toEqual({ prosecutor: true, defendant: false }); // 2 < 12 × 1/2
+    expect(rangeOf(s)).toEqual({ min: 4, max: 10 });
+    expect(out.result).toBe('reversed');
+    expect(out.reasons.map((r) => r.code)).toEqual(expect.arrayContaining(['procedure', 'sentencing']));
+    expect(out.newSentence?.months).toBe(4);
+  });
+
+  it('공판조서 기록(heard): 이의 인용·제지로 듣지 않은 진술은 없다', () => {
+    const { s } = run({ legit: 'cut', grill: 'cut' });
+    expect(s.heard).not.toContain('owner_10'); // 이의 인용으로 막은 여죄 답변
+    expect(s.heard).not.toContain('owner_14');
+    expect(s.heard).not.toContain('owner_15');
+    for (const id of ['def_3', 'def_4', 'def_5']) expect(s.heard).not.toContain(id);
+    expect(s.heard).toEqual(expect.arrayContaining(['q_owner_items', 'q_def_meal']));
+    expect(new Set(s.heard).size).toBe(s.heard.length);
+  });
+
   it('검사 추궁 제지: 반성 카드 없음, 판결 영향 없는 위반 1건', () => {
     const { s, out } = run({ grill: 'cut' });
     expect(s.flags).toContain('cut_prosecutor');

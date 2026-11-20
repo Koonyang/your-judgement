@@ -20,6 +20,8 @@ const sc = {
     { id: 'c_nonpunish', title: '처벌불원', text: '', kind: 'evidence' },
     { id: 'c_prior', title: '동종 전과', text: '', kind: 'evidence' },
   ],
+  opening: [],
+  exams: [],
   closing: { demandMonths: 12, lines: [] },
   appealView: [
     { cellId: 'c_act', proven: true },
@@ -280,8 +282,21 @@ describe('reviewAppeal', () => {
     const o = reviewAppeal(sc, s);
     expect(o.result).toBe('reversed'); // 15 + 30 = 45 < 50
     expect(o.newSentence?.months).toBe(4);
-    s.sentencing.special = [];
-    expect(reviewAppeal(sc, s).result).toBe('dismissed'); // 60 ≥ 50
+  });
+
+  it('R11: 감쇠 대상은 체크 여부가 아니라 기록상 영역 결정에 쓰인 특별인자다', () => {
+    const held = ['c_conf', 'c_cctv', 'c_livelihood', 'c_remorse'];
+    const s = guilty(2, true, held);
+    s.judgment.deviationSlots = ['f_livelihood', 'f_remorse'];
+    s.sentencing.special = []; // 체크하지 않아도 f_livelihood는 기록상 영역을 정했다
+    const o = reviewAppeal(sc, s);
+    expect(o.result).toBe('reversed'); // 15 + 30 = 45 < 50
+    expect(o.newSentence?.months).toBe(4);
+    // 기록에 근거 카드가 없는 특별인자는 영역 결정에 쓰이지 않았으므로 감쇠하지 않는다.
+    const s2 = guilty(3, true, ['c_conf', 'c_cctv', 'c_remorse']); // 범위 6~18, 3월 → 이탈 50%
+    s2.judgment.deviationSlots = ['f_livelihood', 'f_remorse'];
+    s2.sentencing.special = ['f_livelihood'];
+    expect(reviewAppeal(sc, s2).result).toBe('dismissed'); // 30 + 30 = 60 ≥ 50 (감쇠했다면 45 → 파기)
   });
 });
 
