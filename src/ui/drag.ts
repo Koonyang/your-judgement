@@ -1,6 +1,5 @@
 // 끌어다 놓기(Pointer Events). 4px 넘게 움직여야 드래그로 본다. 밖에 놓으면 아무 일 없다(outside가 있으면 그것만).
 // select: true인 source는 클릭하면 선택되고, 선택된 상태에서 target을 클릭해도 놓은 것으로 친다(드래그가 어려운 경우의 대안).
-const SCALE = 2; // #ui-root transform: scale(2)
 
 type SourceOpts = { select?: boolean; outside?: () => void };
 
@@ -62,7 +61,7 @@ export function createDnd(): {
             ghost = el.cloneNode(true) as HTMLElement;
             Object.assign(ghost.style, {
               position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${el.offsetWidth}px`, margin: '0',
-              transform: `scale(${SCALE})`, transformOrigin: '0 0', pointerEvents: 'none', zIndex: '1000', opacity: '0.85',
+              transform: `scale(${r.width / el.offsetWidth})`, // #ui-root 2배 × 바깥 창 맞춤 배율 transformOrigin: '0 0', pointerEvents: 'none', zIndex: '1000', opacity: '0.85',
             });
             ghost.classList.add('ghost');
             ghost.style.font = getComputedStyle(el).font; // body로 옮기면 #ui-root 글꼴을 잃는다

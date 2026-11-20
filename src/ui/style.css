@@ -340,8 +340,6 @@
 .sentencing .scale { pointer-events: none; } .sentencing .scale .pan { pointer-events: auto; } /* 확대된 천칭 상자가 카드 줄을 가리지 않게 */
 .sentencing .stage-foot { flex-wrap: wrap; } .sentencing .stage-foot .btn { white-space: nowrap; padding: 1px 5px; }
 /* 저울질 배치: 천칭이 화면 가운데, 대기 카드는 책상 위 종이 카드, 판결은 서류(.weigh가 없으면 보통 종이 패널) */
-.sentencing:not(.weigh) .scale { display: none; }
-.sentencing:not(.weigh) .sent-grid { grid-template-columns: 1fr 140px; }
 .sentencing.weigh .sent-grid { display: block; }
 .sentencing.weigh .sent-grid > .col:nth-child(2) { position: absolute; left: 0; right: 0; top: 0; }
 .sentencing.weigh .scale { height: 165px; transform: scale(1.5); transform-origin: top center; margin: 16px 0 0; }
@@ -357,3 +355,15 @@
 .panel.sentencing.weigh .pan-tray .pan-chip:nth-child(even) { transform: rotate(1.2deg); }
 .panel.sentencing.weigh .pan-tray .pan-chip .src { display: block; color: var(--muted); }
 .panel.sentencing.weigh .pan-tray .pan-chip.hl { background: #efe2b8; border-style: solid; }
+/* 판결: 주문 쓰기가 가운데 주인공 */
+.order { text-align: center; margin: 8px auto 8px; padding: 8px 12px 6px; max-width: 470px; border: 1px solid var(--ink); background: #f1e8d4; box-shadow: 3px 3px 0 rgb(0 0 0 / 0.25); }
+.order-title { font-size: 15px; font-weight: bold; letter-spacing: 0.6em; margin-bottom: 6px; }
+.order-line { font-size: 13px; margin: 4px 0; }
+.order .num { width: 40px; font-size: 13px; text-align: center; }
+.order label.order-line { justify-content: center; font-size: 11px; }
+.order-note { min-height: 12px; font-size: 9px; }
+.ref { border-top: 1px dashed var(--hanji-2); margin-top: 4px; padding-top: 2px; }
+.ref h3 { margin: 2px 0; color: var(--muted); }
+.ref-line { margin: 2px 0; font-size: 9px; }
+.ref .area { display: inline; font-weight: bold; margin: 0; }
+.sentencing .stage-foot.decide-only { position: sticky; bottom: -8px; background: var(--hanji); padding: 4px 0; margin: 0; border-top: 1px solid var(--hanji-2); } /* 주문 확정은 늘 보이게 */

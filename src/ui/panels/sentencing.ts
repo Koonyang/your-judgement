@@ -4,6 +4,7 @@
 import type { Controller } from '../../game/controller';
 import { formatSentence } from '../../engine/judgment';
 import { scaleView, type ScaleView } from '../../engine/scale';
+import { SUSPENSION_PERIOD_YEARS } from '../../engine/config';
 import type { Factor, Scenario } from '../../engine/scenario/schema';
 import { availableFactors, leeway, validateSentence, type Area } from '../../engine/sentencing';
 import type { GameState } from '../../engine/state';
@@ -82,7 +83,7 @@ export function createSentencingPanel(c: Controller): Panel {
     const suspended = h('input', { type: 'checkbox', testid: 'chk-suspended' });
     suspended.addEventListener('change', () => c.dispatch({ type: 'SET_SENTENCING', patch: { suspended: suspended.checked } }));
     const error = h('div', { class: 'error', testid: 'sentence-error', role: 'alert' });
-    const confirm = button('btn-confirm-sentencing', '양형 확정', () => c.dispatch({ type: 'CONFIRM_SENTENCING' }), 'btn primary');
+    const confirm = button('btn-confirm-sentencing', '주문 확정', () => c.dispatch({ type: 'CONFIRM_SENTENCING' }), 'btn primary');
 
     const drop = (side: Side) => (id: string) => {
       const p = place(sc, c.state, id, side);
@@ -103,24 +104,26 @@ export function createSentencingPanel(c: Controller): Panel {
     // 1단계 저울질: 카드·천칭·수치 없는 권고 막대만. 2단계 판결: 인자 설명·상세 수치·선고형.
     const done = button('btn-scale-done', '저울질을 마친다', () => setWeighing(false), 'btn primary');
     const back = button('btn-scale-back', '다시 저울질', () => setWeighing(true), 'btn');
+    // 판결 단계의 주인공은 주문 쓰기: 빈칸을 채워 주문을 완성한다. 권고·인자 설명은 아래 참고로.
+    const scaleCol = h('div', { class: 'col scale-col' }, scale);
+    const refBar = h('div', { class: 'ref-bar' });
     el.append(
       h('div', { class: 'decide-only' }, h('h2', {}, '양형'),
         h('p', { class: 'guideline' }, h('span', { class: 'muted small' }, '양형기준 유형 '), h('span', { testid: 'guideline-name' }, S.guidelineName),
           h('span', { class: 'muted small' }, ` · 법정형 상한 ${formatSentence(S.statutoryMaxMonths)}`))),
-      h('div', { class: 'sent-grid' },
-        h('div', { class: 'col weigh-only' }, tray),
-        h('div', { class: 'col' }, scale, bar.el,
-          h('div', { class: 'decide-only' },
-            h('div', { class: 'calc-lines' }, calc.special, calc.adjust, calc.general, calc.susp),
-            h('h3', {}, '기록상 권고 (항소심 기준)'), area,
-            h('div', { class: 'susp-line' }, h('span', {}, '집행유예: '), susRec), selected)),
-        h('div', { class: 'col decide-only' }, h('h3', {}, '선고형'),
-          h('div', { class: 'sentence-input' }, h('span', {}, '징역'), months, h('span', {}, '개월')), monthsText,
-          h('label', { class: 'check' }, suspended, h('span', {}, '집행유예')), error,
-          h('div', { class: 'stage-foot' }, back, confirm))),
+      h('div', { class: 'order decide-only', testid: 'order' },
+        h('div', { class: 'order-title' }, '주    문'),
+        h('p', { class: 'order-line' }, '피고인을 징역 ', months, '월에 처한다.'),
+        h('label', { class: 'order-line susp check' }, suspended, h('span', {}, `다만, 이 판결 확정일부터 ${SUSPENSION_PERIOD_YEARS}년간 위 형의 집행을 유예한다.`)),
+        h('div', { class: 'order-note' }, monthsText, error)),
+      h('div', { class: 'ref decide-only' }, h('h3', {}, '참고'), refBar,
+        h('div', { class: 'calc-lines' }, calc.special, calc.adjust, calc.general, calc.susp),
+        h('p', { class: 'ref-line' }, h('span', {}, '기록상 권고(항소심 기준) '), area, h('span', {}, ' · 집행유예 '), susRec), selected),
+      h('div', { class: 'stage-foot decide-only' }, back, confirm),
+      h('div', { class: 'sent-grid weigh-only' }, h('div', { class: 'col' }, tray), scaleCol),
       h('div', { class: 'weigh-foot weigh-only' }, done),
     );
-    return { tray, pans, beam, scale, calc, area, bar, susRec, selected, months, monthsText, suspended, error, confirm };
+    return { scaleCol, refBar, tray, pans, beam, scale, calc, area, bar, susRec, selected, months, monthsText, suspended, error, confirm };
   }
 
   let lastKey = '';
@@ -194,6 +197,9 @@ export function createSentencingPanel(c: Controller): Panel {
       const months = s.sentencing.months;
       const hasAddendum = s.judgment.addendum !== '';
       el.classList.toggle('weigh', weighing);
+      // 막대 하나를 저울질 땐 천칭 아래, 판결 땐 참고 영역으로 옮겨 쓴다.
+      const barHome = weighing ? b.scaleCol : b.refBar;
+      if (b.bar.el.parentElement !== barHome) barHome.append(b.bar.el);
       b.bar.el.classList.toggle('bare', weighing);
       b.bar.update({
         // 저울질 중에는 접시 기준으로 움직이는 범위(수치는 숨김), 판결 때는 기록상 권고(R11)
