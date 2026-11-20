@@ -2,21 +2,27 @@
 // 실행: npm run build && npm run e2e
 import { createRequire } from 'node:module';
 import { spawn, execSync } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const PORT = 4173;
-const URL = `http://localhost:${PORT}/`;
+const BASE = `http://localhost:${PORT}/`;
 const SHOT = 'e2e/artifacts/failure.png';
 
-if (!existsSync('dist')) execSync('npm run build', { stdio: 'inherit' });
+execSync('npm run build', { stdio: 'inherit' });
+try { await fetch(BASE); console.error(`E2E FAIL: ${PORT} already in use`); process.exit(1); } catch {}
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
 const stop = () => { try { process.kill(-server.pid, 'SIGKILL'); } catch {} };
 process.on('exit', stop);
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { stop(); process.exit(1); });
+let serverDied = null;
+server.once('exit', (c) => { serverDied = `preview 서버가 종료됨 (code ${c})`; });
+server.once('error', (e) => { serverDied = `preview 서버 실행 실패: ${e.message}`; });
 
 const waitForServer = async () => {
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(URL)).ok) return; } catch {}
+    if (serverDied) throw new Error(serverDied);
+    try { if ((await fetch(BASE)).ok) return; } catch {}
     await new Promise((r) => setTimeout(r, 500));
   }
   throw new Error('preview 서버가 뜨지 않음');
@@ -31,7 +37,7 @@ try {
   page.setDefaultTimeout(15000);
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); }); // GPU stall 등은 warning이라 제외됨
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-  await page.goto(URL);
+  await page.goto(BASE);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 
@@ -91,6 +97,7 @@ try {
   code = 0;
 } catch (e) {
   console.error('E2E FAIL:', e.message);
+  if (errors.length) console.error(`콘솔 오류:\n${errors.join('\n')}`);
   if (page) { mkdirSync('e2e/artifacts', { recursive: true }); await page.screenshot({ path: SHOT }).catch(() => {}); console.error(`스크린샷: ${SHOT}`); }
 } finally {
   await browser?.close().catch(() => {});
