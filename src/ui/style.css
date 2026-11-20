@@ -18,7 +18,7 @@
   /* 보조(토큰에서 파생) */
   --muted: #7a6c5a;
   --mark: rgb(224 176 96 / 0.55);
-  --ok: var(--ok);
+  --ok: #4f7a45;
 }
 
 #ui-root {
@@ -106,6 +106,7 @@
 
 /* 서랍 (기록·증거목록) */
 .drawer { overflow: hidden; }
+.btn.zoom-close { position: absolute; right: 6px; top: 5px; padding: 0 6px; font-size: 9px; }
 .drawer > .panel { height: 100%; }
 .doc-body { white-space: pre-wrap; background: #f1e8d4; border: 1px solid var(--hanji-2); padding: 4px 5px; }
 .doc-body mark { background: var(--mark); color: inherit; }

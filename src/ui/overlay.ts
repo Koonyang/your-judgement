@@ -67,7 +67,10 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     board: { id: 'board', testid: 'tab-board', label: '쟁점 메모', kind: 'memo', open: () => toggle('board') },
   };
   const dim = h('div', { class: 'zoom-dim' });
-  const drawerEl = h('div', { class: 'drawer', testid: 'drawer' }, docs.el, evidence.el, boardDrawer.el);
+  const putDown = () => { drawer = null; render(c.state); };
+  const close = button('btn-zoom-close', '내려놓기', putDown, 'btn zoom-close');
+  const drawerEl = h('div', { class: 'drawer', testid: 'drawer' }, docs.el, evidence.el, boardDrawer.el, close);
+  dim.addEventListener('click', () => { if (drawer !== null) putDown(); }); // 확대 서류 바깥을 누르면 내려놓는다
   const introOk = button('btn-board-intro-ok', '확인', () => {
     introOpen = false;
     render(c.state);

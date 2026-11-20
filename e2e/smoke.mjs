@@ -33,7 +33,7 @@ const errors = [];
 try {
   await waitForServer();
   browser = await chromium.launch();
-  page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: process.env.SHOTS ? 2 : 1 });
   page.setDefaultTimeout(15000);
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); }); // GPU stall 등은 warning이라 제외됨
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -48,8 +48,12 @@ try {
   const text = async (id) => ((await vis(id)) ? tid(id).innerText() : '');
 
   // 공판: 이의 인용, 모욕 대목 제지, 보충신문, 최후진술 형광펜
+  await page.waitForTimeout(300);
+  await shot('1-docket');
   await tid('btn-open-case').click();
+  await shot('2-pretrial');
   const asked = new Set();
+  const taken = new Set();
   for (let i = 0; i < 300 && (await text('phase-title')) !== '선고기일 전 재검토'; i++) {
     if (await vis('board-intro')) { await tid('btn-board-intro-ok').click(); continue; }
     if (await vis('btn-sustain')) { await tid('btn-sustain').click(); continue; }
@@ -58,11 +62,21 @@ try {
       if (want && (await vis(want)) && (await tid(want).isEnabled())) { asked.add(want); await tid(want).click(); continue; }
       await tid('btn-supp-end').click(); continue;
     }
+    const title = await text('phase-title');
+    for (const [key, name] of [['증거조사', '3-evidence'], ['증인신문', '4-exam']]) {
+      if (title.startsWith(key) && !taken.has(name)) { taken.add(name); await page.waitForTimeout(300); await shot(name); }
+    }
     const cur = await text('dialogue-text');
     if (cur.startsWith('솔직히 사장님도')) { await tid('btn-interrupt').click(); continue; }
     if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
     await tid('btn-next').click();
   }
+  // 재검토: 책상에서 기록을 집어 공판조서를 보고(긴 한글 기록 스크롤) 내려놓는다.
+  if ((await tid('tab-docs').getAttribute('aria-pressed')) !== 'true') await tid('tab-docs').click();
+  if (!(await vis('panel-docs'))) throw new Error('기록 확대 보기가 열리지 않음');
+  await shot('4b-review-transcript');
+  await tid('btn-zoom-close').click();
+  if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
   await tid('btn-next').click();
 
   // 유무죄: 4칸에 자백 외 증거 연결 + 증명됨
@@ -105,6 +119,7 @@ try {
   await tid('btn-finish-appeal').click();
   await tid('record-entry').first().waitFor({ state: 'visible' });
 
+  await shot('9-record');
   const n = await tid('record-entry').count();
   if (n < 1) throw new Error('record-entry 없음');
   if (errors.length) throw new Error(`콘솔 오류:\n${errors.join('\n')}`);

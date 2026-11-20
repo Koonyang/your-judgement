@@ -14,7 +14,7 @@ const NARRATION: Partial<Record<GameState['phase'], { text: string; next: string
     text: '증거조사. 피고인이 동의한 증거는 채택되어 열람할 수 있습니다. 부동의한 증거는 표목만 남습니다.',
     next: '증인신문으로',
   },
-  review: { text: '선고기일 전 재검토. 위의 탭에서 기록을 자유롭게 열람할 수 있습니다.', next: '선고기일로' },
+  review: { text: '선고기일 전 재검토. 책상의 기록을 집어 자유롭게 열람할 수 있습니다.', next: '선고기일로' },
 };
 const BLOCK_END: Partial<Record<GameState['phase'], string>> = {
   opening: '모두절차를 마칩니다.',
