@@ -94,7 +94,7 @@
 .main, .drawer, .stage { position: absolute; left: 6px; right: 6px; top: 6px; bottom: 6px; z-index: 10; }
 #ui-root.dl-on .main, #ui-root.dl-on .drawer, #ui-root.dl-on .stage { bottom: 56px; }
 /* 기록·증거목록·쟁점 메모: 화면을 덮지 않는 종이. 넘치는 내용은 종이 안에서 스크롤 */
-#ui-root.paper .drawer { left: 110px; right: 110px; top: 122px; transform: rotate(-0.4deg); box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5); }
+#ui-root.paper .drawer { left: 110px; right: 110px; top: 6px; transform: rotate(-0.4deg); box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5); }
 #ui-root.paper .zoom-dim, #ui-root.ar .zoom-dim { top: 150px; background: rgb(7 8 10 / 0.35); }
 #ui-root.zoomed .dialogue { top: 310px; }
 .docket { text-align: center; }
@@ -332,3 +332,14 @@
 .panel.sentencing .check input { accent-color: var(--accent); }
 .panel.sentencing .scale.wobble .beam { animation: float 3s ease-in-out infinite, wobble 1.2s ease-in-out infinite; }
 #ui-root.ar .nameplate { display: none; }
+/* 양형 1단계 저울질: 천칭이 주인공. 카드와 수치 없는 막대만 곁에 둔다 */
+.sentencing.weigh .decide-only, .sentencing:not(.weigh) .weigh-only { display: none; }
+.sentencing.weigh .sent-grid { grid-template-columns: 130px 1fr; height: calc(100% - 26px); }
+.sentencing.weigh .scale { height: 220px; transform: scale(1.8); transform-origin: top center; margin: 8px 0 0; }
+.sentencing.weigh .pan-tray { margin-top: 30px; }
+.weigh-foot { position: absolute; right: 10px; bottom: 8px; }
+.rangebar.bare .rb-ticks, .rangebar.bare .rb-legend, .rangebar.bare .rb-demand, .rangebar.bare .rb-months, .rangebar.bare .rb-leeway { display: none; }
+.rangebar.bare { margin-top: 4px; }
+.sentencing .scale { pointer-events: none; } .sentencing .scale .pan { pointer-events: auto; } /* 확대된 천칭 상자가 카드 줄을 가리지 않게 */
+.sentencing:not(.weigh) .sent-grid { grid-template-columns: 1fr 140px; } /* 판결 단계: 카드 줄이 빠진 두 칸 */
+.sentencing .stage-foot { flex-wrap: wrap; } .sentencing .stage-foot .btn { white-space: nowrap; padding: 1px 5px; }

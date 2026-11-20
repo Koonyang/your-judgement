@@ -53,6 +53,12 @@ export function createSentencingPanel(c: Controller): Panel {
   const el = h('section', { class: 'panel stage sentencing', testid: 'panel-sentencing' });
   const dnd = createDnd();
   let built: null | ReturnType<typeof build> = null;
+  let weighing = true;
+  let wasHere = false;
+  const setWeighing = (on: boolean) => {
+    weighing = on;
+    panel.render(c.state, c.sc);
+  };
 
   function build(sc: Scenario) {
     const S = sc.sentencing;
@@ -94,29 +100,36 @@ export function createSentencingPanel(c: Controller): Panel {
     dnd.target(pans.fav, drop('fav'));
     dnd.target(pans.unfav, drop('unfav'));
 
+    // 1단계 저울질: 카드·천칭·수치 없는 권고 막대만. 2단계 판결: 인자 설명·상세 수치·선고형.
+    const done = button('btn-scale-done', '저울질을 마친다', () => setWeighing(false), 'btn primary');
+    const back = button('btn-scale-back', '다시 저울질', () => setWeighing(true), 'btn');
     el.append(
-      h('h2', {}, '양형'),
-      h('p', { class: 'guideline' }, h('span', { class: 'muted small' }, '양형기준 유형 '), h('span', { testid: 'guideline-name' }, S.guidelineName),
-        h('span', { class: 'muted small' }, ` · 법정형 상한 ${formatSentence(S.statutoryMaxMonths)}`)),
+      h('div', { class: 'decide-only' }, h('h2', {}, '양형'),
+        h('p', { class: 'guideline' }, h('span', { class: 'muted small' }, '양형기준 유형 '), h('span', { testid: 'guideline-name' }, S.guidelineName),
+          h('span', { class: 'muted small' }, ` · 법정형 상한 ${formatSentence(S.statutoryMaxMonths)}`))),
       h('div', { class: 'sent-grid' },
-        h('div', { class: 'col' }, h('h3', {}, '기록의 카드'),
-          h('p', { class: 'muted small' }, '끌어다 접시에 올리거나, 눌러 고른 뒤 접시를 누릅니다. 접시의 카드를 누르거나 끌어내면 내려갑니다.'), tray),
-        h('div', { class: 'col' }, scale,
-          h('div', { class: 'calc-lines' }, calc.special, calc.adjust, calc.general, calc.susp),
-          h('h3', {}, '기록상 권고 (항소심 기준)'), area, bar.el,
-          h('div', { class: 'susp-line' }, h('span', {}, '집행유예: '), susRec), selected),
-        h('div', { class: 'col' }, h('h3', {}, '선고형'),
+        h('div', { class: 'col weigh-only' }, tray),
+        h('div', { class: 'col' }, scale, bar.el,
+          h('div', { class: 'decide-only' },
+            h('div', { class: 'calc-lines' }, calc.special, calc.adjust, calc.general, calc.susp),
+            h('h3', {}, '기록상 권고 (항소심 기준)'), area,
+            h('div', { class: 'susp-line' }, h('span', {}, '집행유예: '), susRec), selected)),
+        h('div', { class: 'col decide-only' }, h('h3', {}, '선고형'),
           h('div', { class: 'sentence-input' }, h('span', {}, '징역'), months, h('span', {}, '개월')), monthsText,
           h('label', { class: 'check' }, suspended, h('span', {}, '집행유예')), error,
-          h('div', { class: 'stage-foot' }, confirm))),
+          h('div', { class: 'stage-foot' }, back, confirm))),
+      h('div', { class: 'weigh-foot weigh-only' }, done),
     );
     return { tray, pans, beam, scale, calc, area, bar, susRec, selected, months, monthsText, suspended, error, confirm };
   }
 
   let lastKey = '';
-  return {
+  const panel: Panel = {
     el,
     render(s, sc) {
+      // 양형 단계에 새로 들어오면 늘 저울질부터.
+      if (s.phase === 'sentencing' && !wasHere) weighing = true;
+      wasHere = s.phase === 'sentencing';
       if (s.phase !== 'sentencing' && built) return;
       const b = (built ??= build(sc));
       const S = sc.sentencing;
@@ -176,13 +189,15 @@ export function createSentencingPanel(c: Controller): Panel {
       for (const k of ['special', 'adjust', 'general', 'susp'] as const) b.calc[k].textContent = lines[k];
       b.calc.adjust.classList.toggle('off', !v.adjust.applied);
 
-      // 막대: 기록상 권고(R11)
       const rr = recordBasis(sc, s);
       b.area.textContent = `${areaText(rr)} ${rr.range.min}~${rr.range.max}개월${rr.judgmentCall ? ' · 행위자 인자가 우세해 종합 판단 필요' : ''}`;
       const months = s.sentencing.months;
       const hasAddendum = s.judgment.addendum !== '';
+      el.classList.toggle('weigh', weighing);
+      b.bar.el.classList.toggle('bare', weighing);
       b.bar.update({
-        range: rr.range, leeway: hasAddendum ? leeway(rr.range, true) : null, demand: sc.closing.demandMonths,
+        // 저울질 중에는 접시 기준으로 움직이는 범위(수치는 숨김), 판결 때는 기록상 권고(R11)
+        range: weighing ? v.adjust.range : rr.range, leeway: hasAddendum ? leeway(rr.range, true) : null, demand: sc.closing.demandMonths,
         months: months !== null && Number.isFinite(months) ? months : null,
         scaleMax: scaleMaxOf(S.ranges.aggravated.max, sc.closing.demandMonths, months), lean: v.general.lean,
       });
@@ -201,4 +216,5 @@ export function createSentencingPanel(c: Controller): Panel {
       b.confirm.disabled = months === null || err !== null;
     },
   };
+  return panel;
 }

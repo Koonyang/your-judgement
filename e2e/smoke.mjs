@@ -101,6 +101,10 @@ try {
   await tid('pan-item-c_nonpunish').focus(); await page.keyboard.press('Enter');
   await tid('pan-fav').focus(); await page.keyboard.press('Enter');
   if ((await tid('scale').getAttribute('data-tilt')) !== '-3') throw new Error('키보드로 다시 올라가지 않음');
+  // 저울질 중에는 수치·선고 입력이 없다. 마친 뒤 판결 화면에서 정한다.
+  if (await vis('input-months')) throw new Error('저울질 중에 선고형 입력이 보임');
+  await shot('6-weigh');
+  await tid('btn-scale-done').click();
   await tid('input-months').fill('6');
   await tid('chk-suspended').check();
   await page.waitForTimeout(500);
