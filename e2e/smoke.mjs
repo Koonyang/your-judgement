@@ -67,6 +67,15 @@ try {
       if (title.startsWith(key) && !taken.has(name)) { taken.add(name); await page.waitForTimeout(300); await shot(name); }
     }
     const cur = await text('dialogue-text');
+    // 재판장이 말하는 중에는 마이크(제지)를 누를 수 없다.
+    if (await vis('btn-interrupt') && (await text('dialogue-speaker')) === '재판장' && (await tid('btn-interrupt').isEnabled())) throw new Error('재판장 대사 중에 제지 가능');
+    // 대사는 화면(법정)을 눌러 넘길 수 있다. 신문 첫 대사에서 한 번 확인.
+    if (title.startsWith('증인신문') && !taken.has('tap')) {
+      taken.add('tap');
+      await page.locator('#game canvas').click({ position: { x: 640, y: 80 } });
+      if ((await text('dialogue-text')) === cur) throw new Error('화면을 눌러도 대사가 넘어가지 않음');
+      continue;
+    }
     if (cur.startsWith('솔직히 사장님도')) { await tid('btn-interrupt').click(); continue; }
     if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
     await tid('btn-next').click();

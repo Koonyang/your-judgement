@@ -67,6 +67,19 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     board: { id: 'board', testid: 'tab-board', label: '쟁점 메모', kind: 'memo', open: () => toggle('board') },
   };
   const dim = h('div', { class: 'zoom-dim' });
+  // 제지: 책상 위 마이크를 누르면 재판장이 "잠깐." 하고 끊는다.
+  const say = h('div', { class: 'mic-say', testid: 'judge-say' }, '재판장: 잠깐.');
+  say.hidden = true;
+  let sayTimer = 0;
+  const mic: DeskItem = {
+    id: 'mic', testid: 'btn-interrupt', label: '마이크(제지)', kind: 'mic',
+    open: () => {
+      c.dispatch({ type: 'INTERRUPT' });
+      say.hidden = false;
+      clearTimeout(sayTimer);
+      sayTimer = window.setTimeout(() => { say.hidden = true; }, 900);
+    },
+  };
   const putDown = () => { drawer = null; render(c.state); };
   const close = button('btn-zoom-close', '내려놓기', putDown, 'btn zoom-close');
   const drawerEl = h('div', { class: 'drawer', testid: 'drawer' }, docs.el, evidence.el, boardDrawer.el, close);
@@ -79,7 +92,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const skip = button('btn-skip-pronounce', '건너뛰기', () => c.dispatch({ type: 'FINISH_PRONOUNCE' }), 'btn skip');
   docket.el.classList.add('main');
   boardMain.el.classList.add('stage');
-  root.append(desk.el, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
+  root.append(desk.el, say, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
 
   function enter(s: GameState): void {
     // 단계에 들어설 때 그 단계의 주 패널을 서랍으로 연다.
@@ -110,7 +123,11 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     title.textContent = phaseTitle(c, s);
     show(title, s.phase !== 'docket' && s.phase !== 'pronounce');
     show(desk.el, s.phase !== 'pronounce'); // 선고 연출은 Phaser 화면 전체를 쓴다
-    desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : [])], drawer);
+    // 마이크는 증인·피고인 신문 중(보충신문 제외)에만. 재판장 자신이 말할 때는 누를 수 없다.
+    const line = c.shownLine();
+    const micOn = s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line;
+    mic.disabled = line?.speaker === 'judge';
+    desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : []), ...(micOn ? [mic] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict');
     show(sentencing.el, s.phase === 'sentencing');
@@ -141,6 +158,15 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   render(c.state);
 
   // Space/Enter = [다음]. 버튼에 포커스가 있으면 브라우저 기본 동작(클릭)에 맡긴다.
+  // 화면 아무 데나 누르면 [다음](대사가 보일 때만, 선택지·버튼·서류를 누른 게 아니면).
+  window.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement | null;
+    if (!c.shownLine() || !t || t.closest('button, a, input, label, select, textarea, .panel, .drawer, .modal, .supp, .zoom-dim, .desk-item, .drag-source, .drop-target')) return;
+    const next = root.querySelector<HTMLButtonElement>('[data-testid="btn-next"]');
+    if (!next || next.closest('[hidden]') || next.disabled) return;
+    next.click();
+  });
+
   window.addEventListener('keydown', (e) => {
     if (e.key !== ' ' && e.key !== 'Enter') return;
     const t = e.target as HTMLElement | null;

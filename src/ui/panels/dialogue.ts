@@ -1,4 +1,4 @@
-// 대사 줄(y150–200): 초상 + 화자·대사, [다음]·[제지]·이의 결정·보충신문 질문(줄 위로 펼침).
+// 대사 줄(화면 맨 아래 y290–360): 초상 + 화자·대사, 이의 결정·보충신문 질문. 제지는 책상의 마이크(overlay).
 // 설계 규칙: 어떤 라인이 제지 가능한지 표시하지 않는다. 제지가 무시돼도 반응하지 않는다.
 import type { Controller } from '../../game/controller';
 import { suppFlag } from '../../engine/reducer';
@@ -26,8 +26,7 @@ export function createDialoguePanel(c: Controller): Panel {
   const text = h('div', { class: 'text', testid: 'dialogue-text' });
   const note = h('div', { class: 'note', testid: 'dialogue-note' });
   const supp = h('div', { class: 'supp', testid: 'supp-list' });
-  const next = button('btn-next', '다음', () => (c.replaying ? c.ack() : c.dispatch({ type: 'ADVANCE' })), 'btn primary');
-  const interrupt = button('btn-interrupt', '제지', () => c.dispatch({ type: 'INTERRUPT' }), 'btn warn');
+  const next = button('btn-next', '▼', () => (c.replaying ? c.ack() : c.dispatch({ type: 'ADVANCE' })), 'btn primary');
   const sustain = button('btn-sustain', '인용', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'sustain' }));
   const overrule = button('btn-overrule', '기각', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'overrule' }));
   // 결심의 최후진술은 형광펜으로 표시할 수 있다(문장 일부를 드래그하거나, 선택이 없으면 대사 전체).
@@ -44,7 +43,7 @@ export function createDialoguePanel(c: Controller): Panel {
   });
   hlClosing.addEventListener('mousedown', (e) => e.preventDefault());
   const suppEnd = button('btn-supp-end', '묻지 않음', () => c.dispatch({ type: 'END_SUPP' }));
-  const actions = h('div', { class: 'actions' }, hlClosing, interrupt, sustain, overrule, suppEnd, next);
+  const actions = h('div', { class: 'actions' }, hlClosing, sustain, overrule, suppEnd, next);
   const portrait = h('div', { class: 'portrait', testid: 'dialogue-portrait' });
   const body = h('div', { class: 'dl-body' }, h('div', {}, speaker, text), note);
   const el = h('section', { class: 'dialogue', testid: 'panel-dialogue' }, portrait, body, actions, supp);
@@ -86,14 +85,15 @@ export function createDialoguePanel(c: Controller): Panel {
         suppEnd.textContent = exam.supplementary.some((q) => s.flags.includes(suppFlag(q.id))) ? '신문 종료' : '묻지 않음';
       }
 
-      show(interrupt, s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line);
       show(sustain, !!objection);
       show(overrule, !!objection);
       show(suppEnd, examSupp);
       const closingStmt = s.phase === 'closing' && line?.speaker === 'defendant';
       show(hlClosing, closingStmt);
       show(next, !objection && !examSupp);
-      next.textContent = !line && NARRATION[s.phase] ? NARRATION[s.phase]!.next : '다음';
+      // 대사는 화면을 눌러 넘긴다(▼는 그 표시). 절차를 바꾸는 버튼만 글자로.
+      next.textContent = !line && NARRATION[s.phase] ? NARRATION[s.phase]!.next : '▼';
+      next.classList.toggle('tap', next.textContent === '▼');
     },
   };
 }
