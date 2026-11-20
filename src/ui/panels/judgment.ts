@@ -1,5 +1,5 @@
-// 판결서 작성: 왼쪽은 빈 판결서. 항목(주문·범죄사실·증거의 요지·법령의 적용·양형의 이유)을 누르면 그 문단이 나타나고,
-// 오른쪽 도구가 그 항목을 채우는 것으로 바뀐다. 양형 단계(저울질 뒤)에서 시작하고, 무죄면 판결서 단계에서 바로 연다.
+// 판결서 작성: 왼쪽은 빈 판결서. 누를 때마다 다음 항목(주문 → 범죄사실 → 증거의 요지 → 법령의 적용 → 양형의 이유)이
+// 순서대로 나타나고, 오른쪽 도구가 그 항목을 채우는 것으로 바뀐다. 이미 쓴 항목을 누르면 그 도구로 돌아간다. 양형 단계(저울질 뒤)에서 시작하고, 무죄면 판결서 단계에서 바로 연다.
 // [판결서 확정] = (양형 단계면) CONFIRM_SENTENCING → CONFIRM_JUDGMENT.
 // 1화(tutorial): 여유폭 밖이면 참여관 한 줄만 보이고 이탈 슬롯은 숨긴다. 그 외 회차는 이탈 슬롯(양형 인자)을 연다.
 import type { Controller } from '../../game/controller';
@@ -108,6 +108,13 @@ export function createJudgmentPanel(c: Controller, backToScale: () => void): Pan
     return b;
   };
 
+  const order = (guilty: boolean): SecId[] => (guilty ? ['order', 'facts', 'evidence', 'law', 'reasons'] : ['order', 'facts', 'acquit']);
+  // 판결서의 빈 곳을 눌러도 다음 항목이 나온다.
+  doc.addEventListener('click', () => {
+    const next = order(verdictOf(c.state.board) === 'guilty').find((x) => !opened.has(x));
+    if (next) open(next);
+  });
+
   function drawDoc(s: GameState, sc: Scenario, guilty: boolean) {
     const d = assembleJudgment(sc, s);
     const list = (xs: string[], empty: string) =>
@@ -124,14 +131,17 @@ export function createJudgmentPanel(c: Controller, backToScale: () => void): Pan
       acquit: () => [list(d.acquittalReasons ?? [], '의심 남은 칸이 없습니다.'),
         ...(d.sentencingReasons.addendum ? [h('p', { class: 'jd-add' }, d.sentencingReasons.addendum)] : [])],
     };
-    const ids: SecId[] = guilty ? ['order', 'facts', 'evidence', 'law', 'reasons'] : ['order', 'facts', 'acquit'];
+    const ids = order(guilty);
+    const next = ids.find((x) => !opened.has(x));
     doc.replaceChildren(h('div', { class: 'jd-title' }, '판   결'), ...ids.map((id) => {
       const shown = opened.has(id);
       const sec = h('div', { class: `jd-sec${shown ? ' shown' : ''}${active === id ? ' active' : ''}`, testid: `sec-${id}`, role: 'button', tabindex: '0' },
         h('div', { class: 'jd-h' }, id === 'facts' && !guilty ? '공소사실' : TITLES[id]),
-        ...(shown ? body[id]() : [h('p', { class: 'jd-blank' }, '눌러서 작성')]));
-      sec.addEventListener('click', () => open(id));
-      sec.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(id); } });
+        ...(shown ? body[id]() : [h('p', { class: 'jd-blank' }, id === next ? '눌러서 작성' : '')]));
+      // 쓴 항목은 다시 열고, 아직 안 쓴 항목은 어디를 눌러도 순서상 다음 항목이 나온다.
+      const go = () => open(shown ? id : (next ?? id));
+      sec.addEventListener('click', (e) => { e.stopPropagation(); go(); });
+      sec.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
       if (id === 'evidence') {
         dnd.target(sec, (cardId) => { opened.add('evidence'); active = 'evidence'; add('evidenceSlots', cardId); });
       }
@@ -197,6 +207,8 @@ export function createJudgmentPanel(c: Controller, backToScale: () => void): Pan
     }));
 
     if (document.activeElement !== addendum && addendum.value !== j.addendum) addendum.value = j.addendum;
+    // 마지막 항목까지 써야 확정할 수 있다.
+    confirm.disabled = order(guilty).some((x) => !opened.has(x));
   }
 
   return {

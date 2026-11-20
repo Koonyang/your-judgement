@@ -389,3 +389,7 @@
 .btn.sm { padding: 1px 8px; font-size: 9px; }
 .ref-line { margin: 2px 0; font-size: 9px; }
 .ref-line .area { font-weight: bold; }
+.tool-body:not([hidden]) { animation: tool-in 0.3s ease-out; } /* 도구가 바뀔 때 자연스럽게 */
+@keyframes tool-in { from { opacity: 0; translate: 6px 0; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .tool-body:not([hidden]) { animation: none; } }
+.jd-sec:not(.shown) .jd-blank:empty { border-bottom-style: dotted; opacity: 0.5; min-height: 6px; }

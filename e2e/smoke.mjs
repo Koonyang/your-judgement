@@ -115,10 +115,11 @@ try {
   await shot('6-weigh');
   await tid('btn-scale-done').click();
 
-  // 판결서 작성: 빈 판결서의 항목을 누르면 문단이 나타나고 오른쪽 도구가 바뀐다.
+  // 판결서 작성: 판결서를 누를 때마다 다음 항목이 순서대로 나타나고 오른쪽 도구가 바뀐다.
   if (await vis('tool-order')) throw new Error('누르기 전에 주문 도구가 보임');
-  await tid('btn-confirm-judgment').click(); // 형을 정하지 않고 확정 → 막히고 주문으로
-  if (!(await vis('tool-order'))) throw new Error('형 없이 확정했는데 주문으로 가지 않음');
+  if (await tid('btn-confirm-judgment').isEnabled()) throw new Error('다 쓰기 전에 확정 가능');
+  await tid('sec-reasons').click(); // 아래 항목을 눌러도 순서상 첫 항목(주문)이 나온다
+  if (!(await vis('tool-order'))) throw new Error('첫 누름에 주문이 나오지 않음');
   // 주문: 스크롤(슬라이더)로 형량, +1개월로 미세 조정
   await tid('input-months').evaluate((el) => { el.value = '5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   await tid('btn-months-inc').click();
@@ -126,7 +127,10 @@ try {
   await tid('chk-suspended').check();
   await page.waitForTimeout(300);
   await shot('6-sentencing');
+  await tid('sec-facts').click(); // 다음 누름 = 범죄사실, 양형 스크롤은 사라진다
+  if (await vis('tool-order') || !(await vis('tool-auto'))) throw new Error('범죄사실로 넘어가며 도구가 바뀌지 않음');
   await tid('sec-evidence').click();
+  if (!(await vis('tool-evidence'))) throw new Error('증거의 요지 도구가 나오지 않음');
 
   // 판결서: CCTV 카드는 끌어다 놓기로. 먼저 밖(제목)에 놓아 변화가 없는지 본 뒤 증거의 요지에 놓는다.
   const cctv = tid('slot-evidence-c_cctv');
@@ -140,6 +144,7 @@ try {
   for (const id of ['slot-evidence-c_receipt']) {
     if (await vis(id)) await tid(id).click();
   }
+  await tid('sec-law').click();
   await tid('sec-reasons').click();
   if (!(await text('judgment-preview')).includes('생계형 범죄')) throw new Error('천칭의 유리한 정상이 판결서에 없음');
   await shot('7-judgment');
