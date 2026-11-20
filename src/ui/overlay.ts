@@ -1,4 +1,4 @@
-// HTML 오버레이: 단계에 따라 패널을 전환하고, 기록·증거목록·쟁점 보드를 옆 탭(서랍)으로 연다.
+// HTML 오버레이: 대사 줄 + 책상. 단계 주 패널과 책상에서 집어 든 서류(기록·증거목록·쟁점 보드)는 확대 보기로 연다.
 import type { Controller } from '../game/controller';
 import { toRecordEntry } from '../engine/record';
 import type { Scenario } from '../engine/scenario/schema';
@@ -15,6 +15,7 @@ import { createResultPanel } from './panels/result';
 import { createSentencingPanel } from './panels/sentencing';
 import type { Panel } from './panels/types';
 import { loadRecords, saveRecord } from './storage';
+import { createDesk, type DeskItem } from './desk';
 
 export type { Panel } from './panels/types';
 
@@ -58,11 +59,14 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     drawer = drawer === d ? null : d;
     render(c.state);
   };
-  const title = h('div', { class: 'phase-title', testid: 'phase-title' });
-  const tabDocs = button('tab-docs', '기록', () => toggle('docs'), 'tab');
-  const tabEvidence = button('tab-evidence', '증거목록', () => toggle('evidence'), 'tab');
-  const tabBoard = button('tab-board', '쟁점 보드', () => toggle('board'), 'tab');
-  const topbar = h('header', { class: 'topbar' }, title, h('nav', { class: 'tabs' }, tabBoard, tabDocs, tabEvidence));
+  const desk = createDesk();
+  const title = desk.plate;
+  const items: Record<Exclude<Drawer, null>, DeskItem> = {
+    docs: { id: 'docs', testid: 'tab-docs', label: '기록', kind: 'pile', open: () => toggle('docs') },
+    evidence: { id: 'evidence', testid: 'tab-evidence', label: '증거목록', kind: 'paper', open: () => toggle('evidence') },
+    board: { id: 'board', testid: 'tab-board', label: '쟁점 메모', kind: 'memo', open: () => toggle('board') },
+  };
+  const dim = h('div', { class: 'zoom-dim' });
   const drawerEl = h('div', { class: 'drawer', testid: 'drawer' }, docs.el, evidence.el, boardDrawer.el);
   const introOk = button('btn-board-intro-ok', '확인', () => {
     introOpen = false;
@@ -72,7 +76,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const skip = button('btn-skip-pronounce', '건너뛰기', () => c.dispatch({ type: 'FINISH_PRONOUNCE' }), 'btn skip');
   docket.el.classList.add('main');
   boardMain.el.classList.add('stage');
-  root.append(topbar, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
+  root.append(desk.el, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
 
   function enter(s: GameState): void {
     // 단계에 들어설 때 그 단계의 주 패널을 서랍으로 연다.
@@ -101,13 +105,8 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     const modal = introOpen && s.phase === 'evidence';
 
     title.textContent = phaseTitle(c, s);
-    show(topbar, s.phase !== 'docket' && s.phase !== 'pronounce');
-    show(tabDocs, docsOk);
-    show(tabEvidence, evOk);
-    show(tabBoard, boardOk);
-    tabDocs.classList.toggle('active', drawer === 'docs');
-    tabEvidence.classList.toggle('active', drawer === 'evidence');
-    tabBoard.classList.toggle('active', drawer === 'board');
+    show(title, s.phase !== 'docket' && s.phase !== 'pronounce');
+    desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict');
     show(sentencing.el, s.phase === 'sentencing');
@@ -121,6 +120,13 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     show(docs.el, drawer === 'docs');
     show(evidence.el, drawer === 'evidence');
     show(boardDrawer.el, drawer === 'board');
+    const stageOpen = s.phase === 'docket' || s.phase === 'verdict' || s.phase === 'sentencing' || s.phase === 'judgment'
+      || s.phase === 'appeal' || s.phase === 'record';
+    const dialogueOn = !dialogue.el.hidden;
+    // 확대 보기가 열리면 대사 줄은 맨 아래로 내려가고(y310–360) 확대 서류가 그 위를 쓴다.
+    root.classList.toggle('zoomed', stageOpen || (drawer !== null && !modal) || modal);
+    root.classList.toggle('dl-on', dialogueOn);
+    show(dim, root.classList.contains('zoomed'));
     for (const p of panels) p.render(s, sc);
   }
 
