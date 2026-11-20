@@ -8,6 +8,8 @@ export function createDnd(): {
   source(el: HTMLElement, payload: string, opts?: SourceOpts): void;
   target(el: HTMLElement, onDrop: (payload: string) => void): void;
   clear(): void;
+  /** 클릭으로 고른 카드가 있는가(있으면 접시·슬롯 클릭은 놓기로 쓰인다) */
+  hasSelection(): boolean;
 } {
   const targets = new WeakMap<Element, (p: string) => void>();
   let selected: { el: HTMLElement; payload: string } | null = null;
@@ -26,9 +28,15 @@ export function createDnd(): {
 
   return {
     clear,
+    hasSelection: () => selected !== null,
     target(el, onDrop) {
       targets.set(el, onDrop);
       el.classList.add('drop-target');
+      // 키보드: 고른 카드가 있을 때 Enter/Space로 놓는다.
+      if (el.tabIndex < 0) el.tabIndex = 0;
+      el.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); el.click(); }
+      });
       el.addEventListener('click', (e) => {
         if (!selected) return;
         e.stopPropagation();

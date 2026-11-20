@@ -128,7 +128,7 @@ export function createJudgmentPanel(c: Controller): Panel {
       const evCards = sc.cards.filter((x) => x.kind === 'evidence' && s.heldCards.includes(x.id));
       evidenceBox.replaceChildren(...evCards.map((x) => {
         const b = chip(`slot-evidence-${x.id}`, x.title, j.evidenceSlots.includes(x.id), () => toggle('evidenceSlots', x.id));
-        dragChip(b, 'evidenceSlots', x.id);
+        dnd.source(b, x.id); // 카드 목록은 슬롯이 아니므로 밖에 놓아도 빼지 않는다(빼기는 클릭)
         return b;
       }));
 

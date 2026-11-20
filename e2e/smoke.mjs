@@ -94,6 +94,13 @@ try {
   await tid('pan-item-c_record').click(); await tid('pan-fav').click();
   if (await vis('pan-on-c_record')) throw new Error('반대 접시가 튕기지 않음');
   if ((await tid('scale').getAttribute('data-tilt')) !== '-3') throw new Error(`천칭 기울기 ${await tid('scale').getAttribute('data-tilt')}`);
+  // 접시의 카드는 클릭으로 내리고, 키보드(Enter)로 다시 올릴 수 있어야 한다.
+  await tid('pan-on-c_nonpunish').click();
+  if (await vis('pan-on-c_nonpunish')) throw new Error('클릭으로 접시에서 내려가지 않음');
+  if ((await tid('scale').getAttribute('data-tilt')) !== '-2') throw new Error('내린 뒤 기울기');
+  await tid('pan-item-c_nonpunish').focus(); await page.keyboard.press('Enter');
+  await tid('pan-fav').focus(); await page.keyboard.press('Enter');
+  if ((await tid('scale').getAttribute('data-tilt')) !== '-3') throw new Error('키보드로 다시 올라가지 않음');
   await tid('input-months').fill('6');
   await tid('chk-suspended').check();
   await page.waitForTimeout(500);
@@ -106,6 +113,9 @@ try {
   if ((await cctv.getAttribute('aria-pressed')) !== 'false') throw new Error('밖에 놓았는데 끼워짐');
   await cctv.dragTo(tid('drop-evidence'));
   if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('드래그로 끼워지지 않음');
+  // 끼운 카드를 끌다 슬롯을 놓쳐도(목록 위에 놓기) 빠지면 안 된다.
+  await cctv.dragTo(tid('slot-evidence-c_confession'));
+  if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('끼운 카드가 슬롯 밖에 놓였다고 빠짐');
   for (const id of ['slot-evidence-c_receipt', 'slot-unfav-c_record']) {
     if (await vis(id)) await tid(id).click();
   }

@@ -100,7 +100,7 @@ export function createSentencingPanel(c: Controller): Panel {
         h('span', { class: 'muted small' }, ` · 법정형 상한 ${formatSentence(S.statutoryMaxMonths)}`)),
       h('div', { class: 'sent-grid' },
         h('div', { class: 'col' }, h('h3', {}, '기록의 카드'),
-          h('p', { class: 'muted small' }, '끌어다 접시에 올리거나, 눌러 고른 뒤 접시를 누릅니다. 접시에서 끌어내면 내려갑니다.'), tray),
+          h('p', { class: 'muted small' }, '끌어다 접시에 올리거나, 눌러 고른 뒤 접시를 누릅니다. 접시의 카드를 누르거나 끌어내면 내려갑니다.'), tray),
         h('div', { class: 'col' }, scale,
           h('div', { class: 'calc-lines' }, calc.special, calc.adjust, calc.general, calc.susp),
           h('h3', {}, '기록상 권고 (항소심 기준)'), area, bar.el,
@@ -128,9 +128,8 @@ export function createSentencingPanel(c: Controller): Panel {
         lastKey = key;
         const items = panCandidates(sc, s);
         const chip = (it: PanItem, testid: string) => {
-          const x = h('span', { class: `btn chip pan-chip ${it.src === '형광펜' ? 'hl' : ''}`, testid, title: it.label },
+          return h('button', { type: 'button', class: `btn chip pan-chip ${it.src === '형광펜' ? 'hl' : ''}`, testid, title: it.label },
             h('span', { class: 'src' }, it.src), ` ${it.label}`);
-          return x;
         };
         const on = { fav: [] as HTMLElement[], unfav: [] as HTMLElement[] };
         const off: HTMLElement[] = [];
@@ -138,13 +137,18 @@ export function createSentencingPanel(c: Controller): Panel {
           const side = sideOf(sc, s, it);
           if (side) {
             const x = chip(it, `pan-on-${tid(it.id)}`);
-            dnd.source(x, it.id, {
-              outside: () => {
-                const p = remove(sc, c.state, it.id);
-                c.dispatch({ type: 'SET_SENTENCING', patch: p.sentencing });
-                c.dispatch({ type: 'SET_JUDGMENT', patch: p.judgment });
-              },
+            const takeOff = () => {
+              const p = remove(sc, c.state, it.id);
+              c.dispatch({ type: 'SET_SENTENCING', patch: p.sentencing });
+              c.dispatch({ type: 'SET_JUDGMENT', patch: p.judgment });
+            };
+            // 접시의 카드: 누르면(또는 밖으로 끌면) 내린다. 접시 클릭으로 번지지 않게 막는다.
+            x.addEventListener('click', (e) => {
+              if (dnd.hasSelection()) return; // 고른 카드를 이 접시에 놓는 클릭
+              e.stopPropagation();
+              takeOff();
             });
+            dnd.source(x, it.id, { outside: takeOff });
             on[side].push(x);
           } else {
             const x = chip(it, `pan-item-${tid(it.id)}`);
