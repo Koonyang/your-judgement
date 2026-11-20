@@ -106,6 +106,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
 
     title.textContent = phaseTitle(c, s);
     show(title, s.phase !== 'docket' && s.phase !== 'pronounce');
+    show(desk.el, s.phase !== 'pronounce'); // 선고 연출은 Phaser 화면 전체를 쓴다
     desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict');

@@ -28,17 +28,17 @@ export class PronounceScene extends Phaser.Scene {
     const lines = ['주문.', ...doc.order];
     if (doc.sentencingReasons.addendum) lines.push(`"${doc.sentencingReasons.addendum}"`);
 
-    this.add.rectangle(640, 360, 1280, 720, 0x0d0a08, 0.9);
+    this.add.rectangle(320, 180, 640, 360, 0x07080a, 0.92);
     // 판결서 종이
-    this.add.rectangle(640, 330, 860, 440, 0xefe6d2).setStrokeStyle(4, 0x1d1611);
-    this.add.text(640, 150, '판   결', { fontFamily: FONT_STACK, fontSize: '30px', color: '#2a2118' }).setOrigin(0.5);
+    this.add.rectangle(320, 165, 430, 220, 0xe8dcc2).setStrokeStyle(2, 0x2a221b);
+    this.add.text(320, 75, '판   결', { fontFamily: FONT_STACK, fontSize: '15px', color: '#2a221b' }).setOrigin(0.5);
 
-    const style = { fontFamily: FONT_STACK, fontSize: '22px', color: '#2a2118', wordWrap: { width: 760, useAdvancedWrap: true } };
-    let y = 210;
+    const style = { fontFamily: FONT_STACK, fontSize: '11px', color: '#2a221b', wordWrap: { width: 380, useAdvancedWrap: true } };
+    let y = 105;
     const t0 = 400;
     lines.forEach((text, i) => {
-      const t = this.add.text(240, y, text, style).setAlpha(0);
-      y += t.height + 14;
+      const t = this.add.text(120, y, text, style).setAlpha(0);
+      y += t.height + 7;
       this.time.delayedCall(t0 + i * BEAT_MS, () => {
         this.tweens.add({ targets: t, alpha: 1, duration: 200 });
       });
@@ -52,17 +52,18 @@ export class PronounceScene extends Phaser.Scene {
 
   private stamp(): void {
     this.sfx(SFX.stamp);
-    this.cameras.main.shake(180, 0.008);
-    const box = this.add.container(930, 470).setAngle(-8);
-    box.add(this.add.rectangle(0, 0, 96, 96).setStrokeStyle(6, 0xb0302a));
-    box.add(this.add.text(0, 0, '판사', { fontFamily: FONT_STACK, fontSize: '28px', color: '#b0302a', align: 'center' }).setOrigin(0.5));
+    this.cameras.main.shake(180, 0.006);
+    // 판결서 서명날인(형소법 §41 [확인필요]) 자리. 승인/거절 도장 동작이 아니라 선고 연출이다.
+    const box = this.add.container(465, 235).setAngle(-8);
+    box.add(this.add.rectangle(0, 0, 48, 48).setStrokeStyle(3, 0xb8382e));
+    box.add(this.add.text(0, 0, '판사', { fontFamily: FONT_STACK, fontSize: '14px', color: '#b8382e', align: 'center' }).setOrigin(0.5));
     box.setScale(1.6).setAlpha(0);
     this.tweens.add({ targets: box, scale: 1, alpha: 1, duration: 120, ease: 'Quad.easeIn' });
   }
 
   private gavel(): void {
     this.sfx(SFX.gavel);
-    this.cameras.main.flash(140, 255, 248, 230);
+    this.cameras.main.flash(140, 255, 196, 120);
   }
 
   private sfx(key: string): void {

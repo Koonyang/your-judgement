@@ -99,6 +99,7 @@ try {
   await tid('btn-confirm-judgment').click();
 
   // 선고 → 항소 결과 → 기록실
+  if (process.env.SHOTS) { await page.waitForTimeout(2900); await shot('8-pronounce'); }
   await tid('btn-skip-pronounce').click();
   await tid('panel-result').waitFor({ state: 'visible' });
   await tid('btn-finish-appeal').click();
