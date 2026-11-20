@@ -129,7 +129,7 @@ try {
   // 끼운 카드를 끌다 슬롯을 놓쳐도(목록 위에 놓기) 빠지면 안 된다.
   await cctv.dragTo(tid('slot-evidence-c_confession'));
   if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('끼운 카드가 슬롯 밖에 놓였다고 빠짐');
-  for (const id of ['slot-evidence-c_receipt', 'slot-unfav-c_record']) {
+  for (const id of ['slot-evidence-c_receipt']) {
     if (await vis(id)) await tid(id).click();
   }
   await shot('7-judgment');

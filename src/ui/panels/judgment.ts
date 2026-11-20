@@ -1,4 +1,4 @@
-// 판결서 조립: 증거의 요지 슬롯(증거 카드), 양형의 이유 유리/불리한 정상 슬롯(양형 인자·양형 카드·형광펜 문장 `hl:<i>`),
+// 판결서 조립: 증거의 요지 슬롯(증거 카드). 양형의 이유 유리/불리는 양형 천칭 접시가 채운 것을 미리보기로 보인다.
 // [추가로] 한 줄. 미리보기는 assembleJudgment 결과.
 // 1화(tutorial): 여유폭 밖이면 참여관 한 줄만 보이고 이탈 슬롯은 숨긴다. 그 외 회차는 이탈 슬롯(양형 인자)을 연다.
 import type { Controller } from '../../game/controller';
@@ -16,15 +16,12 @@ import type { Panel } from './types';
 
 type Key = 'evidenceSlots' | 'favorable' | 'unfavorable' | 'deviationSlots';
 const ADDENDUM_MAX = 80;
-const HL_SRC: Record<string, string> = { indictment: '공소장', defenseOpinion: '의견서', closing: '최후진술', transcript: '공판조서' };
 
-const tid = (id: string) => id.replace(/:/g, '-');
 
 export function createJudgmentPanel(c: Controller): Panel {
   const dnd = createDnd();
   const el = h('section', { class: 'panel stage judgment', testid: 'panel-judgment' });
   const evidenceBox = h('div', { class: 'chips' });
-  const reasonsBox = h('div', { class: 'reason-rows' });
   const devBox = h('div', { class: 'chips', testid: 'drop-deviation' });
   const sentencingSec = h('div', {});
   const devSec = h('div', {}, h('h3', {}, '이탈 사유'), h('p', { class: 'muted small' }, '권고범위와 여유폭을 넘어선 형의 근거가 될 양형 인자를 끼웁니다.'), devBox);
@@ -37,9 +34,7 @@ export function createJudgmentPanel(c: Controller): Panel {
   const confirm = button('btn-confirm-judgment', '판결서 확정', () => c.dispatch({ type: 'CONFIRM_JUDGMENT' }), 'btn primary');
   const evidenceSec = h('div', {}, h('h3', {}, '증거의 요지'), h('p', { class: 'muted small' }, '유죄의 근거로 든 증거 카드를 끼웁니다.'), evidenceBox);
   sentencingSec.append(
-    h('h3', {}, '양형의 이유'),
-    h('p', { class: 'muted small' }, '양형 인자·양형 카드·형광펜 문장을 유리한 정상 또는 불리한 정상에 끼웁니다.'),
-    reasonsBox,
+    // 양형의 이유(유리/불리)는 양형 단계의 천칭 접시가 채운다. 여기서는 미리보기에서 확인만.
     h('h3', {}, '권고범위 (항소심 기준)'), rangeInfo, bar.el,
   );
   const left = h('div', { class: 'col' },
@@ -69,18 +64,6 @@ export function createJudgmentPanel(c: Controller): Panel {
     b.setAttribute('aria-pressed', String(on));
     return b;
   };
-
-  /** 양형의 이유 후보: 체크한 양형 인자, 보유한 양형 관련 카드, 형광펜 문장. */
-  function reasonCandidates(s: GameState, sc: Scenario): { id: string; label: string; src: string }[] {
-    const held = new Set(s.heldCards);
-    const chosen = new Set([...s.sentencing.special, ...s.sentencing.general]);
-    const factors = availableFactors(sc.sentencing.factors, held).filter((f) => chosen.has(f.id))
-      .map((f) => ({ id: f.id, label: f.name, src: '양형 인자' }));
-    const related = new Set([...sc.sentencing.factors, ...sc.sentencing.suspensionFactors].flatMap((f) => f.requiresAnyCard));
-    const cards = sc.cards.filter((x) => held.has(x.id) && related.has(x.id)).map((x) => ({ id: x.id, label: x.title, src: '카드' }));
-    const hls = s.highlights.map((x, i) => ({ id: `hl:${i}`, label: x.text, src: HL_SRC[x.docId] ?? x.docId }));
-    return [...factors, ...cards, ...hls];
-  }
 
   function evidenceDrop(el: HTMLElement): HTMLElement {
     el.dataset.testid = 'drop-evidence';
@@ -132,12 +115,6 @@ export function createJudgmentPanel(c: Controller): Panel {
         return b;
       }));
 
-      reasonsBox.replaceChildren(...reasonCandidates(s, sc).map((x) => h('div', { class: 'reason-row' },
-        h('span', { class: 'src small muted' }, x.src),
-        h('span', { class: 'label' }, x.label),
-        chip(`slot-fav-${tid(x.id)}`, '유리', j.favorable.includes(x.id), () => toggle('favorable', x.id), 'btn chip sm'),
-        chip(`slot-unfav-${tid(x.id)}`, '불리', j.unfavorable.includes(x.id), () => toggle('unfavorable', x.id), 'btn chip sm'))));
-      if (!reasonsBox.childElementCount) reasonsBox.append(h('p', { class: 'muted small' }, '끼울 수 있는 항목이 없습니다.'));
 
       // 권고범위·여유폭: [추가로]를 쓰면 여유폭이 열린다.
       const months = s.sentencing.months;

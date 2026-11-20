@@ -19,7 +19,7 @@ function table(sc: Scenario, s: GameState, list: Evidence[], applicant: string):
     // 부동의 진술조서의 원진술자가 증인으로 나오면 비고에 적는다.
     const witness = !e.consent && person !== '' && sc.exams.some((x) => x.kind === 'witness' && x.name.includes(person));
     const row = h('tr', { class: `ev ${open ? 'open' : 'locked'}`, testid: `evidence-${e.id}` },
-      h('td', {}, String(i + 1)), h('td', { class: 'ev-label' }, name), h('td', {}, person), h('td', {}, ''),
+      h('td', {}, String(i + 1)), h('td', { class: 'ev-label' }, ...(open ? [] : [h('span', { class: 'lock', role: 'img', 'aria-label': '열람 불가' })]), name), h('td', {}, person), h('td', {}, ''),
       h('td', { class: 'mark' }, e.consent ? '○' : '×'), h('td', { class: 'mark seal' }, open ? '○' : ''),
       h('td', { class: 'small' }, witness && !open ? '원진술자 증인 신청' : ''));
     const body = h('tr', { class: 'ev-body-row' }, h('td', {}, ''),

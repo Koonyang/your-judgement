@@ -23,6 +23,7 @@
 
 #ui-root {
   font-family: var(--font);
+  word-break: keep-all; /* 한글을 글자 단위로 끊지 않는다("영수 / 증" 방지) */
   -webkit-font-smoothing: none;
   color: var(--hanji);
   font-size: 11px;
@@ -120,13 +121,17 @@
 .b1280-head { text-align: right; margin-bottom: 2px; }
 .b1280 table { width: 100%; border-collapse: collapse; }
 .b1280 th, .b1280 td { border: 1px solid var(--ink); padding: 1px 3px; text-align: center; font-weight: normal; vertical-align: middle; }
-.b1280 th { background: var(--hanji-2); }
+.b1280 th { background: var(--hanji-2); white-space: nowrap; font-size: 9px; }
 .b1280 td.ev-label { text-align: left; }
 .b1280 td.mark { font-size: 13px; }
 .b1280 td.seal { color: var(--seal); }
 .b1280 .ev-body-row td { border-top: 0; text-align: left; font-size: 9px; padding: 1px 4px 3px; }
 .b1280 .ev-body-row td:first-child { border-right: 0; }
 .ev.locked .ev-label { color: var(--muted); }
+.lock { /* 자물쇠: 부동의로 열람할 수 없는 증거 */
+  position: relative; display: inline-block; width: 7px; height: 5px; margin: 0 4px 0 1px; vertical-align: -1px; background: var(--seal);
+}
+.lock::before { content: ""; position: absolute; left: 1px; top: -4px; width: 3px; height: 3px; border: 1px solid var(--seal); border-bottom: 0; border-radius: 3px 3px 0 0; }
 
 /* 대사 줄 (화면 맨 아래 y290–360) */
 .dialogue {
