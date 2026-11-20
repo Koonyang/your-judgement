@@ -21,6 +21,9 @@ function supported(sc: Scenario, cardId: string) {
   return { factors, susp, side, entry: factors[0]?.id ?? cardId };
 }
 
+/** 판결서 유리/불리 칸에 들어가는 id: 형광펜은 그대로, 카드는 뒷받침하는 첫 양형 인자(없으면 카드 id). */
+export const entryOf = (sc: Scenario, itemId: string) => (itemId.startsWith('hl:') ? itemId : supported(sc, itemId).entry);
+
 export function panCandidates(sc: Scenario, s: GameState): PanItem[] {
   const cards = sc.cards
     .filter((x) => s.heldCards.includes(x.id))

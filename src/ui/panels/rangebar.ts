@@ -3,7 +3,8 @@ import type { Range } from '../../engine/scenario/schema';
 import { formatSentence } from '../../engine/judgment';
 import { h } from '../dom';
 
-export type RangeBarData = { range: Range; leeway: Range | null; demand: number; months: number | null; scaleMax: number };
+/** lean: 일반인자 방향(-1 하한 쪽, 1 상한 쪽). 범위 안 위치를 숫자로 정하지 않으므로 반쪽 음영으로만 보인다. */
+export type RangeBarData = { range: Range; leeway: Range | null; demand: number; months: number | null; scaleMax: number; lean?: -1 | 0 | 1 };
 
 const pct = (v: number, max: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
 const fmt = (m: number) => (Number.isInteger(m) ? `${m}` : m.toFixed(1));
@@ -12,6 +13,8 @@ export function createRangeBar(testid: string): { el: HTMLElement; update(d: Ran
   const track = h('div', { class: 'rb-track' });
   const leewayEl = h('div', { class: 'rb-leeway', testid: `${testid}-leeway` });
   const rangeEl = h('div', { class: 'rb-range', testid: `${testid}-range` });
+  const leanEl = h('div', { class: 'rb-lean', testid: `${testid}-lean` });
+  rangeEl.append(leanEl);
   const demandEl = h('div', { class: 'rb-demand', testid: `${testid}-demand` }, h('span', {}, ''));
   const monthsEl = h('div', { class: 'rb-months', testid: `${testid}-months` }, h('span', {}, ''));
   const ticks = h('div', { class: 'rb-ticks' });
@@ -20,12 +23,14 @@ export function createRangeBar(testid: string): { el: HTMLElement; update(d: Ran
   const el = h('div', { class: 'rangebar', testid }, track, ticks, legend);
   return {
     el,
-    update({ range, leeway, demand, months, scaleMax }) {
+    update({ range, leeway, demand, months, scaleMax, lean = 0 }) {
       const place = (x: HTMLElement, r: Range) => {
         x.style.left = pct(r.min, scaleMax);
         x.style.width = `calc(${pct(r.max, scaleMax)} - ${pct(r.min, scaleMax)})`;
       };
       place(rangeEl, range);
+      leanEl.hidden = lean === 0;
+      leanEl.style.left = lean > 0 ? '50%' : '0';
       leewayEl.hidden = leeway === null;
       if (leeway) place(leewayEl, leeway);
       demandEl.style.left = pct(demand, scaleMax);

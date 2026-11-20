@@ -280,6 +280,14 @@ describe('verdict / sentencing / judgment / pronounce', () => {
     s = R(s, { type: 'CONFIRM_SENTENCING' });
     expect(s.phase).toBe('judgment');
   });
+  it('양형 천칭: sentencing 단계에서 판결서 유리/불리만 채울 수 있다', () => {
+    const s = R(markAll(toVerdict(), 'proven'), { type: 'CONFIRM_VERDICT' });
+    const t = R(s, { type: 'SET_JUDGMENT', patch: { favorable: ['f1'], unfavorable: ['f2'] } });
+    expect(t.judgment.favorable).toEqual(['f1']);
+    expect(t.judgment.unfavorable).toEqual(['f2']);
+    expect(R(s, { type: 'SET_JUDGMENT', patch: { addendum: 'x' } })).toBe(s);
+    expect(R(s, { type: 'SET_JUDGMENT', patch: { favorable: ['f1'], evidenceSlots: ['e'] } })).toBe(s);
+  });
   it('SET_SENTENCING outside sentencing → same object', () => {
     const s = toVerdict();
     expect(R(s, { type: 'SET_SENTENCING', patch: { months: 3 } })).toBe(s);

@@ -43,6 +43,8 @@ try {
 
   const tid = (id) => page.locator(`[data-testid="${id}"]`);
   const vis = async (id) => (await tid(id).count()) > 0 && (await tid(id).first().isVisible());
+  // SHOTS=디렉터리 를 주면 단계별 화면을 남긴다(눈 확인용).
+  const shot = async (name) => { if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/${name}.png` }); };
   const text = async (id) => ((await vis(id)) ? tid(id).innerText() : '');
 
   // 공판: 이의 인용, 모욕 대목 제지, 보충신문, 최후진술 형광펜
@@ -70,12 +72,18 @@ try {
     }
     await tid(`board-mark-${cell}-proven`).click();
   }
+  await shot('5-verdict');
   await tid('btn-confirm-verdict').click();
 
-  // 양형: 생계형 + 처벌불원, 징역 6월 집유
-  for (const id of ['factor-f_livelihood', 'factor-f_nonpunish', 'susp-s_livelihood', 'susp-s_nonpunish']) await tid(id).check();
+  // 양형: 생계형·처벌불원 카드를 유리 접시에(클릭 경로), 전과 카드는 반대 접시라 튕김. 징역 6월 집유
+  for (const card of ['c_livelihood', 'c_nonpunish']) { await tid(`pan-item-${card}`).click(); await tid('pan-fav').click(); }
+  await tid('pan-item-c_record').click(); await tid('pan-fav').click();
+  if (await vis('pan-on-c_record')) throw new Error('반대 접시가 튕기지 않음');
+  if ((await tid('scale').getAttribute('data-tilt')) !== '-3') throw new Error(`천칭 기울기 ${await tid('scale').getAttribute('data-tilt')}`);
   await tid('input-months').fill('6');
   await tid('chk-suspended').check();
+  await page.waitForTimeout(500);
+  await shot('6-sentencing');
   await tid('btn-confirm-sentencing').click();
 
   // 판결서: CCTV 카드는 끌어다 놓기로. 먼저 밖(제목)에 놓아 변화가 없는지 본 뒤 증거의 요지에 놓는다.
@@ -84,9 +92,10 @@ try {
   if ((await cctv.getAttribute('aria-pressed')) !== 'false') throw new Error('밖에 놓았는데 끼워짐');
   await cctv.dragTo(tid('drop-evidence'));
   if ((await cctv.getAttribute('aria-pressed')) !== 'true') throw new Error('드래그로 끼워지지 않음');
-  for (const id of ['slot-evidence-c_receipt', 'slot-fav-f_livelihood', 'slot-fav-f_nonpunish', 'slot-unfav-c_record']) {
+  for (const id of ['slot-evidence-c_receipt', 'slot-unfav-c_record']) {
     if (await vis(id)) await tid(id).click();
   }
+  await shot('7-judgment');
   await tid('btn-confirm-judgment').click();
 
   // 선고 → 항소 결과 → 기록실
