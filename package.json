@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Koonyang/your-judgement#readme",
   "dependencies": {
+    "galmuri": "^2.40.3",
     "phaser": "^3.90.0",
     "zod": "^4.6.7"
   },

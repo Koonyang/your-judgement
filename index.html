@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Judgement</title>
     <style>
-      html, body { margin: 0; background: #111; height: 100%; }
+      html, body { margin: 0; background: #07080a; height: 100%; }
       #stage { position: relative; width: 1280px; height: 720px; margin: 0 auto; }
-      #game, #ui-root { position: absolute; inset: 0; }
+      #game { position: absolute; inset: 0; }
+      #ui-root { position: absolute; left: 0; top: 0; width: 640px; height: 360px; transform: scale(2); transform-origin: 0 0; }
       #ui-root { pointer-events: none; }
       #ui-root > * { pointer-events: auto; }
     </style>
