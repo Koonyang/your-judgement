@@ -12,7 +12,7 @@ export type ShownLine = Pick<Line, 'speaker' | 'text'> & Partial<Pick<Line, 'id'
 type Listener = (s: GameState) => void;
 
 export const SPEAKER_NAMES: Record<Speaker, string> = {
-  judge: '재판장', clerk: '참여관', prosecutor: '검사', defense: '변호인', witness: '증인', defendant: '피고인',
+  judge: '재판장', clerk: '참여관', prosecutor: '검사', defense: '변호인', witness: '증인', defendant: '피고인', thought: '생각',
 };
 
 /** 신문 대상 표시 이름(괄호 설명 제외). */

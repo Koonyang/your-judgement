@@ -1,7 +1,7 @@
 // 법정 좌석 배치와 플레이스홀더 색. 이미지 키는 화자 문자열 그대로 두어 나중에 스프라이트로 교체한다.
 import type { Speaker } from '../engine/scenario/schema';
 
-export type SeatKey = Speaker;
+export type SeatKey = Exclude<Speaker, 'thought'>;
 
 export const FONT_STACK =
   '"Galmuri11", "DungGeunMo", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "NanumGothic", "WenQuanYi Zen Hei", sans-serif';

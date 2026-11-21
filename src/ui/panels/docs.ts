@@ -21,6 +21,7 @@ export function transcriptText(sc: Scenario, s: GameState): string {
   const out: string[] = [];
   let section = '';
   for (const e of heardEntries(sc, s)) {
+    if (e.line.speaker === 'thought') continue; // 속생각은 조서에 남지 않는다
     const exam = e.block === 'exam' ? sc.exams[e.examIndex] : undefined;
     const head = e.block === 'opening' ? '[모두절차]' : e.block === 'closing' ? '[결심]'
       : exam?.kind === 'witness' ? `[증인신문 · ${examineeName(exam)}]` : '[피고인신문]';

@@ -33,23 +33,23 @@ const base: Choices = {
 /** 개정 전 ~ 증인 점주 Exam 시작 */
 const toOwner: Action[] = [
   ...adv(2), // 사건 배당 → 공판 전 → 모두절차
-  ...adv(9), // 모두절차 라인
+  ...adv(12), // 모두절차 라인
   ...adv(2), // 모두절차 → 증거조사 → 증인신문
 ];
 
 function actions(c: Choices): Action[] {
   const a: Action[] = [...toOwner];
   // 점주: 선서·주신문 → 여죄 질문 이의 인용 → 반대신문
-  a.push(...adv(8), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2));
+  a.push(...adv(9), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2));
   a.push(...(c.legit === 'hear' ? adv(3) : [{ type: 'INTERRUPT' } as const]));
-  a.push(...(c.insult === 'stop' ? [{ type: 'INTERRUPT' } as const, ...adv(1)] : adv(3)));
+  a.push(...(c.insult === 'stop' ? [{ type: 'INTERRUPT' } as const, ...adv(2)] : adv(4)));
   a.push({ type: 'ASK_SUPP', questionId: 'q_owner_items' }, { type: 'END_SUPP' });
   // 피고인: 검사 추궁 → 변호인 생활 사정
   a.push(...adv(1));
-  a.push(...(c.grill === 'hear' ? adv(8) : [{ type: 'INTERRUPT' } as const, ...adv(4)]));
+  a.push(...(c.grill === 'hear' ? adv(9) : [{ type: 'INTERRUPT' } as const, ...adv(5)]));
   a.push({ type: 'ASK_SUPP', questionId: 'q_def_meal' }, { type: 'END_SUPP' });
-  // 결심 7라인 → 재검토 → 판단
-  a.push(...adv(7), ...adv(2));
+  // 결심 8라인 → 재검토 → 판단
+  a.push(...adv(8), ...adv(2));
   for (const [cellId, v] of Object.entries(c.board)) {
     for (const cardId of v.cards) a.push({ type: 'LINK_CARD', cellId, cardId });
     a.push({ type: 'MARK_CELL', cellId, mark: v.mark });
@@ -98,7 +98,7 @@ describe('1화 데이터', () => {
   });
 
   it('부동의 점주 진술조서는 점주 증언 뒤에 해금된다', () => {
-    const atEvidence = play(sc, [...adv(2), ...adv(9), ...adv(1)]);
+    const atEvidence = play(sc, [...adv(2), ...adv(12), ...adv(1)]);
     expect(atEvidence.phase).toBe('evidence');
     expect(atEvidence.unlockedEvidence).not.toContain('e_owner_stmt');
     expect(atEvidence.heldCards).toEqual(expect.arrayContaining(['c_confession', 'c_nonpunish', 'c_livelihood']));
@@ -107,7 +107,7 @@ describe('1화 데이터', () => {
   });
 
   it('여죄 질문을 기각하면 판결 영향 없는 위반 1건', () => {
-    const s = play(sc, [...toOwner, ...adv(8), { type: 'RULE_OBJECTION', ruling: 'overrule' }]);
+    const s = play(sc, [...toOwner, ...adv(9), { type: 'RULE_OBJECTION', ruling: 'overrule' }]);
     expect(s.violations).toHaveLength(1);
     expect(s.violations[0].affectsJudgment).toBe(false);
   });

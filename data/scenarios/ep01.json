@@ -22,6 +22,7 @@
     "lawApplied": "형법 제329조(징역형 선택)"
   },
   "opening": [
+    { "id": "open_0", "speaker": "thought", "text": "첫 사건이다. 공소장에 적힌 피해액은 1만 2천 원. 지금 내가 아는 건 공소장과 피고인 의견서뿐이다." },
     { "id": "open_1", "speaker": "clerk", "text": "(참여관) 모두절차입니다. 진술거부권 고지, 인정신문, 공소장 낭독, 피고인 의견 순으로 진행됩니다." },
     { "id": "open_2", "speaker": "judge", "text": "피고인은 진술하지 않거나 개개의 질문에 진술을 거부할 수 있고, 이익이 되는 사실을 진술할 수 있습니다." },
     { "id": "open_3", "speaker": "judge", "text": "피고인, 이름과 생년월일, 직업, 주거를 말씀하십시오." },
@@ -30,7 +31,9 @@
     { "id": "open_6", "speaker": "judge", "text": "피고인, 공소사실을 인정합니까?" },
     { "id": "open_7", "speaker": "defendant", "text": "네, 인정합니다." },
     { "id": "open_8", "speaker": "defense", "text": "피고인은 공소사실을 모두 인정합니다. 다만 당시 일이 끊겨 끼니를 거르던 사정을 참작해 주시기 바랍니다.", "yieldsCards": ["c_livelihood"] },
-    { "id": "open_9", "speaker": "clerk", "text": "(참여관) 다툼 없는 사건이라도 자백만으로는 유죄를 인정할 수 없습니다. 이어서 증거조사입니다. 동의한 증거는 채택해 조사하고(요지 고지), 부동의한 조서는 진술자를 증인으로 불러 확인합니다." }
+    { "id": "open_8a", "speaker": "thought", "text": "다툼은 없다. 그렇다면 남는 물음은 하나, 얼마나 무겁게 볼 것인가." },
+    { "id": "open_9", "speaker": "thought", "text": "자백했다고 끝나지 않는다. 자백만으로는 유죄로 할 수 없고, 그것을 뒷받침할 증거가 따로 있어야 한다." },
+    { "id": "open_9b", "speaker": "thought", "text": "동의한 증거는 채택해 조사한다. 동의하지 않은 조서는 진술한 사람을 법정에 불러 직접 듣는다." }
   ],
   "cells": [
     { "id": "property", "name": "타인의 재물", "disputed": false },
@@ -76,6 +79,7 @@
         { "id": "owner_6", "speaker": "witness", "text": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." },
         { "id": "owner_7", "speaker": "prosecutor", "text": "증거목록 3번 피해품 목록 및 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
         { "id": "owner_8", "speaker": "witness", "text": "네, 그렇습니다.", "yieldsCards": ["c_minor"] },
+        { "id": "owner_8a", "speaker": "thought", "text": "피해액은 영수증과 맞는다. 판단의 근거로 남겨 둘 만하다." },
         { "id": "owner_9", "speaker": "prosecutor", "text": "그 전에도 가게에서 물건이 여러 번 없어진 적이 있었지요?",
           "objection": {
             "by": "defense", "correct": "sustain",
@@ -96,7 +100,8 @@
           "interrupt": { "legit": false, "resumeAt": "owner_18", "sets": ["stop_insult"] } },
         { "id": "owner_17", "speaker": "witness", "text": "지금 제 탓이라는 겁니까? 그 서면도 사실 마지못해 써 준 겁니다. 처벌을 원합니다.",
           "when": { "none": ["stop_insult"] }, "revokesCards": ["c_nonpunish"], "sets": ["nonpunish_withdrawn"] },
-        { "id": "owner_18", "speaker": "defense", "text": "이상입니다." }
+        { "id": "owner_18", "speaker": "defense", "text": "이상입니다." },
+        { "id": "owner_18a", "speaker": "thought", "text": "사과와 변제는 있었다. 무엇을 가져갔는지, 언제 갚았는지. 직접 물어볼 수 있는 건 지금뿐이다." }
       ],
       "supplementary": [
         { "id": "q_owner_items", "cellId": "appropriation", "kind": "clarify", "text": "피고인이 가져간 물건이 정확히 무엇이었습니까?",
@@ -121,7 +126,8 @@
         { "id": "def_6", "speaker": "prosecutor", "text": "이상입니다." },
         { "id": "def_7", "speaker": "defense", "text": "피고인, 사건 무렵 생활은 어땠습니까?" },
         { "id": "def_8", "speaker": "defendant", "text": "공사장 일이 석 달째 끊겼습니다. 혼자 살고, 그날은 이틀째 제대로 못 먹은 상태였습니다.", "yieldsCards": ["c_livelihood"] },
-        { "id": "def_9", "speaker": "defense", "text": "이상입니다." }
+        { "id": "def_9", "speaker": "defense", "text": "이상입니다." },
+        { "id": "def_9a", "speaker": "thought", "text": "생계가 막막했다는 사정, 그리고 세 번의 벌금. 둘 다 기록에 있는 사실이다. 어느 쪽에 무게를 둘지는 내 몫이다." }
       ],
       "supplementary": [
         { "id": "q_def_meal", "cellId": "appropriation", "kind": "clarify", "text": "가져간 도시락은 어떻게 했습니까?",
@@ -139,8 +145,9 @@
       { "id": "close_5", "speaker": "defendant", "text": "검사님 말씀이 맞습니다. 세 번이나 그러고도 또 그랬습니다. 다시는 남의 물건에 손대지 않겠습니다.",
         "when": { "none": ["cut_prosecutor"] }, "yieldsCards": ["c_remorse"] },
       { "id": "close_6", "speaker": "defendant", "text": "죄송합니다. 선처 부탁드립니다.", "when": { "all": ["cut_prosecutor"] } },
+      { "id": "close_6a", "speaker": "thought", "text": "검사는 징역 1년을 구했다. 구형은 참고일 뿐이다. 형을 정하는 건 법정에 나온 증거다." },
       { "id": "close_7", "speaker": "judge", "text": "변론을 종결합니다. 선고는 2주 뒤 오후 2시에 하겠습니다." },
-      { "id": "close_8", "speaker": "clerk", "text": "(참여관) 선고 전까지 기록을 다시 볼 수 있습니다. 쟁점 보드의 칸마다 증거를 연결하고 증명됐는지 판단하십시오." }
+      { "id": "close_8", "speaker": "thought", "text": "선고까지 2주. 기록을 다시 펼쳐 쟁점마다 증거를 대 보고, 증명됐는지 따져 봐야 한다." }
     ]
   },
   "appealView": [

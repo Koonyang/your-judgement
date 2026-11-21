@@ -88,7 +88,7 @@ export class CourtroomScene extends Phaser.Scene {
     this.lastPhase = s.phase;
 
     const line = c.shownLine();
-    let seat: SeatKey | null = line?.speaker ?? null;
+    let seat: SeatKey | null = line && line.speaker !== 'thought' ? line.speaker : null;
     if (seat === 'defendant' && defendantAtStand) seat = 'witness';
     this.bob?.stop();
     this.actors.forEach((a, key) => a.img.setY(SEATS[key].y));

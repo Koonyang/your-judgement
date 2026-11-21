@@ -129,7 +129,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     // 마이크는 증인·피고인 신문 중(보충신문 제외)에만. 재판장 자신이 말할 때는 누를 수 없다.
     const line = c.shownLine();
     const micOn = s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line;
-    mic.disabled = line?.speaker === 'judge';
+    mic.disabled = line?.speaker === 'judge' || line?.speaker === 'thought';
     desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : []), ...(micOn ? [mic] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict');

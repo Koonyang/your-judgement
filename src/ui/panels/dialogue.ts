@@ -4,7 +4,7 @@ import type { Controller } from '../../game/controller';
 import { suppFlag } from '../../engine/reducer';
 import type { GameState } from '../../engine/state';
 import { button, h, show } from '../dom';
-import { SEATS } from '../../scenes/seats';
+import { SEATS, type SeatKey } from '../../scenes/seats';
 import type { Panel } from './types';
 
 /** 라인이 없는 단계의 안내문과 [다음] 버튼 문구. */
@@ -55,19 +55,20 @@ export function createDialoguePanel(c: Controller): Panel {
       const examSupp = s.phase === 'exam' && s.cursor.inSupp && !c.replaying;
       const objection = !c.replaying && line?.objection ? line.objection : null;
 
+      const spoken = !!line && line.speaker !== 'thought';
       speaker.textContent = line ? c.speakerName(line.speaker) : '';
-      show(speaker, !!line);
+      show(speaker, spoken);
       // 초상 플레이스홀더: 좌석 색 + 이름 첫 글자. 나중에 같은 화자 키로 그림 교체.
-      show(portrait, !!line);
-      if (line) {
+      show(portrait, spoken);
+      if (line && spoken) {
         portrait.dataset.speaker = line.speaker;
-        portrait.style.background = `#${SEATS[line.speaker].color.toString(16).padStart(6, '0')}`;
+        portrait.style.background = `#${SEATS[line.speaker as SeatKey].color.toString(16).padStart(6, '0')}`;
         portrait.textContent = speaker.textContent.slice(0, 1);
       }
       if (line) text.textContent = line.text;
       else if (examSupp) text.textContent = '보충신문. 재판장이 직접 물어볼 것이 있으면 고르십시오.';
       else text.textContent = NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
-      text.classList.toggle('narration', !line);
+      text.classList.toggle('narration', !spoken);
 
       note.textContent = objection ? `${objection.by === 'defense' ? '변호인이' : '검사가'} 이의를 제기했습니다.` : '';
       show(note, !!objection);

@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const FlagS = z.string();
 export const CondS = z.object({ all: z.array(FlagS).optional(), none: z.array(FlagS).optional() });
-export const SpeakerS = z.enum(['judge', 'clerk', 'prosecutor', 'defense', 'witness', 'defendant']);
+export const SpeakerS = z.enum(['judge', 'clerk', 'prosecutor', 'defense', 'witness', 'defendant', 'thought']);
+// thought: 재판장(플레이어)의 속생각. 법정에서 말해지지 않으므로 좌석·마이크·공판조서와 무관하다.
 export const ViolationS = z.object({
   id: z.string(), text: z.string(), affectsJudgment: z.boolean(), lostCards: z.array(z.string()),
 });
