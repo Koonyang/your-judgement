@@ -36,3 +36,22 @@ export function saveRecord(e: RecordEntry): boolean {
     return false;
   }
 }
+
+const NICK_KEY = 'yourJudgement.nickname.v1';
+
+/** 판사 닉네임(도장에 새김). 없거나 읽기 실패면 빈 문자열. */
+export function loadNickname(): string {
+  try {
+    return globalThis.localStorage?.getItem(NICK_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveNickname(name: string): void {
+  try {
+    globalThis.localStorage?.setItem(NICK_KEY, name);
+  } catch {
+    // 저장 못 해도 이번 판에서는 입력값을 그대로 쓴다
+  }
+}

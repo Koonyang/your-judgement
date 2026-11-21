@@ -5,6 +5,8 @@ import Phaser from 'phaser';
 import type { Controller } from '../game/controller';
 import { assembleJudgment } from '../engine/judgment';
 import { FONT_STACK } from './seats';
+import { normalizeNickname, sealLayout } from '../ui/seal';
+import { loadNickname } from '../ui/storage';
 
 export const SFX = { stamp: 'sfx-stamp', gavel: 'sfx-gavel' } as const;
 /** 박자 간격(ms) */
@@ -55,8 +57,18 @@ export class PronounceScene extends Phaser.Scene {
     this.cameras.main.shake(180, 0.006);
     // 판결서 서명날인(형소법 §41 [확인필요]) 자리. 승인/거절 도장 동작이 아니라 선고 연출이다.
     const box = this.add.container(465, 235).setAngle(-8);
-    box.add(this.add.rectangle(0, 0, 48, 48).setStrokeStyle(3, 0xb8382e));
-    box.add(this.add.text(0, 0, '판사', { fontFamily: FONT_STACK, fontSize: '14px', color: '#b8382e', align: 'center' }).setOrigin(0.5));
+    const name = normalizeNickname(loadNickname());
+    // 서명란: 판결서 끝의 "판사 ○○○" (닉네임이 없으면 직함만)
+    this.add.text(410, 235, name ? `판사  ${name}` : '판사', { fontFamily: FONT_STACK, fontSize: '11px', color: '#2a221b' }).setOrigin(1, 0.5);
+    const S = 48;
+    box.add(this.add.rectangle(0, 0, S, S).setStrokeStyle(3, 0xb8382e));
+    const l = sealLayout(name);
+    const cw = S / l.cols, ch = S / l.rows;
+    const size = l.cols === 1 && l.rows === 1 ? 26 : 16;
+    for (const cell of l.cells) {
+      const x = -S / 2 + cw * (cell.col + 0.5), y = -S / 2 + ch * (cell.row + 0.5);
+      box.add(this.add.text(x, y, cell.ch, { fontFamily: FONT_STACK, fontSize: `${size}px`, color: '#b8382e', fontStyle: 'bold' }).setOrigin(0.5));
+    }
     box.setScale(1.6).setAlpha(0);
     this.tweens.add({ targets: box, scale: 1, alpha: 1, duration: 120, ease: 'Quad.easeIn' });
   }

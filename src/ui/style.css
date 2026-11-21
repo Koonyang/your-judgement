@@ -104,6 +104,16 @@
 }
 .case-tag { display: inline-block; background: var(--seal); color: var(--hanji); padding: 0 4px; font-size: 9px; }
 .case-title { font-size: 12px; margin: 4px 0 2px; }
+/* 판사 이름 + 도장 미리보기(선고 때 판결서에 찍히는 것과 같은 배치) */
+.nick { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 8px 0; font-size: 10px; color: var(--muted); }
+.nick-row { display: flex; align-items: center; gap: 8px; }
+.nick-input { width: 72px; font: inherit; font-size: 12px; text-align: center; padding: 2px 4px; background: var(--hanji); color: var(--ink); border: 1px solid var(--box-line); }
+.seal-preview {
+  width: 30px; height: 30px; box-sizing: border-box; display: grid; place-items: center;
+  border: 2px solid var(--seal); color: var(--seal); font-weight: bold; line-height: 1; transform: rotate(-8deg);
+}
+.seal-preview[data-size="1"] { font-size: 17px; }
+.seal-preview[data-size="2"] { font-size: 11px; }
 .case-court { color: var(--muted); }
 .placeholder { text-align: center; }
 
