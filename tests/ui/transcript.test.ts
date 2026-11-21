@@ -17,8 +17,8 @@ const text = (id: string) => {
 describe('transcriptText', () => {
   // 점주 신문: 여죄 질문 이의 인용 → 정당 대목 제지 → 모욕 제지 → 보충신문 1개
   const a: Action[] = [
-    ...adv(16), ...adv(9), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2),
-    { type: 'INTERRUPT' }, { type: 'INTERRUPT' }, ...adv(2),
+    ...adv(15), ...adv(10), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2),
+    { type: 'INTERRUPT' }, { type: 'INTERRUPT' }, ...adv(4),
     { type: 'ASK_SUPP', questionId: 'q_owner_items' },
   ];
   const s = play(sc, a);
@@ -26,7 +26,7 @@ describe('transcriptText', () => {
   it('heard와 줄 수가 같고(머리줄·빈 줄·속생각 제외) 듣지 않은 진술은 없다', () => {
     const t = transcriptText(sc, s);
     const body = t.split('\n').filter((x) => x && !x.startsWith('['));
-    const thoughts = s.heard.filter((id) => /^(open_0|open_8a|open_9|open_9b|owner_8a|owner_18a)$/.test(id));
+    const thoughts = s.heard.filter((id) => /^(open_0|open_8a|open_9|owner_8a|owner_18a)$/.test(id));
     expect(thoughts.length).toBeGreaterThan(0);
     expect(body).toHaveLength(s.heard.length - thoughts.length);
     expect(t).not.toContain(text('owner_18a'));

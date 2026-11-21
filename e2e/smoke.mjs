@@ -49,10 +49,10 @@ try {
 
   // 공판: 이의 인용, 모욕 대목 제지, 보충신문, 최후진술 형광펜
   await page.waitForTimeout(300);
-  // 판사 이름 → 도장 미리보기(3자는 '인'을 붙여 2×2)
+  // 판사 닉네임 → 도장 미리보기
   await tid('judge-nickname').fill('홍길동');
   const sealChars = await page.locator('[data-testid="seal-preview"] span').allTextContents();
-  if (sealChars.join('') !== '홍길동인') throw new Error(`도장 미리보기 글자 이상: ${sealChars.join('')}`);
+  if (sealChars.join('') !== '홍길동') throw new Error(`도장 미리보기 글자 이상: ${sealChars.join('')}`);
   await shot('1-docket');
   await tid('btn-open-case').click();
   await shot('2-pretrial');

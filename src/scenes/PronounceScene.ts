@@ -5,7 +5,7 @@ import Phaser from 'phaser';
 import type { Controller } from '../game/controller';
 import { assembleJudgment } from '../engine/judgment';
 import { FONT_STACK } from './seats';
-import { normalizeNickname, sealLayout } from '../ui/seal';
+import { normalizeNickname, sealBox, sealLayout } from '../ui/seal';
 import { loadNickname } from '../ui/storage';
 
 export const SFX = { stamp: 'sfx-stamp', gavel: 'sfx-gavel' } as const;
@@ -60,14 +60,12 @@ export class PronounceScene extends Phaser.Scene {
     const name = normalizeNickname(loadNickname());
     // 서명란: 판결서 끝의 "판사 ○○○" (닉네임이 없으면 직함만)
     this.add.text(410, 235, name ? `판사  ${name}` : '판사', { fontFamily: FONT_STACK, fontSize: '11px', color: '#2a221b' }).setOrigin(1, 0.5);
-    const S = 48;
-    box.add(this.add.rectangle(0, 0, S, S).setStrokeStyle(3, 0xb8382e));
     const l = sealLayout(name);
-    const cw = S / l.cols, ch = S / l.rows;
-    const size = l.cols === 1 && l.rows === 1 ? 26 : 16;
+    const b = sealBox(l, 52, 15);
+    box.add(this.add.rectangle(0, 0, b.w, b.h).setStrokeStyle(3, 0xb8382e));
     for (const cell of l.cells) {
-      const x = -S / 2 + cw * (cell.col + 0.5), y = -S / 2 + ch * (cell.row + 0.5);
-      box.add(this.add.text(x, y, cell.ch, { fontFamily: FONT_STACK, fontSize: `${size}px`, color: '#b8382e', fontStyle: 'bold' }).setOrigin(0.5));
+      const x = -b.w / 2 + b.pad + cell.x * b.cw, y = -b.h / 2 + b.pad + cell.y * b.cell;
+      box.add(this.add.text(x, y, cell.ch, { fontFamily: FONT_STACK, fontSize: `${b.font}px`, color: '#b8382e', fontStyle: 'bold' }).setOrigin(0.5));
     }
     box.setScale(1.6).setAlpha(0);
     this.tweens.add({ targets: box, scale: 1, alpha: 1, duration: 120, ease: 'Quad.easeIn' });
