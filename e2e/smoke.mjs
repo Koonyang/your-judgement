@@ -80,6 +80,12 @@ try {
       if ((await text('dialogue-text')) === cur) throw new Error('화면을 눌러도 대사가 넘어가지 않음');
       continue;
     }
+    // 블록 끝 안내(대사 줄이 아님)도 화면을 눌러 넘길 수 있다.
+    if (cur === '모두절차를 마칩니다.') {
+      await page.locator('#game canvas').click({ position: { x: 640, y: 80 } });
+      if ((await text('phase-title')) === title) throw new Error('모두절차 끝 안내에서 화면을 눌러도 넘어가지 않음');
+      continue;
+    }
     if (cur.startsWith('솔직히 사장님도')) { await tid('btn-interrupt').click(); continue; }
     if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
     await tid('btn-next').click();

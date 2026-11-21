@@ -162,12 +162,13 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   render(c.state);
 
   // Space/Enter = [다음]. 버튼에 포커스가 있으면 브라우저 기본 동작(클릭)에 맡긴다.
-  // 화면 아무 데나 누르면 [다음](대사가 보일 때만, 선택지·버튼·서류를 누른 게 아니면).
+  // 화면 아무 데나 누르면 [다음]: [다음]이 ▼(터치로 넘기는 상태)일 때만. 대사 줄뿐 아니라 "모두절차를 마칩니다." 같은
+  // 블록 끝 안내도 포함한다. 절차를 바꾸는 글자 버튼(공판 개정 등)과 선택지·버튼·서류를 누른 경우는 제외.
   window.addEventListener('click', (e) => {
     const t = e.target as HTMLElement | null;
-    if (!c.shownLine() || !t || t.closest('button, a, input, label, select, textarea, .panel, .drawer, .modal, .supp, .zoom-dim, .desk-item, .drag-source, .drop-target')) return;
+    if (!t || t.closest('button, a, input, label, select, textarea, .panel, .drawer, .modal, .supp, .zoom-dim, .desk-item, .drag-source, .drop-target')) return;
     const next = root.querySelector<HTMLButtonElement>('[data-testid="btn-next"]');
-    if (!next || next.closest('[hidden]') || next.disabled) return;
+    if (!next || !next.classList.contains('tap') || next.closest('[hidden]') || next.disabled) return;
     next.click();
   });
 
