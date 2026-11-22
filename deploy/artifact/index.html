@@ -95,13 +95,13 @@ ul.items.todo li::before { content: "□"; }
 
   <article class="receipt" aria-label="패치 내역과 현재 상황">
     <p class="r-title">검 수 영 수 증</p>
-    <p class="r-sub">2026. 11. 22. 반영 · 커밋 c31f4b7</p>
+    <p class="r-sub">2026. 11. 22. 반영 · 커밋 c12efb2</p>
     <hr class="cut">
 
     <p class="r-h">현재 상황</p>
     <dl class="kv">
       <dt>진행 범위</dt><dd>1화 사건 대기열 → 판결 기록실</dd>
-      <dt>단위 테스트</dt><dd class="ok">160 / 160 통과</dd>
+      <dt>단위 테스트</dt><dd class="ok">174 / 174 통과</dd>
       <dt>1화 자동 진행(e2e)</dt><dd class="ok">통과</dd>
       <dt>브랜치</dt><dd>ccr-2d3777f9-6euads</dd>
       <dt>main 병합</dt><dd>대기</dd>
@@ -109,6 +109,17 @@ ul.items.todo li::before { content: "□"; }
     <hr class="cut">
 
     <p class="r-h">패치 내역</p>
+    <div class="day"><span>2026. 11. 22. (4차)</span><span>쟁점 보드 → 길막기 판</span></div>
+    <ul class="items">
+      <li>쟁점 보드가 천칭처럼 허공에 뜬 3×3 판으로: 피고인은 판 위의 기물 하나, 갈 수 있는 방향이 곧 활로(쟁점). 다툴 게 없는 1화는 앞으로만 가는 폰</li>
+      <li>검사의 증거는 나오는 대로 활로에 자동으로 올라오고, 판사는 증거마다 [신뢰] / [배척]만 정함. 활로가 모두 막히면 유죄</li>
+      <li>[회상]: 증언을 법정 장면 그대로 다시 들음(바랜 색)</li>
+      <li>[대조]: 두 기록(CCTV와 점주 증언)을 겹쳐 손끝으로 쓸면 어긋난 곳에서 걸림. 찾은 어긋남은 판 아래 대조 기록으로 남음</li>
+      <li>판결 직전 자동 점검: 자백만 신뢰했으면 참여관이 그 판정을 무르고 다시 판정하게 함</li>
+      <li>첫 안내에 재판장 독백(증거능력과 증명력)과 한 문장 설명</li>
+      <li>점주 증인신문에 기억이 흐린 답변 한 줄(시각·개수) 추가</li>
+      <li>책상과 서류를 판사석에서 내려다보는 각도로</li>
+    </ul>
     <div class="day"><span>2026. 11. 22. (3차)</span><span>법정 연출 다듬기</span></div>
     <ul class="items">
       <li>서류를 집으면 아래에서 올라오고, 내려놓으면 책상으로 내려감</li>
@@ -182,6 +193,9 @@ ul.items.todo li::before { content: "□"; }
 
     <p class="r-h">검수해 볼 것</p>
     <ul class="items todo">
+      <li>쟁점 보드: 첫 안내만 읽고 [신뢰] / [배척]으로 무엇을 하는지 바로 알겠는지</li>
+      <li>[대조]에서 손끝으로 쓸 때 걸리는 느낌(폰은 진동)이 괜찮은지, 사소한 어긋남을 보고 배척하고 싶어지는지</li>
+      <li>[회상] 장면 연출(바랜 색·"회상" 표시)이 자연스러운지</li>
       <li>인물이 걸어 다니는 속도·느낌이 어색하지 않은지, 대사를 빨리 넘길 때 거슬리지 않는지</li>
       <li>말하는 사람 밝기와 머리 위 말소리 표시가 잘 보이는지</li>
       <li>판사실 장면으로 바뀌는 시점이 자연스러운지, 법정 확대로 도트가 뭉개져 보이지 않는지</li>
@@ -207,7 +221,7 @@ ul.items.todo li::before { content: "□"; }
     </ul>
     <hr class="cut">
 
-    <div class="total"><span>이번 반영</span><span>커밋 7건</span></div>
+    <div class="total"><span>이번 반영</span><span>커밋 10건</span></div>
     <div class="foot"><span class="stamp">검 수 대 기</span></div>
   </article>
 </div>
