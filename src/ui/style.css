@@ -430,3 +430,38 @@
 @keyframes tool-in { from { opacity: 0; translate: 6px 0; } to { opacity: 1; translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .tool-body:not([hidden]) { animation: none; } }
 .jd-sec:not(.shown) .jd-blank:empty { border-bottom-style: dotted; opacity: 0.5; min-height: 6px; }
+
+/* 쟁점 보드 v2: 법정과 분리된 머릿속 화면 */
+#ui-root.board-screen .zoom-dim {
+  top: 0; background-color: #15171c;
+  background-image: linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.board-thoughts { margin: 0 0 6px; }
+.board-thought { margin: 0 0 2px; font-style: italic; color: var(--muted); }
+.board-check:empty { display: none; }
+.btn.chip.memo { background: #f3e1a8; border-style: dashed; }
+.cell-head .btn.sm { padding: 0 5px; font-size: 9px; }
+.board.rubbing .board-cells, .board.rubbing .card-tray { display: none; }
+.rub-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.rub-rows { display: flex; flex-direction: column; gap: 5px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.rub-row { position: relative; border: 1px dashed var(--hanji-2); background: #f1e8d4; padding: 3px 6px; }
+.rub-row:focus-visible { outline: 1px solid var(--accent); }
+.rub-a { font-size: 11px; }
+/* 아래 기록: 반투명 덧종이에 비친 글자 */
+.rub-b { font-size: 11px; color: #6b4a3a; background: rgb(255 255 255 / 0.35); margin-top: 2px; padding-left: 4px; border-left: 2px solid var(--hanji-2); }
+.rub-memo:empty { display: none; }
+.rub-row.smooth { border-style: solid; border-color: var(--ok); }
+.rub-row.smooth .rub-memo { color: var(--ok); }
+/* 턱: 종이 결이 일어난다 */
+.rub-row.snag { border-style: solid; border-color: var(--seal); background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgb(184 56 46 / 0.08) 5px 6px); }
+.rub-row.snag .rub-memo { color: var(--seal); }
+.rub-row.bump { animation: snag-bump 0.25s ease-out; }
+@keyframes snag-bump { 25% { translate: -3px 0; } 50% { translate: 2px -1px; } 75% { translate: -1px 0; } }
+@media (prefers-reduced-motion: reduce) { .rub-row.bump { animation: none; } }
+/* 회상: 법정 장면이 바랜 기억처럼 */
+html.recall #game canvas { filter: sepia(0.9) brightness(1.25) contrast(0.9); }
+html.recall #ui-root::before {
+  content: "회상"; position: absolute; left: 8px; top: 6px; z-index: 25; padding: 0 6px;
+  background: var(--ink); color: var(--accent); border: 1px solid var(--box-line); font-size: 11px;
+}

@@ -133,18 +133,21 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     const boardOk = at(s.phase, 'evidence') && !isJudgmentStage(s.phase);
     if ((drawer === 'docs' && !docsOk) || (drawer === 'evidence' && !evOk) || (drawer === 'board' && !boardOk)) drawer = null;
     const modal = introOpen && s.phase === 'evidence';
+    // 쟁점 보드 회상: 보드·판단 화면을 잠시 걷고 그 증언 장면(법정 + 대사 줄)을 다시 보여 준다.
+    const recall = c.recalling;
+    document.documentElement.classList.toggle('recall', recall);
 
     title.textContent = phaseTitle(c, s);
     show(title, s.phase !== 'docket' && s.phase !== 'pronounce');
     show(desk.el, s.phase !== 'pronounce'); // 선고 연출은 Phaser 화면 전체를 쓴다
-    root.classList.toggle('chambers', !COURT_PHASES.has(s.phase) && s.phase !== 'pronounce'); // 판사실: 책상 띠 없이 방 안의 책상
+    root.classList.toggle('chambers', !COURT_PHASES.has(s.phase) && s.phase !== 'pronounce' && !recall); // 판사실: 책상 띠 없이 방 안의 책상
     // 마이크는 증인·피고인 신문 중(보충신문 제외)에만. 재판장 자신이 말할 때는 누를 수 없다.
     const line = c.shownLine();
     const micOn = s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line;
     mic.disabled = line?.speaker === 'judge' || line?.speaker === 'thought';
     desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : []), ...(micOn ? [mic] : [])], drawer);
     show(docket.el, s.phase === 'docket');
-    show(boardMain.el, s.phase === 'verdict');
+    show(boardMain.el, s.phase === 'verdict' && !recall);
     const weighing = s.phase === 'sentencing' && sentencing.weighing();
     show(sentencing.el, weighing);
     show(judgment.el, s.phase === 'judgment' || (s.phase === 'sentencing' && !weighing));
@@ -152,19 +155,22 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     show(record.el, s.phase === 'record');
     show(skip, s.phase === 'pronounce');
     show(intro, modal);
-    show(dialogue.el, s.phase !== 'docket' && !isJudgmentStage(s.phase) && !modal);
-    show(drawerEl, drawer !== null && !modal);
+    show(dialogue.el, recall || (s.phase !== 'docket' && !isJudgmentStage(s.phase) && !modal));
+    show(drawerEl, drawer !== null && !modal && !recall);
     show(docs.el, drawer === 'docs');
     show(evidence.el, drawer === 'evidence');
     show(boardDrawer.el, drawer === 'board');
-    const stageOpen = s.phase === 'docket' || s.phase === 'verdict' || s.phase === 'sentencing' || s.phase === 'judgment'
-      || s.phase === 'appeal' || s.phase === 'record';
+    const stageOpen = !recall && (s.phase === 'docket' || s.phase === 'verdict' || s.phase === 'sentencing' || s.phase === 'judgment'
+      || s.phase === 'appeal' || s.phase === 'record');
+    const drawerOpen = drawer !== null && !modal && !recall;
     const dialogueOn = !dialogue.el.hidden;
     // 확대 보기가 열리면 대사 줄은 맨 아래로 내려가고(y310–360) 확대 서류가 그 위를 쓴다.
-    root.classList.toggle('zoomed', stageOpen || (drawer !== null && !modal) || modal);
+    root.classList.toggle('zoomed', stageOpen || drawerOpen || modal);
     root.classList.toggle('dl-on', dialogueOn);
     // 판결 단계 밖에서 집어 든 서류는 작은 종이로: 위로 법정이 보이게 한다. 양형은 허공에 뜬 숙고(AR).
-    root.classList.toggle('paper', !stageOpen && drawer !== null && !modal);
+    root.classList.toggle('paper', !stageOpen && drawerOpen && drawer !== 'board');
+    // 쟁점 보드는 법정과 분리된 머릿속 화면: 법정·책상을 가리고 보드만(판단 단계의 보드도 같은 화면).
+    root.classList.toggle('board-screen', (drawerOpen && drawer === 'board') || (s.phase === 'verdict' && !recall) || modal);
     root.classList.toggle('ar', s.phase === 'sentencing' && sentencing.weighing());
     show(dim, root.classList.contains('zoomed'));
     for (const p of panels) p.render(s, sc);
@@ -187,7 +193,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   window.addEventListener('keydown', (e) => {
     if (e.key !== ' ' && e.key !== 'Enter') return;
     const t = e.target as HTMLElement | null;
-    if (t && t.closest('button, input, textarea, select, [contenteditable]')) return;
+    if (t && t.closest('button, input, textarea, select, [contenteditable], [role="button"]')) return;
     const next = root.querySelector<HTMLButtonElement>('[data-testid="btn-next"]');
     if (!next || next.closest('[hidden]') || next.disabled) return;
     e.preventDefault();

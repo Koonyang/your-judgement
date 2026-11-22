@@ -1,4 +1,4 @@
-import { initBoard, canConfirmVerdict, verdictOf, boardFindings } from '../../src/engine/board';
+import { initBoard, canConfirmVerdict, verdictOf, boardFindings, corroborationCheck } from '../../src/engine/board';
 import type { Card, Cell } from '../../src/engine/scenario/schema';
 
 const cells: Cell[] = [
@@ -52,5 +52,21 @@ describe('board', () => {
     expect(boardFindings(b, cards, views, none).appealDisagree).toEqual(['intent']);
     b.act.mark = 'doubt';
     expect(boardFindings(b, cards, views, new Set(['x'])).appealDisagree).toEqual(['act', 'intent']);
+  });
+});
+
+describe('corroborationCheck', () => {
+  const memo: Card = { id: 'memo', title: '메모', text: '', kind: 'memo' };
+  it('자백만 있으면 자백을 떼고, 메모는 보강증거로 치지 않는다', () => {
+    const b = initBoard(cells);
+    b.act.cards = ['conf', 'memo']; b.intent.cards = ['conf'];
+    const r = corroborationCheck(b, [...cards, memo]);
+    expect(r.dropped).toEqual([{ cellId: 'act', cardId: 'conf' }, { cellId: 'intent', cardId: 'conf' }]);
+    expect(r.board.act.cards).toEqual(['memo']);
+  });
+  it('다른 증거가 하나라도 있으면 그대로', () => {
+    const b = initBoard(cells);
+    b.act.cards = ['conf']; b.intent.cards = ['cctv'];
+    expect(corroborationCheck(b, cards)).toEqual({ board: b, dropped: [] });
   });
 });

@@ -62,6 +62,27 @@ export function loadScenario(raw: unknown): Scenario {
         errors.push(`exam ${x.id}.unlocksEvidence: 알 수 없는 증거 id '${u.evidenceId}'`);
     });
   }
+  // 회상·더듬기가 가리키는 줄 id: 모든 블록의 라인 + 보충신문 질문·답변
+  const anyLine = new Set<string>([
+    ...s.opening, ...s.closing.lines,
+    ...s.exams.flatMap((x) => [...x.lines, ...x.supplementary.flatMap((q) => q.answer)]),
+  ].map((l) => l.id).concat(s.exams.flatMap((x) => x.supplementary.map((q) => q.id))));
+  const needAnyLine = (id: string, where: string) => {
+    if (!anyLine.has(id)) errors.push(`${where}: 알 수 없는 줄 id '${id}'`);
+  };
+  for (const c of s.cells) c.recall?.forEach((id) => needAnyLine(id, `cell ${c.id}.recall`));
+  const kindOf = new Map(s.cards.map((c) => [c.id, c.kind]));
+  for (const r of s.rubs) {
+    if (!cellIds.has(r.cellId)) errors.push(`rub ${r.id}.cellId: 알 수 없는 셀 id '${r.cellId}'`);
+    r.requires.cards?.forEach((id) => needCard(id, `rub ${r.id}.requires.cards`));
+    r.requires.heard?.forEach((id) => needAnyLine(id, `rub ${r.id}.requires.heard`));
+    for (const row of r.rows) {
+      if (!row.snag) continue;
+      needCard(row.snag.cardId, `rub ${r.id}.snag(${row.snag.id})`);
+      if (kindOf.has(row.snag.cardId) && kindOf.get(row.snag.cardId) !== 'memo')
+        errors.push(`rub ${r.id}.snag(${row.snag.id}): 메모 카드(kind memo)여야 함 '${row.snag.cardId}'`);
+    }
+  }
   for (const e of s.evidence) if (e.cardId) needCard(e.cardId, `evidence ${e.id}.cardId`);
   for (const a of s.appealView)
     if (!cellIds.has(a.cellId)) errors.push(`appealView.cellId: 알 수 없는 셀 id '${a.cellId}'`);

@@ -14,7 +14,8 @@ const COURT_PHASES = new Set<GameState['phase']>(['opening', 'evidence', 'exam',
 
 export class CourtroomScene extends Phaser.Scene {
   private actors = new Map<SeatKey, Actor>();
-  private witnessOf = -1;
+  private witnessOf: string | null = null;
+  private wasRecalling = false;
   private waves!: Phaser.GameObjects.Container;
   private dim!: Phaser.GameObjects.Rectangle;
   private bob?: Phaser.Tweens.Tween;
@@ -89,31 +90,38 @@ export class CourtroomScene extends Phaser.Scene {
     const w = this.actors.get('witness')!;
     const d = this.actors.get('defendant')!;
     // 위치 이동: 피고인은 자기 자리 ↔ 증언대, 증인은 난간 문 → 증언대 → 퇴정. 다음 증인이면 앞 증인이 나간 뒤 들어온다.
-    this.moveTo(d, defendantAtStand ? spotOf('witness') : spotOf('defendant'));
-    const idx = witnessIn ? s.cursor.examIndex : -1;
-    if (idx !== this.witnessOf) {
+    // 쟁점 보드 회상은 걸어 들어오지 않고 그 장면 그대로 나타났다 사라진다.
+    const snap = c.recalling || this.wasRecalling;
+    this.wasRecalling = c.recalling;
+    if (snap) this.place(d, defendantAtStand ? spotOf('witness') : spotOf('defendant'));
+    else this.moveTo(d, defendantAtStand ? spotOf('witness') : spotOf('defendant'));
+    const id = witnessIn ? exam!.id : null;
+    if (id !== this.witnessOf) {
       const enter = () => {
-        if (idx < 0) return;
+        if (id === null) return;
         w.label.setText(c.speakerName('witness'));
+        w.shown = true;
+        if (snap) return this.place(w, spotOf('witness'));
         w.img.setPosition(GATE.x, GATE.y).setScale(GATE.scale);
         w.spot = GATE;
-        w.shown = true;
         this.moveTo(w, spotOf('witness'));
       };
-      if (this.witnessOf >= 0) this.moveTo(w, GATE, () => { w.shown = false; enter(); });
+      if (this.witnessOf !== null && snap) { w.shown = false; enter(); }
+      else if (this.witnessOf !== null) this.moveTo(w, GATE, () => { w.shown = false; enter(); });
       else enter();
-      this.witnessOf = idx;
+      this.witnessOf = id;
     }
+    const courtOn = COURT_PHASES.has(s.phase) || c.recalling;
     for (const [key, a] of this.actors) {
       const on = key === 'witness' ? w.shown : visible[key];
       a.img.setVisible(on);
-      a.label.setVisible(on && !a.walk && COURT_PHASES.has(s.phase)); // 법정 밖(숙고·판결)·걷는 중에는 이름표가 겹쳐 보이지 않게
+      a.label.setVisible(on && !a.walk && courtOn); // 법정 밖(숙고·판결)·걷는 중에는 이름표가 겹쳐 보이지 않게
     }
     d.label.setText(defendantAtStand ? c.speakerName('defendant') : SEATS.defendant.label);
 
-    this.dim.setVisible(!COURT_PHASES.has(s.phase));
+    this.dim.setVisible(!courtOn);
     // 법정 밖 단계는 판사실로 장면을 바꾼다(선고는 별도 장면).
-    this.scene.setVisible(!COURT_PHASES.has(s.phase) && s.phase !== 'pronounce', 'chambers');
+    this.scene.setVisible(!courtOn && s.phase !== 'pronounce', 'chambers');
     // 양형 숙고는 법정 위에 떠 있는 생각이라 법정을 희미하게 남긴다.
     this.dim.setFillStyle(0x07080a, s.phase === 'sentencing' ? 0.55 : 0.85);
     // 선고 연출은 별도 장면. 끝나면(FINISH_PRONOUNCE·건너뛰기) 장면이 스스로 멈춘다.
@@ -152,6 +160,17 @@ export class CourtroomScene extends Phaser.Scene {
       targets: a.img, scaleY: a.spot.scale * 1.04, duration: 1400 + Math.random() * 900,
       delay: Math.random() * 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
+  }
+
+  /** 걷지 않고 그 자리에 바로 둔다. */
+  private place(a: Actor, to: Spot): void {
+    a.walk?.remove();
+    a.walk = undefined;
+    a.arrive = undefined;
+    a.spot = to;
+    a.img.setPosition(to.x, to.y).setScale(to.scale);
+    a.label.setPosition(to.x, to.y + (SPRITE_H * to.scale) / 2 + 1);
+    this.breathe(a);
   }
 
   /** 짧은 걸음: 통통 튀며 목표 자리로 간다. 이미 그 자리(로 가는 중)면 아무것도 안 한다. */

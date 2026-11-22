@@ -45,6 +45,8 @@ export type GameState = {
    */
   cursor: { block: LineBlock; examIndex: number; lineId: string | null; inSupp: boolean };
   board: BoardState;
+  /** 판결 직전 자동 점검 결과(verdict 진입 때 한 번). 떼어 낸 연결 목록. */
+  boardCheck: { dropped: { cellId: string; cardId: string }[] } | null;
   sentencing: { special: string[]; general: string[]; susp: string[]; months: number | null; suspended: boolean };
   judgment: { evidenceSlots: string[]; favorable: string[]; unfavorable: string[]; addendum: string; deviationSlots: string[] };
   /** reviewAppeal 결과 (Task 7이 채움) */
@@ -56,7 +58,7 @@ export type Action =
   | { type: 'ASK_SUPP'; questionId: string } | { type: 'END_SUPP' }
   | { type: 'HIGHLIGHT'; docId: string; text: string }
   | { type: 'LINK_CARD'; cellId: string; cardId: string } | { type: 'UNLINK_CARD'; cellId: string; cardId: string }
-  | { type: 'MARK_CELL'; cellId: string; mark: CellMark } | { type: 'CONFIRM_VERDICT' }
+  | { type: 'MARK_CELL'; cellId: string; mark: CellMark } | { type: 'RUB'; rubId: string; row: number } | { type: 'CONFIRM_VERDICT' }
   | { type: 'SET_SENTENCING'; patch: Partial<GameState['sentencing']> } | { type: 'CONFIRM_SENTENCING' }
   | { type: 'SET_JUDGMENT'; patch: Partial<GameState['judgment']> } | { type: 'CONFIRM_JUDGMENT' }
   | { type: 'FINISH_PRONOUNCE' } | { type: 'FINISH_APPEAL' };
@@ -73,6 +75,7 @@ export function initialState(sc: Scenario): GameState {
     heard: [],
     cursor: { block: 'opening', examIndex: 0, lineId: null, inSupp: false },
     board: initBoard(sc.cells),
+    boardCheck: null,
     sentencing: { special: [], general: [], susp: [], months: null, suspended: false },
     judgment: { evidenceSlots: [], favorable: [], unfavorable: [], addendum: '', deviationSlots: [] },
     outcome: null,

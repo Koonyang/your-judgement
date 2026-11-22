@@ -74,7 +74,7 @@ describe('1화 데이터', () => {
     expect(sc.cells.every((c) => !c.disputed)).toBe(true);
     expect(sc.cards.map((c) => c.id).sort()).toEqual([
       'c_cctv', 'c_confession', 'c_livelihood', 'c_minor', 'c_nonpunish', 'c_owner_stmt',
-      'c_receipt', 'c_record', 'c_remorse', 'c_repaid',
+      'c_receipt', 'c_record', 'c_remorse', 'c_repaid', 'm_count', 'm_time',
     ]);
     expect(sc.cards.find((c) => c.id === 'c_confession')?.confession).toBe(true);
     expect(sc.sentencing.factors.map((f) => [f.id, f.tier, f.requiresAnyCard, f.weight])).toEqual([
@@ -212,5 +212,45 @@ describe('1화 경로', () => {
     expect(lastWords('hear')?.yieldsCards).toEqual(['c_remorse']);
     expect(lastWords('cut')?.yieldsCards ?? []).toEqual([]);
     expect(lastWords('cut')?.speaker).toBe('defendant');
+  });
+});
+
+describe('1화 쟁점 보드 v2', () => {
+  const toReview = (): Step[] => {
+    const a = actions(base);
+    return a.slice(0, a.findIndex((x) => 'to' in x && x.to === 'phase:verdict')).concat(toPhase('review'));
+  };
+
+  it('판결 직전 자동 점검: 자백만 미리 연결해 두면 verdict 진입 때 떨어진다', () => {
+    const pre: Step[] = CELLS.map((cellId) => ({ type: 'LINK_CARD', cellId, cardId: 'c_confession' }) as Action);
+    const s = play(sc, [...toReview(), ...pre, toPhase('verdict')]);
+    expect(s.boardCheck?.dropped).toHaveLength(4);
+    expect(Object.values(s.board).every((c) => c.cards.length === 0)).toBe(true);
+  });
+
+  it('자동 점검은 증명력을 건드리지 않는다: 보강증거가 있으면 그대로', () => {
+    const pre: Step[] = [
+      { type: 'LINK_CARD', cellId: 'taking', cardId: 'c_confession' },
+      { type: 'LINK_CARD', cellId: 'taking', cardId: 'c_cctv' },
+    ];
+    const s = play(sc, [...toReview(), ...pre, toPhase('verdict')]);
+    expect(s.boardCheck?.dropped).toEqual([]);
+    expect(s.board.taking.cards).toEqual(['c_confession', 'c_cctv']);
+  });
+
+  it('겹쳐 더듬기: 턱 걸린 줄만 메모 카드가 생기고, 일치하는 줄은 아무 일 없다', () => {
+    const s = play(sc, [...toReview(), { type: 'RUB', rubId: 'r_owner_cctv', row: 0 }, { type: 'RUB', rubId: 'r_owner_cctv', row: 1 }]);
+    expect(s.heldCards).toEqual(expect.arrayContaining(['m_time', 'm_count']));
+    expect(() => play(sc, [{ type: 'RUB', rubId: 'r_owner_cctv', row: 2 }], s)).toThrow();
+  });
+
+  it('사소한 턱을 의심 근거로 무죄를 내면 항소심에서 사실오인 파기', () => {
+    const a = actions({ ...base, board: { ...fullBoard, taking: { cards: ['m_time'], mark: 'doubt' } }, sentence: null });
+    const i = a.findIndex((x) => 'to' in x && x.to === 'phase:verdict');
+    a.splice(i, 0, { type: 'RUB', rubId: 'r_owner_cctv', row: 0 });
+    const s = play(sc, a);
+    const out = reviewAppeal(sc, s);
+    expect(out.result).toBe('reversed');
+    expect(out.reasons.map((r) => r.code)).toContain('fact');
   });
 });

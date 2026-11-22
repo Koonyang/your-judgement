@@ -1,5 +1,6 @@
 // 단계 전환. 단계 순서는 PHASES 나열 순.
 import { evalCond } from '../cond';
+import { corroborationCheck } from '../board';
 import type { Scenario } from '../scenario/schema';
 import { PHASES, type GameState, type LineBlock, type Phase } from '../state';
 import { addCards, addUnique, moveCursor } from './lines';
@@ -25,6 +26,10 @@ export function enterPhase(sc: Scenario, s: GameState, phase: Phase): GameState 
     case 'opening': return startBlock(sc, t, 'opening');
     case 'closing': return startBlock(sc, t, 'closing');
     case 'exam': return sc.exams.length ? startBlock(sc, t, 'exam', 0) : enterPhase(sc, s, 'closing');
+    case 'verdict': {
+      const { board, dropped } = corroborationCheck(s.board, sc.cards);
+      return { ...t, board, boardCheck: { dropped }, cursor: { ...t.cursor, lineId: null, inSupp: false } };
+    }
     case 'evidence': return fileEvidence(sc, { ...t, cursor: { ...t.cursor, lineId: null, inSupp: false } });
     default: return { ...t, cursor: { ...t.cursor, lineId: null, inSupp: false } };
   }

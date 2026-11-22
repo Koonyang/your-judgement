@@ -12,7 +12,7 @@ import type { Scenario } from './scenario/schema';
 import { validateSentence } from './sentencing';
 import { PHASES, type Action, type GameState } from './state';
 import {
-  addFlags, blockLines, currentLine, hear, indexOfLine, moveCursor, recordViolation,
+  addCards, addFlags, blockLines, currentLine, hear, indexOfLine, moveCursor, recordViolation,
 } from './flow/lines';
 import { finishExam, nextPhase } from './flow/phases';
 
@@ -80,6 +80,19 @@ function askSupp(sc: Scenario, s: GameState, questionId: string): GameState {
   return t;
 }
 
+/** 겹쳐 더듬기에서 턱이 걸린 줄. 플래그 `rub:<snagId>`와 메모 카드를 남긴다. 턱 없는 줄은 상태 변화 없음. */
+export const rubFlag = (snagId: string) => `rub:${snagId}`;
+export function rubOpen(sc: Scenario, s: GameState, rubId: string): boolean {
+  const r = sc.rubs.find((x) => x.id === rubId);
+  if (!r) return false;
+  return (r.requires.cards ?? []).every((id) => s.heldCards.includes(id)) && (r.requires.heard ?? []).every((id) => s.heard.includes(id));
+}
+function rub(sc: Scenario, s: GameState, rubId: string, row: number): GameState {
+  const snag = sc.rubs.find((x) => x.id === rubId)?.rows[row]?.snag;
+  if (!boardEditable(s) || !snag || !rubOpen(sc, s, rubId) || s.flags.includes(rubFlag(snag.id))) return s;
+  return addCards(addFlags(s, [rubFlag(snag.id)]), [snag.cardId]);
+}
+
 function linkCard(s: GameState, cellId: string, cardId: string, link: boolean): GameState {
   const cell = s.board[cellId];
   if (!boardEditable(s) || !cell) return s;
@@ -101,6 +114,7 @@ export function reduce(sc: Scenario, s: GameState, a: Action): GameState {
       return { ...s, highlights: [...s.highlights, { docId: a.docId, text: a.text }] };
     case 'LINK_CARD': return linkCard(s, a.cellId, a.cardId, true);
     case 'UNLINK_CARD': return linkCard(s, a.cellId, a.cardId, false);
+    case 'RUB': return rub(sc, s, a.rubId, a.row);
     case 'MARK_CELL': {
       const cell = s.board[a.cellId];
       if (!boardEditable(s) || !cell || cell.mark === a.mark) return s;

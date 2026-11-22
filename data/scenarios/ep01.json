@@ -35,10 +35,10 @@
     { "id": "open_9", "speaker": "thought", "text": "그래도 자백했다고 끝은 아니지. 자백만으론 유죄가 안 된다. 뒷받침할 증거가 따로 있어야 해." }
   ],
   "cells": [
-    { "id": "property", "name": "타인의 재물", "disputed": false },
-    { "id": "taking", "name": "절취(점유 이전)", "disputed": false },
-    { "id": "intent", "name": "고의", "disputed": false },
-    { "id": "appropriation", "name": "불법영득의사", "disputed": false }
+    { "id": "property", "name": "타인의 재물", "disputed": false, "recall": ["owner_3", "owner_4", "owner_7", "owner_8"] },
+    { "id": "taking", "name": "절취(점유 이전)", "disputed": false, "recall": ["owner_5", "owner_6", "owner_6c", "owner_6d"] },
+    { "id": "intent", "name": "고의", "disputed": false, "recall": ["def_4", "def_5"] },
+    { "id": "appropriation", "name": "불법영득의사", "disputed": false, "recall": ["def_7", "def_8"] }
   ],
   "evidence": [
     { "id": "e_interrogation", "label": "피의자신문조서(피고인)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_confession",
@@ -64,7 +64,21 @@
     { "id": "c_livelihood", "title": "생계형 범행", "text": "석 달째 일이 끊겨 끼니를 거르던 중 먹을 것을 가져갔다.", "kind": "fact" },
     { "id": "c_repaid", "title": "변제", "text": "사건 나흘 뒤 피해자를 찾아가 사과하고 물건값을 갚았다.", "kind": "fact" },
     { "id": "c_remorse", "title": "진지한 반성", "text": "최후진술에서 전과를 스스로 언급하며 잘못을 인정했다.", "kind": "fact" },
-    { "id": "c_minor", "title": "피해 경미", "text": "피해액 12,000원.", "kind": "fact" }
+    { "id": "c_minor", "title": "피해 경미", "text": "피해액 12,000원.", "kind": "fact" },
+    { "id": "m_time", "title": "메모: 시각 차이", "text": "CCTV는 21:38, 증언은 '열 시쯤'. 다음 날 화면으로 알게 된 사람의 기억이다.", "kind": "memo" },
+    { "id": "m_count", "title": "메모: 개수 차이", "text": "CCTV는 도시락 2개, 증언은 '세 개였나'. 정확한 건 영수증과 맞춰 봤다고 본인이 말했다.", "kind": "memo" }
+  ],
+  "rubs": [
+    {
+      "id": "r_owner_cctv", "cellId": "taking", "title": "CCTV 캡처 ↔ 점주 법정 증언",
+      "a": { "label": "CCTV 영상 캡처(검사 설명)" }, "b": { "label": "증인 노은숙 법정 증언" },
+      "requires": { "cards": ["c_cctv"], "heard": ["owner_6", "owner_6d"] },
+      "rows": [
+        { "a": "21:38경 피고인이 진열대에서 물건을 집어 점퍼 안에 넣습니다.", "b": "열 시쯤이었을 거예요.", "snag": { "id": "s_time", "cardId": "m_time" } },
+        { "a": "도시락 2개, 우유, 빵", "b": "도시락 세 개하고 우유였나….", "snag": { "id": "s_count", "cardId": "m_count" } },
+        { "a": "21:40경 계산대를 지나쳐 출입문으로 나갑니다.", "b": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." }
+      ]
+    }
   ],
   "exams": [
     {
@@ -77,6 +91,8 @@
         { "id": "owner_5", "speaker": "prosecutor", "text": "3월 14일 밤, 피고인이 물건을 계산하지 않고 나간 사실은 언제 알았습니까?" },
         { "id": "owner_6", "speaker": "witness", "text": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." },
         { "id": "owner_6a", "speaker": "witness", "text": "그날은 제가 정신이 없었어요. 남편 보내고 열흘 만에 가게를 다시 연 참이라서요." },
+        { "id": "owner_6c", "speaker": "prosecutor", "text": "화면에서 피고인이 무엇을 가져갔는지, 몇 시쯤이었는지 기억합니까?" },
+        { "id": "owner_6d", "speaker": "witness", "text": "열 시쯤이었을 거예요. 도시락 세 개하고 우유였나…. 정확한 건 영수증하고 맞춰 본 게 맞아요." },
         { "id": "owner_7", "speaker": "prosecutor", "text": "증거목록 3번 피해품 목록 및 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
         { "id": "owner_8", "speaker": "witness", "text": "네, 맞습니다. 그날 영수증하고 재고를 하나하나 맞춰 봤어요. 큰돈은 아니지요.", "yieldsCards": ["c_minor"] },
         { "id": "owner_8a", "speaker": "thought", "text": "손으로 짚어 본 영수증 금액이랑 맞네. 판단 근거로 남겨 둘 만하다." },

@@ -1,7 +1,7 @@
 // 게임 컨트롤러: GameState를 들고 액션을 순수 엔진(reduce)에 넘긴 뒤 구독자에게 알린다.
 // DOM·Phaser 비의존 (Vitest node 환경에서 테스트).
 import { reviewAppeal } from '../engine/appeal';
-import { heardEntries } from '../engine/flow/lines';
+import { heardEntries, lineIndex } from '../engine/flow/lines';
 import { currentLine, reduce } from '../engine/reducer';
 import type { Exam, Line, Scenario, Speaker } from '../engine/scenario/schema';
 import { initialState, type Action, type AppealOutcome, type GameState } from '../engine/state';
@@ -36,6 +36,9 @@ export class Controller {
   private replay: ShownLine[] = [];
   /** 항소 판정 결과. 리듀서는 outcome을 채우지 않으므로 appeal 단계에 들어설 때 여기서 계산해 둔다. */
   private outcome: AppealOutcome | null = null;
+  /** 쟁점 보드 회상 중이면 그 증언의 신문(이름표·법정 배치용). 재생 큐가 비면 끝난다. */
+  private recallExam: Exam | null = null;
+  private recallingNow = false;
 
   constructor(readonly sc: Scenario, from: GameState = initialState(sc)) {
     this.s = from;
@@ -69,7 +72,37 @@ export class Controller {
   ack(): void {
     if (!this.replay.length) return;
     this.replay = this.replay.slice(1);
+    if (!this.replay.length) {
+      this.recallingNow = false;
+      this.recallExam = null;
+    }
     this.emit();
+  }
+
+  /** 쟁점 칸의 회상 줄 중 실제로 들은 것(들은 순서가 아니라 칸에 적힌 순서). */
+  recallLines(cellId: string): ShownLine[] {
+    const idx = lineIndex(this.sc);
+    const ids = this.sc.cells.find((c) => c.id === cellId)?.recall ?? [];
+    return ids.filter((id) => this.s.heard.includes(id)).flatMap((id) => {
+      const e = idx.get(id);
+      return e ? [{ speaker: e.line.speaker, text: e.line.text }] : [];
+    });
+  }
+
+  /** 쟁점 칸을 눌러 그 증언을 다시 듣는다(엔진 상태 불변, 표시 전용). */
+  recall(cellId: string): void {
+    const lines = this.recallLines(cellId);
+    if (!lines.length || this.replay.length) return;
+    const idx = lineIndex(this.sc);
+    const first = (this.sc.cells.find((c) => c.id === cellId)?.recall ?? []).map((id) => idx.get(id)).find((e) => e?.block === 'exam');
+    this.recallExam = first ? this.sc.exams[first.examIndex] : null;
+    this.recallingNow = true;
+    this.replay = lines;
+    this.emit();
+  }
+
+  get recalling(): boolean {
+    return this.recallingNow;
   }
 
   subscribe(fn: Listener): () => void {
@@ -86,6 +119,7 @@ export class Controller {
 
   /** 현재 신문(exam 단계일 때). */
   currentExam() {
+    if (this.recallingNow) return this.recallExam;
     return this.s.phase === 'exam' ? this.sc.exams[this.s.cursor.examIndex] ?? null : null;
   }
 
