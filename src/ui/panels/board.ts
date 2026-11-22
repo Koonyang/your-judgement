@@ -23,7 +23,7 @@ export const FIRST_USE_THOUGHT = [
 /** 판결 직전 자동 점검에서 연결이 떨어졌을 때 */
 export const CHECK_THOUGHT = '조문에 적합하지 않은 것들은 걸러냈다. 나머지는 스스로 판단해야 해.';
 
-const VERDICT_LABEL = { ok: '인정', reject: '인정 못 함' } as const;
+const VERDICT_LABEL = { ok: '신뢰', reject: '배척' } as const;
 const ROUTE_STATE = { proven: '막힘', doubt: '열림', null: '판정 중' } as const;
 
 /** 튜토리얼 설명(모두절차 끝 안내). */
@@ -39,7 +39,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const thought = (t: string) => h('p', { class: 'board-thought' }, t);
   const check = h('div', { class: 'board-check', testid: 'board-check' });
   const rubSlot = h('div', { class: 'rub-slot' });
-  /** 겹쳐 더듬기 화면(열려 있으면 판 위에 겹친 종이). UI 전용 상태. */
+  /** 대조 화면(열려 있으면 판 위에 겹친 종이). UI 전용 상태. */
   let rubView: ReturnType<typeof createRubView> | null = null;
 
   const el = h('section', { class: `panel board chess board-${mode}`, testid: `panel-board-${mode}` },
@@ -89,9 +89,9 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
         h('div', { class: 'route-head' }, h('span', { class: 'route-arrow' }, arrowOf(l.dirs[i])), h('b', {}, cell.name),
           h('span', { class: 'route-state' }, ROUTE_STATE[String(st.mark) as keyof typeof ROUTE_STATE])));
       if (mode === 'readonly') return row;
-      // 겹쳐 더듬기: 두 기록이 다 확보되면 열린다(턱에서 나온 메모는 판단 참고용).
+      // 대조: 두 기록이 다 확보되면 열린다(턱에서 나온 메모는 판단 참고용).
       for (const r of sc.rubs.filter((x) => x.cellId === cell.id)) {
-        const b = button(`${pre}board-rub-${r.id}`, '겹쳐 더듬기', () => openRub(r.id), 'btn sm');
+        const b = button(`${pre}board-rub-${r.id}`, '대조', () => openRub(r.id), 'btn sm');
         b.disabled = !rubOpen(sc, s, r.id);
         b.title = r.title;
         row.firstElementChild!.append(b);
@@ -140,7 +140,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
         const dropped = s.boardCheck?.dropped ?? [];
         const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
         check.replaceChildren(...(dropped.length ? [
-          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 인정한 증거가 없어 자백의 인정을 무릅니다(자백만으로는 유죄를 인정할 수 없음). ${[...new Set(dropped.map((d) => title(d.cardId)))].join(', ')}`),
+          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 신뢰한 증거가 없어 자백을 신뢰한 판정을 무릅니다(자백만으로는 유죄를 인정할 수 없음). ${[...new Set(dropped.map((d) => title(d.cardId)))].join(', ')}`),
           thought(CHECK_THOUGHT),
         ] : []));
       }

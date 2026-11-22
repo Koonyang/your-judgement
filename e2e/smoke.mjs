@@ -98,7 +98,7 @@ try {
   await tid('btn-zoom-close').click();
   await tid('panel-docs').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
-  // 쟁점 보드(길막기 판): 증언 기물 회상(법정 장면 재생) → 겹쳐 더듬기(키보드)로 턱 찾기
+  // 쟁점 보드(길막기 판): 증언 기물 회상(법정 장면 재생) → 대조(키보드)로 턱 찾기
   await tid('tab-board').click();
   await tid('drawer-board-recall-c_owner_testimony').click();
   if (!(await page.evaluate(() => document.documentElement.classList.contains('recall')))) throw new Error('회상이 시작되지 않음');

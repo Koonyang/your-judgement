@@ -80,7 +80,7 @@ function askSupp(sc: Scenario, s: GameState, questionId: string): GameState {
   return t;
 }
 
-/** 겹쳐 더듬기에서 턱이 걸린 줄. 플래그 `rub:<snagId>`와 메모 카드를 남긴다. 턱 없는 줄은 상태 변화 없음. */
+/** 대조에서 턱이 걸린 줄. 플래그 `rub:<snagId>`와 메모 카드를 남긴다. 턱 없는 줄은 상태 변화 없음. */
 export const rubFlag = (snagId: string) => `rub:${snagId}`;
 export function rubOpen(sc: Scenario, s: GameState, rubId: string): boolean {
   const r = sc.rubs.find((x) => x.id === rubId);
