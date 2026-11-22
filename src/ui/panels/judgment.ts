@@ -111,7 +111,7 @@ export function createJudgmentPanel(c: Controller, backToScale: () => void): Pan
   const order = (guilty: boolean): SecId[] => (guilty ? ['order', 'facts', 'evidence', 'law', 'reasons'] : ['order', 'facts', 'acquit']);
   // 판결서의 빈 곳을 눌러도 다음 항목이 나온다.
   doc.addEventListener('click', () => {
-    const next = order(verdictOf(c.state.board) === 'guilty').find((x) => !opened.has(x));
+    const next = order(verdictOf(c.state.board, c.sc.cards) === 'guilty').find((x) => !opened.has(x));
     if (next) open(next);
   });
 
@@ -150,7 +150,7 @@ export function createJudgmentPanel(c: Controller, backToScale: () => void): Pan
   }
 
   function draw(s: GameState, sc: Scenario) {
-    const guilty = verdictOf(s.board) === 'guilty';
+    const guilty = verdictOf(s.board, sc.cards) === 'guilty';
     const j = s.judgment;
     show(back, guilty && s.phase === 'sentencing');
     drawDoc(s, sc, guilty);

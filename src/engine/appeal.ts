@@ -13,7 +13,7 @@ type Reason = AppealOutcome['reasons'][number];
 type NewSentence = NonNullable<AppealOutcome['newSentence']>;
 
 export function whoAppeals(sc: Scenario, s: GameState): Appellants {
-  const guilty = verdictOf(s.board) === 'guilty';
+  const guilty = verdictOf(s.board, sc.cards) === 'guilty';
   const months = s.sentencing.months;
   const prosecutor = !guilty || (months !== null && months < sc.closing.demandMonths * PROSECUTOR_APPEAL_RATIO);
   const d = sc.appeal.defendant;
@@ -41,14 +41,11 @@ function supportWeight(sc: Scenario, s: GameState, dir: Factor['direction'], use
 function review(sc: Scenario, s: GameState, appellants: Appellants): Omit<AppealOutcome, 'hypothetical'> {
   const reasons: Reason[] = [];
   const remarks: string[] = [];
-  const guilty = verdictOf(s.board) === 'guilty';
+  const guilty = verdictOf(s.board, sc.cards) === 'guilty';
 
   // 1. 법리·사실오인 (직권)
   const flags = new Set(s.flags);
   const bf = boardFindings(s.board, sc.cards, sc.appealView, flags);
-  if (guilty && bf.corroborationViolation) {
-    reasons.push({ code: 'law', text: '자백만으로 유죄를 인정했다 (보강법칙 위반)' });
-  }
   if (guilty && bf.factMisfinding.length > 0) {
     reasons.push({ code: 'fact', text: '증거 없이 증명됨으로 본 쟁점이 있다 (사실오인)' });
   }

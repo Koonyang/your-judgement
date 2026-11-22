@@ -20,7 +20,7 @@ function sentenceText(months: number | null, suspended: boolean): string {
 }
 
 export function toRecordEntry(sc: Scenario, s: GameState, o: AppealOutcome): RecordEntry {
-  const guilty = verdictOf(s.board) === 'guilty';
+  const guilty = verdictOf(s.board, sc.cards) === 'guilty';
   const remarks = [...o.reasons.map((r) => r.text), ...o.remarks];
   if (o.result === 'reversed' && o.newSentence) {
     const n = o.newSentence;

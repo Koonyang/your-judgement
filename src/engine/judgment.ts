@@ -1,5 +1,5 @@
 // 판결서 조립. phaser/DOM 비의존, 순수 함수.
-import { verdictOf } from './board';
+import { confessionOnly, verdictOf } from './board';
 import { SUSPENSION_PERIOD_YEARS } from './config';
 import type { Scenario } from './scenario/schema';
 import type { GameState } from './state';
@@ -34,7 +34,7 @@ export function assembleJudgment(sc: Scenario, s: GameState): JudgmentDoc {
   };
   const resolveAll = (ids: string[]) => ids.map(resolve).filter((x): x is string => x !== null);
 
-  const acquitted = verdictOf(s.board) === 'acquitted';
+  const acquitted = verdictOf(s.board, sc.cards) === 'acquitted';
   const order: string[] = [];
   if (acquitted) {
     order.push('피고인은 무죄.');
@@ -61,6 +61,7 @@ export function assembleJudgment(sc: Scenario, s: GameState): JudgmentDoc {
         const titles = (s.board[c.id].cards.map((id) => cardTitle.get(id)).filter(Boolean)) as string[];
         return `${c.name}: ${titles.length ? titles.join(', ') : '연결된 증거 없음'}`;
       });
+    if (confessionOnly(s.board, sc.cards)) doc.acquittalReasons.push('피고인의 자백 외에 이를 보강할 증거가 없음 (형사소송법 제310조)');
   }
   return doc;
 }

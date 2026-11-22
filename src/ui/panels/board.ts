@@ -3,7 +3,7 @@
 // 인정한 기물이 있는 활로는 막히고, 모든 활로가 막히면 유죄.
 // mode: 'main'(유무죄 판단, [판단 확정]) | 'drawer'(심리 중) | 'readonly'(모두절차 끝 안내)
 import type { Controller } from '../../game/controller';
-import { canConfirmVerdict, verdictOf } from '../../engine/board';
+import { canConfirmVerdict, confessionOnly, verdictOf } from '../../engine/board';
 import { rubOpen } from '../../engine/reducer';
 import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
@@ -74,7 +74,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       at.set(`${l.at[0] + dr},${l.at[1] + dc}`, h('div', { class: `blocker ${mark ?? 'open-q'}`, title: cell.name, testid: `${pre}board-block-${cell.id}` },
         h('span', { class: 'blk-glyph' }, mark === 'proven' ? '■' : mark === 'doubt' ? arrowOf([dr, dc]) : n ? '?' : ''), h('span', { class: 'blk-name' }, cell.name)));
     });
-    at.set(`${l.at[0]},${l.at[1]}`, h('div', { class: `defendant${s.board && canConfirmVerdict(s.board) && verdictOf(s.board) === 'guilty' ? ' mated' : ''}`, testid: `${pre}board-king`, title: '피고인' }, l.glyph));
+    at.set(`${l.at[0]},${l.at[1]}`, h('div', { class: `defendant${s.board && canConfirmVerdict(s.board) && verdictOf(s.board, sc.cards) === 'guilty' ? ' mated' : ''}`, testid: `${pre}board-king`, title: '피고인' }, l.glyph));
     const out: HTMLElement[] = [];
     for (let r = 0; r < SIZE; r++) for (let col = 0; col < SIZE; col++) {
       out.push(h('div', { class: `bsq${(r + col) % 2 ? ' dark' : ''}` }, ...(at.has(`${r},${col}`) ? [at.get(`${r},${col}`)!] : [])));
@@ -121,9 +121,10 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     });
   }
 
-  function statusText(s: GameState): string {
+  function statusText(s: GameState, sc: Scenario): string {
     if (!canConfirmVerdict(s.board)) return '아직 판정하지 않은 기물이 있다.';
-    return verdictOf(s.board) === 'guilty' ? '피고인의 활로가 모두 막혔다: 유죄' : '열린 활로가 남았다: 무죄';
+    if (confessionOnly(s.board, sc.cards)) return '믿은 증거가 자백뿐이다. 보강증거 없이는 유죄로 볼 수 없다: 무죄';
+    return verdictOf(s.board, sc.cards) === 'guilty' ? '피고인의 활로가 모두 막혔다: 유죄' : '열린 활로가 남았다: 무죄';
   }
 
   let lastKey: unknown[] = [];
@@ -137,7 +138,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       rubView?.paint(s, sc);
       grid.replaceChildren(...board(s, sc));
       routes.replaceChildren(...routeList(s, sc));
-      status.textContent = mode === 'readonly' ? '' : statusText(s);
+      status.textContent = mode === 'readonly' ? '' : statusText(s, sc);
       const found = sc.cards.filter((x) => x.kind === 'memo' && s.heldCards.includes(x.id));
       memos.replaceChildren(h('b', { class: 'memos-title' }, '대조 기록'), ...(found.length
         ? found.map((m) => h('div', { class: 'memo-note', testid: `${pre}board-memo-${m.id}` }, m.text))

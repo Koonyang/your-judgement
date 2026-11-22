@@ -1,4 +1,5 @@
 // 1화 대표 플레이 경로를 엔진만으로 끝까지 돌려 기대 결과를 확인한다 (설계 문서 8절).
+import { verdictOf } from '../../src/engine/board';
 import raw from '../../data/scenarios/ep01.json';
 import { reviewAppeal } from '../../src/engine/appeal';
 import { currentLine } from '../../src/engine/reducer';
@@ -190,10 +191,10 @@ describe('1화 경로', () => {
     expect(out.newSentence?.verdict).toBe('guilty');
   });
 
-  it('보강법칙: 자백만 연결해 유죄 → 확정되지만 법리 지적', () => {
-    const { out } = run({ board: { corroboration: { c_confession: 'ok' } } });
-    expect(out.result).toBe('final');
-    expect(out.hypothetical.some((t) => t.includes('보강법칙'))).toBe(true);
+  it('보강법칙: 자백만 다시 인정해도 유죄가 되지 않는다(무죄)', () => {
+    const { s } = run({ board: { corroboration: { c_confession: 'ok' } }, sentence: null });
+    expect(verdictOf(s.board, sc.cards)).toBe('acquitted');
+    expect(s.sentencing.months).toBeNull();
   });
 
   it('결심 최후진술은 검사 추궁을 들었는지에 따라 갈린다', () => {

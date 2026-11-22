@@ -1,4 +1,4 @@
-import { initBoard, canConfirmVerdict, verdictOf, boardFindings, corroborationCheck } from '../../src/engine/board';
+import { initBoard, canConfirmVerdict, verdictOf, boardFindings, corroborationCheck, withCell, confessionOnly } from '../../src/engine/board';
 import type { Card, Cell } from '../../src/engine/scenario/schema';
 
 const cells: Cell[] = [
@@ -25,9 +25,18 @@ describe('board', () => {
   it('verdictOf', () => {
     const b = initBoard(cells);
     b.act.mark = 'proven'; b.intent.mark = 'proven';
-    expect(verdictOf(b)).toBe('guilty');
+    expect(verdictOf(b, [])).toBe('guilty');
     b.intent.mark = 'doubt';
-    expect(verdictOf(b)).toBe('acquitted');
+    expect(verdictOf(b, [])).toBe('acquitted');
+  });
+  it('verdictOf: 믿은 증거가 자백뿐이면 무죄(§310)', () => {
+    const cards = [{ id: 'conf', confession: true }, { id: 'cctv' }] as Card[];
+    const b = initBoard(cells);
+    b.act = withCell(b.act, { cards: ['conf'], judged: { conf: 'ok' } });
+    b.intent = withCell(b.intent, { cards: ['conf'], judged: { conf: 'ok' } });
+    expect(verdictOf(b, cards)).toBe('acquitted');
+    b.intent = withCell(b.intent, { cards: ['conf', 'cctv'], judged: { conf: 'ok', cctv: 'ok' } });
+    expect(verdictOf(b, cards)).toBe('guilty');
   });
   it('factMisfinding: proven with no cards', () => {
     const b = initBoard(cells);
@@ -35,12 +44,12 @@ describe('board', () => {
     b.intent.mark = 'proven';
     expect(boardFindings(b, cards, [], none).factMisfinding).toEqual(['intent']);
   });
-  it('corroborationViolation is board-wide', () => {
+  it('confessionOnly is board-wide', () => {
     const b = initBoard(cells);
     b.act.cards = ['conf']; b.intent.cards = ['conf'];
-    expect(boardFindings(b, cards, [], none).corroborationViolation).toBe(true);
+    expect(confessionOnly(b, cards)).toBe(true);
     b.intent.cards = ['cctv'];
-    expect(boardFindings(b, cards, [], none).corroborationViolation).toBe(false);
+    expect(confessionOnly(b, cards)).toBe(false);
   });
   it('appealDisagree', () => {
     const b = initBoard(cells);

@@ -137,7 +137,7 @@ function step(sc: Scenario, s: GameState, a: Action): GameState {
     case 'RUB': return rub(sc, s, a.rubId, a.row);
     case 'CONFIRM_VERDICT':
       if (s.phase !== 'verdict' || !canConfirmVerdict(s.board)) return s;
-      return { ...s, phase: verdictOf(s.board) === 'guilty' ? 'sentencing' : 'judgment' };
+      return { ...s, phase: verdictOf(s.board, sc.cards) === 'guilty' ? 'sentencing' : 'judgment' };
     case 'SET_SENTENCING':
       return s.phase === 'sentencing' ? { ...s, sentencing: { ...s.sentencing, ...a.patch } } : s;
     case 'CONFIRM_SENTENCING': {

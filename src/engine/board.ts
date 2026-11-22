@@ -27,7 +27,6 @@ export function withCell(c: BoardCell, patch: Partial<BoardCell>): BoardCell {
 }
 export type BoardFindings = {
   factMisfinding: string[];
-  corroborationViolation: boolean;
   appealDisagree: string[];
 };
 
@@ -41,12 +40,20 @@ export function canConfirmVerdict(b: BoardState): boolean {
   return Object.values(b).every((c) => c.mark !== null);
 }
 
-export function verdictOf(b: BoardState): 'guilty' | 'acquitted' {
-  return Object.values(b).some((c) => c.mark === 'doubt') ? 'acquitted' : 'guilty';
+/** 칸이 하나라도 열렸거나, 믿은 증거가 자백뿐이면(보강증거 없음 `[§310]`) 무죄. */
+export function verdictOf(b: BoardState, cards: Card[]): 'guilty' | 'acquitted' {
+  return Object.values(b).some((c) => c.mark === 'doubt') || confessionOnly(b, cards) ? 'acquitted' : 'guilty';
 }
 
 /** 증거로 셀 카드인가(판사 메모는 증거가 아님). */
 const isEvidence = (c: Card | undefined) => !!c && c.kind !== 'memo';
+
+/** 판사가 인정한 증거가 있고, 그게 전부 자백인가. */
+export function confessionOnly(b: BoardState, cards: Card[]): boolean {
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const accepted = Object.values(b).flatMap((c) => acceptedPieces(c).map((id) => byId.get(id))).filter(isEvidence);
+  return accepted.length > 0 && accepted.every((c) => c!.confession === true);
+}
 
 /**
  * 판결 직전 자동 점검: 법이 정해 둔 규칙에 어긋난 연결만 떼어 낸다. 증명력(얼마나 믿을지)은 건드리지 않는다.
@@ -55,9 +62,8 @@ const isEvidence = (c: Card | undefined) => !!c && c.kind !== 'memo';
  * (증거능력 없는 증거는 애초에 보유 카드가 되지 않아 연결할 수 없다.)
  */
 export function corroborationCheck(b: BoardState, cards: Card[]): { board: BoardState; dropped: { cellId: string; cardId: string }[] } {
+  if (!confessionOnly(b, cards)) return { board: b, dropped: [] };
   const byId = new Map(cards.map((c) => [c.id, c]));
-  const accepted = Object.values(b).flatMap((c) => acceptedPieces(c).map((id) => byId.get(id))).filter(isEvidence);
-  if (!accepted.length || !accepted.every((c) => c!.confession === true)) return { board: b, dropped: [] };
   // 자백 기물의 [인정]을 무른다(기물은 판에 남고 다시 판정해야 한다).
   const dropped: { cellId: string; cardId: string }[] = [];
   const board: BoardState = {};
@@ -84,15 +90,6 @@ export function boardFindings(
     .filter(([, c]) => c.mark === 'proven' && !acceptedPieces(c).some((id) => isEvidence(byId.get(id))))
     .map(([id]) => id);
 
-  const linked = new Set<Card>();
-  for (const c of Object.values(b)) {
-    for (const id of acceptedPieces(c)) {
-      const card = byId.get(id);
-      if (isEvidence(card)) linked.add(card!);
-    }
-  }
-  const corroborationViolation = linked.size > 0 && [...linked].every((c) => c.confession === true);
-
   const provenByView = new Set(
     appealView.filter((v) => v.proven && evalCond(v.when, flags)).map((v) => v.cellId),
   );
@@ -100,5 +97,5 @@ export function boardFindings(
     .filter(([id, c]) => c.mark === 'doubt' && provenByView.has(id))
     .map(([id]) => id);
 
-  return { factMisfinding, corroborationViolation, appealDisagree };
+  return { factMisfinding, appealDisagree };
 }

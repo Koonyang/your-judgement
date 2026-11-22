@@ -181,32 +181,10 @@ describe('reviewAppeal', () => {
     expect(reviewAppeal(sc2, s).result).toBe('dismissed');
   });
 
-  it('증거 없이 증명됨 → fact 파기, 자백만 → law 파기', () => {
+  it('증거 없이 증명됨 → fact 파기', () => {
     const s = guilty(5, true);
     s.board.c_intent.cards = [];
     expect(reviewAppeal(sc, s).reasons.map((r) => r.code)).toEqual(['fact']);
-    const t = guilty(5, true);
-    t.board.c_act.cards = ['c_conf'];
-    expect(reviewAppeal(sc, t).reasons.map((r) => r.code)).toEqual(['law']);
-  });
-
-  it('R7: 자백만으로 유죄 + appealView 전부 증명 → law 파기, 유죄 자판', () => {
-    const s = guilty(5, true);
-    s.board.c_act.cards = ['c_conf'];
-    const o = reviewAppeal(sc, s);
-    expect(o.result).toBe('reversed');
-    expect(o.reasons.map((r) => r.code)).toEqual(['law']);
-    expect(o.newSentence).toEqual({ verdict: 'guilty', months: 5, suspended: true });
-  });
-
-  it('R7: 자백만으로 유죄 + appealView 한 칸 의심 → law 파기, 무죄 자판', () => {
-    const sc2 = { ...sc, appealView: [{ cellId: 'c_act', proven: true }, { cellId: 'c_intent', proven: false }] } as Scenario;
-    const s = guilty(5, true);
-    s.board.c_act.cards = ['c_conf'];
-    const o = reviewAppeal(sc2, s);
-    expect(o.result).toBe('reversed');
-    expect(o.reasons.map((r) => r.code)).toEqual(['law']);
-    expect(o.newSentence).toEqual({ verdict: 'acquitted', months: null, suspended: false });
   });
 
   it('R7: when이 맞지 않는 의심 판단은 무시한다', () => {
