@@ -66,7 +66,7 @@
   position: absolute; left: 8px; top: 8px; z-index: 2; background: var(--ink); color: var(--accent);
   border: 1px solid var(--desk-top); padding: 1px 6px;
 }
-.desk-items { position: absolute; left: 0; right: 0; top: 16px; bottom: 0; display: flex; justify-content: center; gap: 22px; z-index: 2; }
+.desk-items { position: absolute; left: 0; right: 0; top: 16px; bottom: 0; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 8px; gap: 22px; z-index: 2; }
 .desk-item {
   font: inherit; cursor: pointer; width: 74px; height: 96px; border: 1px solid var(--ink); border-radius: 0;
   background: var(--hanji); color: var(--ink); box-shadow: 3px 3px 0 rgb(0 0 0 / 0.45);
@@ -79,6 +79,24 @@
 .desk-item.lifted { visibility: hidden; }
 .desk-item:hover { filter: brightness(1.08); }
 .desk-item:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+/* 내려다보는 각도(2D로 흉내): 나뭇결이 법정 쪽 소실점으로 모이고, 서류는 세로로 눌리고 먼 쪽(위)이 좁은 사다리꼴.
+   CSS 3D 변환은 쓰지 않는다(WebGL 법정 캔버스가 안 그려지는 환경이 있음). 마이크는 서 있는 물건이라 그대로 */
+.desk::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20120'%20preserveAspectRatio='none'%3E%3Cpath%20d='M-32%200L-320%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M-6%200L-272%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M21%200L-224%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M47%200L-176%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M74%200L-128%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M100%200L-80%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M126%200L-32%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M153%200L16%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M179%200L64%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M206%200L112%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M232%200L160%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M258%200L208%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M285%200L256%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M311%200L304%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M338%200L352%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M364%200L400%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M390%200L448%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M417%200L496%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M443%200L544%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M470%200L592%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M496%200L640%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M522%200L688%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M549%200L736%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M575%200L784%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M602%200L832%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M628%200L880%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3Cpath%20d='M654%200L928%20120'%20stroke='%23000'%20stroke-opacity='.13'%20stroke-width='2'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat; }
+#ui-root.chambers .desk::before { display: none; }
+.desk-item:not(.mic) {
+  position: relative; isolation: isolate; background: none; border: 0; box-shadow: none;
+  filter: drop-shadow(3px 3px 0 rgb(0 0 0 / 0.45)); transform: scaleY(0.74) rotate(-2deg); transform-origin: 50% 100%;
+}
+.desk-item:not(.mic)::before, .desk-item:not(.mic)::after { content: ""; position: absolute; z-index: -1; clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%); }
+.desk-item:not(.mic)::after { inset: 0; background: var(--ink); z-index: -2; }
+.desk-item:not(.mic)::before {
+  inset: 1px; background: var(--hanji);
+  background-image: repeating-linear-gradient(transparent 0 26px, var(--hanji-2) 26px 27px, transparent 27px 31px);
+}
+.desk-item.memo::before { background: var(--hanji-2); }
+.desk-item:not(.mic):nth-child(2) { transform: scaleY(0.74) rotate(1.5deg); }
+.desk-item.pile { box-shadow: none; filter: drop-shadow(2px 2px 0 var(--hanji-2)) drop-shadow(2px 2px 0 var(--hanji-2)) drop-shadow(2px 2px 0 rgb(0 0 0 / 0.45)); }
+.desk-item:not(.mic):hover { filter: drop-shadow(3px 3px 0 rgb(0 0 0 / 0.45)) brightness(1.08); }
 .zoom-dim { position: absolute; inset: 0; background: rgb(7 8 10 / 0.6); z-index: 5; }
 
 /* 패널 공통 (종이) */
