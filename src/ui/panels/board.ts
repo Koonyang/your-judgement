@@ -1,15 +1,17 @@
-// 쟁점 보드: 칸마다 증거 카드를 연결하고 [증명됨]/[의심 남음]을 고른다.
-// mode: 'main'(유무죄 판단, [판단 확정] 포함) | 'drawer'(심리 중 서랍) | 'readonly'(모두절차 끝 확인용)
-// 카드가 위반으로 사라지면 엔진이 보드에서 떼어 낸다(R6). 패널은 상태를 그대로 그린다.
+// 쟁점 보드(체스판): 가운데 킹 = 공소사실 속 피고인, 둘러싼 칸 = 구성요건(탈출 칸).
+// 검사가 낸 증거 카드(기물)를 칸에 올려 그 칸을 막는다. 판사는 두는 사람이 아니라 체크메이트를 판정하는 심판:
+// 칸마다 [막힘](증명됨)/[탈출](의심 남음)을 정한다. 모든 칸이 막히면 체크메이트 = 유죄, 탈출 칸이 하나라도 있으면 무죄.
+// 책상에 떨어진 카드: 끌어서 칸에 올리기(또는 눌러 고른 뒤 칸 누르기), 카드 위에 카드를 겹치면 겹쳐 더듬기, [회상]은 그 증언 재생.
+// mode: 'main'(유무죄 판단, [판단 확정]) | 'drawer'(심리 중) | 'readonly'(모두절차 끝 안내)
 import type { Controller } from '../../game/controller';
-import { canConfirmVerdict, verdictOf, type CellMark } from '../../engine/board';
+import { canConfirmVerdict, verdictOf } from '../../engine/board';
+import { rubOpen } from '../../engine/reducer';
 import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
 import { button, h } from '../dom';
-import type { Panel } from './types';
 import { createDnd } from '../drag';
-import { rubOpen } from '../../engine/reducer';
 import { createRubView } from './rub';
+import type { Panel } from './types';
 
 export type BoardMode = 'main' | 'drawer' | 'readonly';
 
@@ -22,84 +24,36 @@ export const FIRST_USE_THOUGHT = [
 /** 판결 직전 자동 점검에서 연결이 떨어졌을 때 */
 export const CHECK_THOUGHT = '조문에 적합하지 않은 것들은 걸러냈다. 나머지는 스스로 판단해야 해.';
 
-const MARK_LABEL: Record<Exclude<CellMark, null>, string> = { proven: '증명됨', doubt: '의심 남음' };
+/** 3×3 판에서 구성요건 칸 자리(행, 열). 위·오른쪽·아래·왼쪽 다음 대각선. 가운데(2,2)는 킹. */
+// shortcut: 구성요건 8개까지, 넘는 회차가 생기면 판을 키운다
+const SQUARES: [number, number][] = [[1, 2], [2, 3], [3, 2], [2, 1], [1, 3], [3, 3], [3, 1], [1, 1]];
+const MARK_LABEL = { proven: '막힘', doubt: '탈출' } as const;
 
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   // 서랍 인스턴스는 유무죄 판단 화면과 testid가 겹치지 않게 접두어를 붙인다.
-  const pre = mode === 'drawer' ? 'drawer-' : '';
+  const pre = mode === 'drawer' ? 'drawer-' : mode === 'readonly' ? 'intro-' : '';
   const dnd = createDnd();
-  const tray = h('div', { class: 'chips card-tray', testid: `${pre}board-tray` });
-  const cells = h('div', { class: 'board-cells' });
-  const verdictLine = h('p', { class: 'board-verdict', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
+  const grid = h('div', { class: 'chess-grid', testid: `${pre}chess` });
+  const desk = h('div', { class: 'chess-desk', testid: `${pre}board-tray` });
+  const status = h('p', { class: 'chess-status', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
+  const hint = h('p', { class: 'chess-hint small', testid: `${pre}board-hint` });
   const confirm = button('btn-confirm-verdict', '판단 확정', () => c.dispatch({ type: 'CONFIRM_VERDICT' }), 'btn primary');
-  const intro = mode === 'readonly'
-    ? '공소사실을 요건별로 나눈 쟁점 보드가 만들어졌습니다. 선고 전까지 칸마다 증거를 연결하고 판단합니다.'
-    : '칸을 눌러 [회상]하면 그 증언을 다시 듣고, [겹쳐 더듬기]로 두 기록의 어긋남을 찾습니다. 근거를 연결하고 [증명됨] 또는 [의심 남음]을 고르십시오. 모든 칸이 증명됨이면 유죄, 한 칸이라도 의심 남음이면 무죄입니다.';
   const thought = (t: string) => h('p', { class: 'board-thought' }, t);
-  const firstUse = mode === 'readonly' ? [h('div', { class: 'board-thoughts', testid: 'board-first-thought' }, ...FIRST_USE_THOUGHT.map(thought))] : [];
   const check = h('div', { class: 'board-check', testid: 'board-check' });
-  /** 겹쳐 더듬기 화면(열려 있으면 칸 목록 대신). UI 전용 상태. */
-  let rubView: ReturnType<typeof createRubView> | null = null;
   const rubSlot = h('div', { class: 'rub-slot' });
-  const el = h(
-    'section',
-    { class: `panel board board-${mode}`, testid: `panel-board-${mode}` },
+  /** 겹쳐 더듬기 화면(열려 있으면 판 위에 겹친 종이). UI 전용 상태. */
+  let rubView: ReturnType<typeof createRubView> | null = null;
+
+  const el = h('section', { class: `panel board chess board-${mode}`, testid: `panel-board-${mode}` },
     h('h2', {}, '쟁점 보드'),
-    ...firstUse,
-    h('p', { class: 'muted small' }, intro),
+    ...(mode === 'readonly' ? [h('div', { class: 'board-thoughts', testid: 'board-first-thought' }, ...FIRST_USE_THOUGHT.map(thought)),
+      h('p', { class: 'small chess-hint' }, '가운데 킹은 공소사실 속 피고인, 둘러싼 칸은 구성요건입니다. 증거로 모든 칸이 막히면 체크메이트(유죄), 빠져나갈 칸이 하나라도 남으면 무죄입니다.')] : []),
     ...(mode === 'main' ? [check] : []),
-    ...(mode === 'readonly' ? [] : [tray]),
-    cells,
+    grid,
+    ...(mode === 'readonly' ? [] : [hint, desk]),
+    h('div', { class: 'board-foot' }, status, ...(mode === 'main' ? [confirm] : [])),
     rubSlot,
-    ...(mode === 'main' ? [h('div', { class: 'board-foot' }, verdictLine, confirm)] : []),
   );
-
-  let lastKey: unknown[] = [];
-  const isBoardCard = (kind: string) => kind === 'evidence' || kind === 'memo';
-
-  function cellView(s: GameState, sc: Scenario, cellId: string, name: string): HTMLElement {
-    const st = s.board[cellId] ?? { cards: [], mark: null };
-    const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
-    const head = h('div', { class: 'cell-head' }, h('span', { class: 'cell-name' }, name));
-    if (mode === 'readonly') {
-      head.append(h('span', { class: 'cell-mark muted' }, '미판정'));
-      return h('div', { class: 'cell', testid: `intro-board-cell-${cellId}` }, head,
-        h('div', { class: 'muted small' }, st.cards.length ? st.cards.map(title).join(', ') : '연결된 증거 없음'));
-    }
-    for (const m of ['proven', 'doubt'] as const) {
-      const b = button(`${pre}board-mark-${cellId}-${m}`, MARK_LABEL[m], () =>
-        c.dispatch({ type: 'MARK_CELL', cellId, mark: st.mark === m ? null : m }), `btn mark ${m}`);
-      b.classList.toggle('on', st.mark === m);
-      b.setAttribute('aria-pressed', String(st.mark === m));
-      head.append(b);
-    }
-    // 연결 후보: 보유한 증거 카드(사실 카드는 양형용). 연결된 카드는 눌린 상태로.
-    const candidates = sc.cards.filter((x) => isBoardCard(x.kind) && s.heldCards.includes(x.id));
-    const chips = candidates.map((card) => {
-      const on = st.cards.includes(card.id);
-      const b = button(`${pre}board-card-${cellId}-${card.id}`, card.title, () =>
-        c.dispatch({ type: on ? 'UNLINK_CARD' : 'LINK_CARD', cellId, cardId: card.id }), `btn chip${card.kind === 'memo' ? ' memo' : ''}`);
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-pressed', String(on));
-      b.title = card.text;
-      return b;
-    });
-    // 회상·겹쳐 더듬기
-    const recall = button(`${pre}board-recall-${cellId}`, '회상', () => c.recall(cellId), 'btn sm');
-    recall.disabled = c.replaying || c.recallLines(cellId).length === 0;
-    head.insertBefore(recall, head.children[1]);
-    for (const r of sc.rubs.filter((x) => x.cellId === cellId)) {
-      const b = button(`${pre}board-rub-${r.id}`, '겹쳐 더듬기', () => openRub(r.id), 'btn sm');
-      b.disabled = !rubOpen(sc, s, r.id);
-      b.title = b.disabled ? '두 기록을 다 확보해야 겹쳐 볼 수 있습니다.' : r.title;
-      head.insertBefore(b, head.children[2]);
-    }
-    const cell = h('div', { class: `cell ${st.mark ?? 'unmarked'}`, testid: `${pre}board-cell-${cellId}` }, head,
-      h('div', { class: 'chips' }, ...(chips.length ? chips : [h('span', { class: 'muted small' }, '연결할 수 있는 증거가 없습니다.')])));
-    // 위 카드 줄에서 칸으로 끌어다 놓으면 연결(이미 연결돼 있으면 그대로).
-    dnd.target(cell, (cardId) => { if (!(c.state.board[cellId]?.cards ?? []).includes(cardId)) c.dispatch({ type: 'LINK_CARD', cellId, cardId }); });
-    return cell;
-  }
 
   function openRub(rubId: string | null): void {
     const r = c.sc.rubs.find((x) => x.id === rubId);
@@ -109,37 +63,100 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     panel.render(c.state, c.sc);
   }
 
+  /** 카드 위에 카드를 겹쳤다: 짝이 맞는 겹쳐 더듬기가 열려 있으면 연다. */
+  function overlap(a: string, b: string): void {
+    if (a === b) return;
+    const r = c.sc.rubs.find((x) => {
+      const need = x.requires.cards ?? [];
+      return need.length === 2 && need.includes(a) && need.includes(b);
+    });
+    if (r && rubOpen(c.sc, c.state, r.id)) return openRub(r.id);
+    hint.textContent = '겹쳐 봐도 맞대 볼 내용이 없다.';
+  }
+
+  function square(s: GameState, sc: Scenario, i: number): HTMLElement {
+    const cell = sc.cells[i];
+    const [row, col] = SQUARES[i];
+    const sq = h('div', { class: 'sq', style: `grid-row:${row};grid-column:${col}` });
+    if (!cell) return sq;
+    const st = s.board[cell.id] ?? { cards: [], mark: null };
+    sq.classList.add('cell', st.mark ?? 'unmarked');
+    sq.dataset.testid = `${pre}board-cell-${cell.id}`;
+    const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
+    sq.append(h('div', { class: 'sq-name' }, cell.name));
+    if (mode === 'readonly') return sq;
+    // 칸에 올린 기물: 누르면 내린다.
+    sq.append(h('div', { class: 'pieces' }, ...st.cards.map((id) => {
+      const memo = sc.cards.find((x) => x.id === id)?.kind === 'memo';
+      return button(`${pre}board-piece-${cell.id}-${id}`, title(id), () => c.dispatch({ type: 'UNLINK_CARD', cellId: cell.id, cardId: id }), `piece${memo ? ' memo' : ''}`);
+    })));
+    const marks = h('div', { class: 'sq-marks' });
+    for (const m of ['proven', 'doubt'] as const) {
+      const b = button(`${pre}board-mark-${cell.id}-${m}`, MARK_LABEL[m], () =>
+        c.dispatch({ type: 'MARK_CELL', cellId: cell.id, mark: st.mark === m ? null : m }), `btn mark ${m}`);
+      b.classList.toggle('on', st.mark === m);
+      b.setAttribute('aria-pressed', String(st.mark === m));
+      marks.append(b);
+    }
+    sq.append(marks);
+    dnd.target(sq, (cardId) => {
+      if (!(c.state.board[cell.id]?.cards ?? []).includes(cardId)) c.dispatch({ type: 'LINK_CARD', cellId: cell.id, cardId });
+    });
+    return sq;
+  }
+
+  function deskCards(s: GameState, sc: Scenario): HTMLElement[] {
+    return sc.cards.filter((x) => (x.kind === 'evidence' || x.kind === 'memo') && s.heldCards.includes(x.id)).map((card, i) => {
+      const t = h('div', { class: `desk-card${card.kind === 'memo' ? ' memo' : ''}`, testid: `${pre}board-tray-${card.id}`, title: card.text, style: `--tilt:${(i % 3) - 1}deg` },
+        h('span', { class: 'dc-title' }, card.title));
+      if (c.recallLines(card.id).length) {
+        const r = button(`${pre}board-recall-${card.id}`, '회상', () => c.recall(card.id), 'btn sm dc-recall');
+        r.addEventListener('click', (e) => e.stopPropagation()); // 카드 고르기로 번지지 않게
+        r.disabled = c.replaying;
+        r.addEventListener('pointerdown', (e) => e.stopPropagation()); // 회상 버튼은 끌기를 시작하지 않는다
+        t.append(r);
+      }
+      // 카드 위에 카드를 겹치면 겹쳐 더듬기. target을 source보다 먼저 달아 고른 카드를 누르면 겹치기로 친다.
+      dnd.target(t, (other) => overlap(other, card.id));
+      dnd.source(t, card.id, { select: true });
+      return t;
+    });
+  }
+
+  function statusText(s: GameState): string {
+    if (!canConfirmVerdict(s.board)) return '아직 판정하지 않은 칸이 있다.';
+    return verdictOf(s.board) === 'guilty' ? '체크메이트. 빠져나갈 칸이 없다: 유죄' : '탈출 칸이 남았다: 무죄';
+  }
+
+  let lastKey: unknown[] = [];
   const panel: Panel = {
     el,
     render(s, sc) {
-      const key = [s.board, s.heldCards, s.flags, s.heard, s.boardCheck, c.replaying, rubView];
+      const key = [s.board, s.heldCards, s.flags, s.boardCheck, c.replaying, rubView];
       if (key.every((k, i) => k === lastKey[i])) return;
       lastKey = key;
       el.classList.toggle('rubbing', !!rubView);
       rubView?.paint(s, sc);
-      cells.replaceChildren(...sc.cells.map((cell) => cellView(s, sc, cell.id, cell.name)));
+      const ok = canConfirmVerdict(s.board);
+      const mate = ok && verdictOf(s.board) === 'guilty';
+      const king = h('div', { class: `sq king${mate ? ' mated' : ''}`, style: 'grid-row:2;grid-column:2', testid: `${pre}board-king` },
+        h('div', { class: 'king-glyph' }, '♚'), h('div', { class: 'sq-name' }, '피고인'));
+      grid.replaceChildren(...SQUARES.map((_, i) => square(s, sc, i)), king);
+      status.textContent = mode === 'readonly' ? '' : statusText(s);
+      if (mode !== 'readonly') {
+        dnd.clear(); // 다시 그리면 고른 카드 요소가 바뀐다
+        desk.replaceChildren(...deskCards(s, sc));
+        if (!rubView) hint.textContent = '카드를 칸에 올려 막는다. 카드끼리 겹치면 겹쳐 더듬기.';
+      }
       if (mode === 'main') {
+        confirm.disabled = !ok;
         const dropped = s.boardCheck?.dropped ?? [];
         const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
         const cellName = (id: string) => sc.cells.find((x) => x.id === id)?.name ?? id;
         check.replaceChildren(...(dropped.length ? [
-          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 보강할 증거가 연결돼 있지 않아 떼어 냈습니다(자백만으로는 유죄를 인정할 수 없음). ${dropped.map((d) => `${cellName(d.cellId)} ← ${title(d.cardId)}`).join(', ')}`),
+          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 보강할 증거가 올라가 있지 않아 반칙 기물로 내렸습니다(자백만으로는 유죄를 인정할 수 없음). ${dropped.map((d) => `${cellName(d.cellId)} ← ${title(d.cardId)}`).join(', ')}`),
           thought(CHECK_THOUGHT),
         ] : []));
-      }
-      if (mode !== 'readonly') {
-        tray.replaceChildren(...sc.cards.filter((x) => isBoardCard(x.kind) && s.heldCards.includes(x.id)).map((card) => {
-          const t = h('span', { class: `btn chip card${card.kind === 'memo' ? ' memo' : ''}`, testid: `${pre}board-tray-${card.id}`, title: card.text }, card.title);
-          dnd.source(t, card.id);
-          return t;
-        }));
-      }
-      if (mode === 'main') {
-        const ok = canConfirmVerdict(s.board);
-        confirm.disabled = !ok;
-        verdictLine.textContent = ok
-          ? `판단: ${verdictOf(s.board) === 'guilty' ? '유죄' : '무죄'}`
-          : '아직 판단하지 않은 칸이 있습니다.';
       }
     },
   };

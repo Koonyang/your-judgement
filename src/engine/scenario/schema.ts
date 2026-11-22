@@ -43,9 +43,10 @@ export const CardS = z.object({
   // memo: 겹쳐 더듬기로 찾은 어긋남(판사 메모). 증거가 아니라 쟁점 칸의 판단 근거로만 쓴다.
   id: z.string(), title: z.string(), text: z.string(), kind: z.enum(['evidence', 'fact', 'memo']),
   confession: z.boolean().optional(),
+  /** 카드를 눌러 회상할 줄 id(들은 것만 재생). 라인 id 또는 보충신문 질문 id. 법정 증언 카드에 쓴다. */
+  recall: z.array(z.string()).optional(),
 });
-/** recall: 칸을 누르면 회상할 줄 id(들은 것만 재생). 라인 id 또는 보충신문 질문 id. */
-export const CellS = z.object({ id: z.string(), name: z.string(), disputed: z.boolean(), recall: z.array(z.string()).optional() });
+export const CellS = z.object({ id: z.string(), name: z.string(), disputed: z.boolean() });
 /**
  * 겹쳐 더듬기: 두 기록을 줄(row) 단위로 겹쳐 놓고 문지른다. snag가 있는 줄은 "턱"이 걸리고 메모 카드(kind memo)가 생긴다.
  * 턱이 사소한지 본질적인지는 판정하지 않는다(증명력은 플레이어 몫). requires: 보유 카드·들은 줄이 다 있어야 열린다.

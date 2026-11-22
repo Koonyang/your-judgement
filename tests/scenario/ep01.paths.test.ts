@@ -73,8 +73,8 @@ describe('1화 데이터', () => {
     expect(sc.cells.map((c) => c.id)).toEqual(CELLS);
     expect(sc.cells.every((c) => !c.disputed)).toBe(true);
     expect(sc.cards.map((c) => c.id).sort()).toEqual([
-      'c_cctv', 'c_confession', 'c_livelihood', 'c_minor', 'c_nonpunish', 'c_owner_stmt',
-      'c_receipt', 'c_record', 'c_remorse', 'c_repaid', 'm_count', 'm_time',
+      'c_cctv', 'c_confession', 'c_def_testimony', 'c_livelihood', 'c_minor', 'c_nonpunish', 'c_owner_stmt',
+      'c_owner_testimony', 'c_receipt', 'c_record', 'c_remorse', 'c_repaid', 'm_count', 'm_time',
     ]);
     expect(sc.cards.find((c) => c.id === 'c_confession')?.confession).toBe(true);
     expect(sc.sentencing.factors.map((f) => [f.id, f.tier, f.requiresAnyCard, f.weight])).toEqual([
@@ -115,7 +115,7 @@ describe('1화 경로', () => {
     expect(s.violations).toEqual([]);
     expect(held(s)).toEqual(new Set([
       'c_confession', 'c_cctv', 'c_receipt', 'c_record', 'c_nonpunish', 'c_livelihood',
-      'c_minor', 'c_repaid', 'c_owner_stmt', 'c_remorse',
+      'c_minor', 'c_repaid', 'c_owner_stmt', 'c_remorse', 'c_owner_testimony', 'c_def_testimony',
     ]));
     expect(rangeOf(s)).toEqual({ min: 2, max: 10 });
     expect(suspRec(s)).toBe('discretion');

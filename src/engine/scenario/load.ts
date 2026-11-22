@@ -70,7 +70,7 @@ export function loadScenario(raw: unknown): Scenario {
   const needAnyLine = (id: string, where: string) => {
     if (!anyLine.has(id)) errors.push(`${where}: 알 수 없는 줄 id '${id}'`);
   };
-  for (const c of s.cells) c.recall?.forEach((id) => needAnyLine(id, `cell ${c.id}.recall`));
+  for (const c of s.cards) c.recall?.forEach((id) => needAnyLine(id, `card ${c.id}.recall`));
   const kindOf = new Map(s.cards.map((c) => [c.id, c.kind]));
   for (const r of s.rubs) {
     if (!cellIds.has(r.cellId)) errors.push(`rub ${r.id}.cellId: 알 수 없는 셀 id '${r.cellId}'`);

@@ -79,22 +79,22 @@ export class Controller {
     this.emit();
   }
 
-  /** 쟁점 칸의 회상 줄 중 실제로 들은 것(들은 순서가 아니라 칸에 적힌 순서). */
-  recallLines(cellId: string): ShownLine[] {
+  /** 카드의 회상 줄 중 실제로 들은 것(카드에 적힌 순서). */
+  recallLines(cardId: string): ShownLine[] {
     const idx = lineIndex(this.sc);
-    const ids = this.sc.cells.find((c) => c.id === cellId)?.recall ?? [];
+    const ids = this.sc.cards.find((c) => c.id === cardId)?.recall ?? [];
     return ids.filter((id) => this.s.heard.includes(id)).flatMap((id) => {
       const e = idx.get(id);
       return e ? [{ speaker: e.line.speaker, text: e.line.text }] : [];
     });
   }
 
-  /** 쟁점 칸을 눌러 그 증언을 다시 듣는다(엔진 상태 불변, 표시 전용). */
-  recall(cellId: string): void {
-    const lines = this.recallLines(cellId);
+  /** 증언 카드를 눌러 그 증언을 다시 듣는다(엔진 상태 불변, 표시 전용). */
+  recall(cardId: string): void {
+    const lines = this.recallLines(cardId);
     if (!lines.length || this.replay.length) return;
     const idx = lineIndex(this.sc);
-    const first = (this.sc.cells.find((c) => c.id === cellId)?.recall ?? []).map((id) => idx.get(id)).find((e) => e?.block === 'exam');
+    const first = (this.sc.cards.find((c) => c.id === cardId)?.recall ?? []).map((id) => idx.get(id)).find((e) => e?.block === 'exam');
     this.recallExam = first ? this.sc.exams[first.examIndex] : null;
     this.recallingNow = true;
     this.replay = lines;

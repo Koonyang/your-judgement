@@ -35,6 +35,7 @@ try {
   browser = await chromium.launch();
   page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: process.env.SHOTS ? 2 : 1 });
   page.setDefaultTimeout(15000);
+  await page.emulateMedia({ reducedMotion: 'reduce' }); // 떠다니는 홀로그램(체스판)은 클릭 대상이 안정되지 않는다
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); }); // GPU stall 등은 warning이라 제외됨
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   await page.goto(BASE);
@@ -97,14 +98,15 @@ try {
   await tid('btn-zoom-close').click();
   await tid('panel-docs').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
-  // 쟁점 보드 v2: 칸 회상(법정 장면 재생) → 겹쳐 더듬기(키보드)로 메모 카드
+  // 쟁점 보드(체스판): 증언 카드 회상(법정 장면 재생) → 카드 겹치기로 겹쳐 더듬기(키보드) → 메모 카드
   await tid('tab-board').click();
-  await tid('drawer-board-recall-taking').click();
+  await tid('drawer-board-recall-c_owner_testimony').click();
   if (!(await page.evaluate(() => document.documentElement.classList.contains('recall')))) throw new Error('회상이 시작되지 않음');
   if (await vis('drawer')) throw new Error('회상 중에 보드가 가려지지 않음');
   for (let i = 0; i < 20 && (await page.evaluate(() => document.documentElement.classList.contains('recall'))); i++) await tid('btn-next').click();
   if (!(await vis('panel-board-drawer'))) throw new Error('회상 뒤 보드로 돌아오지 않음');
-  await tid('drawer-board-rub-r_owner_cctv').click();
+  await tid('drawer-board-tray-c_cctv').click(); // 고르고
+  await tid('drawer-board-tray-c_owner_testimony').click(); // 위에 겹친다
   await tid('rub-row-0').focus(); await page.keyboard.press('Enter');
   await tid('rub-row-2').focus(); await page.keyboard.press('Enter');
   await shot('4c-rub');
@@ -117,9 +119,9 @@ try {
 
   // 유무죄: 4칸에 자백 외 증거 연결 + 증명됨
   for (const cell of ['property', 'taking', 'intent', 'appropriation']) {
-    for (const card of ['c_cctv', 'c_receipt', 'c_owner_stmt']) {
-      if (await vis(`board-card-${cell}-${card}`)) { await tid(`board-card-${cell}-${card}`).click(); break; }
-    }
+    // 책상 카드를 끌어 칸에 올린다(끌기 경로), 한 칸은 눌러 고른 뒤 칸 누르기
+    if (cell === 'property') { await tid('board-tray-c_receipt').click(); await tid(`board-cell-${cell}`).click({ position: { x: 4, y: 4 } }); }
+    else await tid('board-tray-c_cctv').dragTo(tid(`board-cell-${cell}`), { targetPosition: { x: 4, y: 4 } });
     await tid(`board-mark-${cell}-proven`).click();
   }
   await shot('5-verdict');

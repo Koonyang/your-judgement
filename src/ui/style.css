@@ -442,7 +442,49 @@
 .board-check:empty { display: none; }
 .btn.chip.memo { background: #f3e1a8; border-style: dashed; }
 .cell-head .btn.sm { padding: 0 5px; font-size: 9px; }
-.board.rubbing .board-cells, .board.rubbing .card-tray { display: none; }
+.board.rubbing .chess-grid, .board.rubbing .chess-desk, .board.rubbing .chess-hint { display: none; }
+
+/* 쟁점 보드 = 허공에 뜬 체스판(천칭과 같은 호박빛 구조물). 카드는 책상에 떨어진 종이 */
+.panel.chess {
+  --holo: #ffe0b0; --holo-line: rgb(255 205 140 / 0.75); --holo-glow: rgb(255 196 120 / 0.45);
+  background: none; border: 0; box-shadow: none; color: var(--holo); text-shadow: 0 0 3px var(--holo-glow);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; overflow-y: auto; animation: holo-in 0.5s ease-out;
+}
+.panel.chess h2 { align-self: stretch; border-color: var(--holo-line); }
+.panel.chess .board-thought, .panel.chess .chess-hint { color: rgb(255 224 176 / 0.6); margin: 0; }
+.panel.chess .board-check { align-self: stretch; }
+.chess-grid { display: grid; grid-template-columns: repeat(3, 92px); grid-template-rows: repeat(3, 46px); gap: 3px; padding: 4px;
+  border: 1px solid var(--holo-line); box-shadow: 0 0 8px var(--holo-glow), inset 0 0 8px var(--holo-glow); animation: float 3s ease-in-out infinite; }
+.sq { border: 1px solid rgb(255 205 140 / 0.35); background: rgb(255 196 120 / 0.06); padding: 2px 3px; display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; }
+.sq:nth-child(even) { background: rgb(255 196 120 / 0.12); }
+.sq-name { font-size: 9px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sq.proven { background: rgb(255 196 120 / 0.32); border-color: var(--holo); }
+.sq.doubt { border-style: dashed; border-color: #ff8a70; box-shadow: inset 0 0 8px rgb(255 120 90 / 0.5); }
+.sq.drop-target.selected-hover, .sq.drop-target:hover { outline: 1px dashed var(--holo); }
+.pieces { display: flex; flex-wrap: wrap; gap: 1px; min-height: 0; overflow: hidden; }
+.piece { font: inherit; font-size: 8px; line-height: 1.2; padding: 0 2px; cursor: pointer; color: var(--ink); background: var(--hanji); border: 1px solid var(--ink); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+.piece.memo { background: #f3e1a8; border-style: dashed; }
+.sq-marks { display: flex; gap: 2px; margin-top: auto; }
+.panel.chess .btn.mark { font-size: 8px; padding: 0 3px; color: var(--holo); background: rgb(255 196 120 / 0.08); border: 1px solid var(--holo-line); box-shadow: none; text-shadow: inherit; }
+.panel.chess .btn.mark.proven.on { background: rgb(255 196 120 / 0.5); color: var(--ink); text-shadow: none; }
+.panel.chess .btn.mark.doubt.on { background: #ff8a70; color: var(--ink); text-shadow: none; }
+.sq.king { align-items: center; justify-content: center; border-color: var(--holo-line); }
+.king-glyph { font-size: 22px; line-height: 1; font-family: serif; }
+.sq.king.mated { border-color: #ff8a70; box-shadow: 0 0 10px #ff8a70; }
+.chess-status { margin: 0; font-weight: bold; }
+.panel.chess .board-foot { align-self: stretch; margin-top: 0; }
+.panel.chess .btn.primary { color: var(--ink); text-shadow: none; }
+/* 책상에 떨어진 카드 */
+.chess-desk { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; align-self: stretch; }
+.desk-card { position: relative; width: 68px; min-height: 32px; padding: 3px 4px; box-sizing: border-box; background: var(--hanji); color: var(--ink); border: 1px solid var(--ink);
+  font-size: 9px; text-shadow: none; transform: rotate(var(--tilt, 0deg)); box-shadow: 2px 2px 0 rgb(0 0 0 / 0.45); animation: card-drop 0.35s ease-out both; cursor: grab; }
+.desk-card.memo { background: #f3e1a8; border-style: dashed; }
+.desk-card.selected { outline: 2px solid var(--accent); }
+.desk-card .dc-title { display: block; font-weight: bold; }
+.desk-card .dc-recall { position: absolute; right: 2px; bottom: 2px; font-size: 8px; padding: 0 3px; }
+@keyframes card-drop { from { translate: 0 -40px; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .desk-card, .chess-grid, .panel.chess { animation: none; } }
+.rub-view { align-self: stretch; color: var(--ink); text-shadow: none; background: var(--hanji); border: 1.5px solid var(--ink); padding: 6px 8px; }
 .rub-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .rub-rows { display: flex; flex-direction: column; gap: 5px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
 .rub-row { position: relative; border: 1px dashed var(--hanji-2); background: #f1e8d4; padding: 3px 6px; }
@@ -465,3 +507,4 @@ html.recall #ui-root::before {
   content: "회상"; position: absolute; left: 8px; top: 6px; z-index: 25; padding: 0 6px;
   background: var(--ink); color: var(--accent); border: 1px solid var(--box-line); font-size: 11px;
 }
+.modal-box:has(> .chess) { background: #15171c; }

@@ -35,10 +35,10 @@
     { "id": "open_9", "speaker": "thought", "text": "그래도 자백했다고 끝은 아니지. 자백만으론 유죄가 안 된다. 뒷받침할 증거가 따로 있어야 해." }
   ],
   "cells": [
-    { "id": "property", "name": "타인의 재물", "disputed": false, "recall": ["owner_3", "owner_4", "owner_7", "owner_8"] },
-    { "id": "taking", "name": "절취(점유 이전)", "disputed": false, "recall": ["owner_5", "owner_6", "owner_6c", "owner_6d"] },
-    { "id": "intent", "name": "고의", "disputed": false, "recall": ["def_4", "def_5"] },
-    { "id": "appropriation", "name": "불법영득의사", "disputed": false, "recall": ["def_7", "def_8"] }
+    { "id": "property", "name": "타인의 재물", "disputed": false },
+    { "id": "taking", "name": "절취(점유 이전)", "disputed": false },
+    { "id": "intent", "name": "고의", "disputed": false },
+    { "id": "appropriation", "name": "불법영득의사", "disputed": false }
   ],
   "evidence": [
     { "id": "e_interrogation", "label": "피의자신문조서(피고인)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_confession",
@@ -65,6 +65,8 @@
     { "id": "c_repaid", "title": "변제", "text": "사건 나흘 뒤 피해자를 찾아가 사과하고 물건값을 갚았다.", "kind": "fact" },
     { "id": "c_remorse", "title": "진지한 반성", "text": "최후진술에서 전과를 스스로 언급하며 잘못을 인정했다.", "kind": "fact" },
     { "id": "c_minor", "title": "피해 경미", "text": "피해액 12,000원.", "kind": "fact" },
+    { "id": "c_owner_testimony", "title": "점주 법정 증언", "text": "다음 날 아침 재고가 맞지 않아 CCTV로 알았다. 시각·물건은 '열 시쯤', '도시락 세 개였나'로 기억이 흐리다.", "kind": "evidence", "recall": ["owner_5", "owner_6", "owner_6a", "owner_6c", "owner_6d", "owner_7", "owner_8"] },
+    { "id": "c_def_testimony", "title": "피고인 법정 진술", "text": "전과를 인정하고, 배가 고파 가져갔다고 진술했다.", "kind": "evidence", "confession": true, "recall": ["def_2", "def_3", "def_4", "def_5", "def_7", "def_8"] },
     { "id": "m_time", "title": "메모: 시각 차이", "text": "CCTV는 21:38, 증언은 '열 시쯤'. 다음 날 화면으로 알게 된 사람의 기억이다.", "kind": "memo" },
     { "id": "m_count", "title": "메모: 개수 차이", "text": "CCTV는 도시락 2개, 증언은 '세 개였나'. 정확한 건 영수증과 맞춰 봤다고 본인이 말했다.", "kind": "memo" }
   ],
@@ -72,7 +74,7 @@
     {
       "id": "r_owner_cctv", "cellId": "taking", "title": "CCTV 캡처 ↔ 점주 법정 증언",
       "a": { "label": "CCTV 영상 캡처(검사 설명)" }, "b": { "label": "증인 노은숙 법정 증언" },
-      "requires": { "cards": ["c_cctv"], "heard": ["owner_6", "owner_6d"] },
+      "requires": { "cards": ["c_cctv", "c_owner_testimony"] },
       "rows": [
         { "a": "21:38경 피고인이 진열대에서 물건을 집어 점퍼 안에 넣습니다.", "b": "열 시쯤이었을 거예요.", "snag": { "id": "s_time", "cardId": "m_time" } },
         { "a": "도시락 2개, 우유, 빵", "b": "도시락 세 개하고 우유였나….", "snag": { "id": "s_count", "cardId": "m_count" } },
@@ -92,7 +94,7 @@
         { "id": "owner_6", "speaker": "witness", "text": "다음 날 아침 재고가 안 맞아서 CCTV를 돌려 보고 알았습니다." },
         { "id": "owner_6a", "speaker": "witness", "text": "그날은 제가 정신이 없었어요. 남편 보내고 열흘 만에 가게를 다시 연 참이라서요." },
         { "id": "owner_6c", "speaker": "prosecutor", "text": "화면에서 피고인이 무엇을 가져갔는지, 몇 시쯤이었는지 기억합니까?" },
-        { "id": "owner_6d", "speaker": "witness", "text": "열 시쯤이었을 거예요. 도시락 세 개하고 우유였나…. 정확한 건 영수증하고 맞춰 본 게 맞아요." },
+        { "id": "owner_6d", "speaker": "witness", "text": "열 시쯤이었을 거예요. 도시락 세 개하고 우유였나…. 정확한 건 영수증하고 맞춰 본 게 맞아요.", "yieldsCards": ["c_owner_testimony"] },
         { "id": "owner_7", "speaker": "prosecutor", "text": "증거목록 3번 피해품 목록 및 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
         { "id": "owner_8", "speaker": "witness", "text": "네, 맞습니다. 그날 영수증하고 재고를 하나하나 맞춰 봤어요. 큰돈은 아니지요.", "yieldsCards": ["c_minor"] },
         { "id": "owner_8a", "speaker": "thought", "text": "손으로 짚어 본 영수증 금액이랑 맞네. 판단 근거로 남겨 둘 만하다." },
@@ -141,7 +143,7 @@
           } },
         { "id": "def_3", "speaker": "defendant", "text": "……네." },
         { "id": "def_4", "speaker": "prosecutor", "text": "세 번을 받고도 또 그랬습니다. 그때마다 무슨 생각을 했습니까?" },
-        { "id": "def_5", "speaker": "defendant", "text": "배가 고프면 그 생각이 안 났습니다. 핑계인 줄 압니다." },
+        { "id": "def_5", "speaker": "defendant", "text": "배가 고프면 그 생각이 안 났습니다. 핑계인 줄 압니다.", "yieldsCards": ["c_def_testimony"] },
         { "id": "def_6", "speaker": "prosecutor", "text": "이상입니다." },
         { "id": "def_7", "speaker": "defense", "text": "피고인, 사건 무렵 생활은 어땠습니까?" },
         { "id": "def_8", "speaker": "defendant", "text": "공사장 일이 석 달째 끊겼습니다. 혼자 살고, 그날은 이틀째 제대로 못 먹은 상태였습니다.", "yieldsCards": ["c_livelihood"] },
