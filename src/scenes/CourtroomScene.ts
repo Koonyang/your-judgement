@@ -2,7 +2,7 @@
 import Phaser from 'phaser';
 import type { Controller } from '../game/controller';
 import type { GameState } from '../engine/state';
-import { COURT_H, FONT_STACK, SEATS, SPRITE_H, type SeatKey } from './seats';
+import { COURT_H, FONT_STACK, SEATS, SPRITE_H, SPRITE_W, type SeatKey } from './seats';
 
 type Spot = { x: number; y: number; scale: number };
 type Actor = { img: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; spot: Spot; shown: boolean; arrive?: () => void; walk?: Phaser.Tweens.Tween; breathe?: Phaser.Tweens.Tween };
@@ -15,7 +15,7 @@ const COURT_PHASES = new Set<GameState['phase']>(['opening', 'evidence', 'exam',
 export class CourtroomScene extends Phaser.Scene {
   private actors = new Map<SeatKey, Actor>();
   private witnessOf = -1;
-  private glow!: Phaser.GameObjects.Container;
+  private waves!: Phaser.GameObjects.Container;
   private dim!: Phaser.GameObjects.Rectangle;
   private bob?: Phaser.Tweens.Tween;
   private unsubscribe?: () => void;
@@ -28,13 +28,12 @@ export class CourtroomScene extends Phaser.Scene {
   create(): void {
     const c = this.registry.get('controller') as Controller;
     this.drawRoom();
-    // 화자에게 떨어지는 스포트라이트(#ffc478, 책상 스탠드 빛처럼 계단식). ADD라 인물·책상 위에 얹혀 밝힌다.
-    this.glow = this.add.container(0, 0, [
-      this.add.ellipse(0, 0, 76, 64, 0xffc478, 0.1),
-      this.add.ellipse(0, 0, 52, 46, 0xffc478, 0.12),
-      this.add.ellipse(0, -2, 32, 32, 0xffc478, 0.12),
-    ]).setDepth(6).setVisible(false);
-    this.glow.each((e: Phaser.GameObjects.Ellipse) => e.setBlendMode(Phaser.BlendModes.ADD));
+    // 말소리 ))) : 소리를 내는 사람이 상대적으로 또렷이 잡힌다. 세 줄이 차례로 번진다.
+    this.waves = this.add.container(0, 0, [0, 1, 2].map((i) => {
+      const t = this.add.text(i * 4, 0, ')', { fontFamily: FONT_STACK, fontSize: `${8 + i * 2}px`, color: '#ffc478' }).setOrigin(0, 0.5);
+      this.tweens.add({ targets: t, alpha: { from: 0.15, to: 1 }, duration: 300, delay: i * 150, yoyo: true, repeat: -1, repeatDelay: 150 });
+      return t;
+    })).setDepth(6).setVisible(false);
     for (const key of Object.keys(SEATS) as SeatKey[]) {
       const seat = SEATS[key];
       const img = this.add.image(seat.x, seat.y, key).setScale(seat.scale ?? 1);
@@ -117,14 +116,17 @@ export class CourtroomScene extends Phaser.Scene {
     this.bob?.stop();
     this.actors.forEach((a) => { if (!a.walk) a.img.setY(a.spot.y); });
     const lit = seat && visible[seat] && !SEATS[seat].hidden ? seat : null;
-    // 말하는 사람만 밝고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
-    this.actors.forEach((a, key) => a.img.setAlpha(lit === null ? 0.85 : key === lit ? 1 : 0.55));
+    // 말하는 사람만 밝은 판(-lit)으로 바꾸고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
+    this.actors.forEach((a, key) => {
+      a.img.setAlpha(lit === null ? 0.85 : key === lit ? 1 : 0.55);
+      a.img.setTexture(key === lit ? `${key}-lit` : key);
+    });
     if (!lit) {
-      this.glow.setVisible(false);
+      this.waves.setVisible(false);
       return;
     }
     const a = this.actors.get(lit)!;
-    this.glow.setPosition(a.spot.x, a.spot.y + 6).setVisible(true);
+    this.waves.setPosition(a.spot.x + (SPRITE_W * a.spot.scale) / 2 + 2, a.spot.y - (SPRITE_H * a.spot.scale) / 2 + 4).setVisible(true);
     if (!a.walk) this.bob = this.tweens.add({ targets: a.img, y: a.spot.y - 1, duration: 180, yoyo: true, repeat: 1 });
   }
 
