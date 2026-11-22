@@ -22,7 +22,7 @@
 ## 작업 규칙 메모
 - 시나리오 테스트는 줄 id로 진행한다(`tests/scenario/play.ts`의 `to('owner_9')`, `toSupp()`, `toPhase('verdict')`). 대사를 추가해도 테스트 숫자를 고칠 필요 없다
 - `data/scenarios/*.json`을 고치면 훅이 형식 검사·대사 통계를 자동으로 돈다(`.claude/settings.json`)
-- 법령·판례 원문은 `scripts/law.mjs`(국가법령정보 Open API, `LAW_OC` 필요)
+- 법령·판례 원문은 `scripts/law.mjs`(국가법령정보 Open API, `LAW_OC` 필요). 클라우드 세션은 나가는 IP가 바뀌어 대부분 막힘(2026-11-22 기준) → PC 세션에서 돌리는 게 확실
 
 ## 다음 단계
 1. **2화 데이터 전 필수**: `loadScenario`에 블록 간·보충신문 질문 id 중복 검사 추가(`heard`가 id 하나로 줄을 찾음)

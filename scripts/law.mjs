@@ -4,8 +4,10 @@
 //   LAW_OC=<아이디> node scripts/law.mjs law 형사소송법 292의2   # 조문(조 번호 생략 시 법령 전체)
 //   LAW_OC=<아이디> node scripts/law.mjs prec 2012다71688        # 판례(판시사항·판결요지·참조조문)
 //   ... --full                                                   # 판례 전문까지
-// LAW_OC: open.law.go.kr에서 Open API 신청 시 등록한 이메일의 @ 앞부분.
+// LAW_OC: open.law.go.kr Open API 신청 정보의 OC 값. 호출하는 곳의 서버 IP가 등록돼 있어야 한다.
 // shortcut: 응답 JSON 필드 구조를 키 없이 검증하지 못해 '내용'·'요지' 계열 키를 깊이 탐색해 뽑는다. 키 받으면 실제 응답으로 확인할 것.
+import { execFileSync } from 'node:child_process';
+
 const OC = process.env.LAW_OC;
 const [kind, query, jo] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const full = process.argv.includes('--full');
@@ -13,12 +15,19 @@ if (!OC || !['law', 'prec'].includes(kind) || !query) {
   console.error('사용: LAW_OC=<아이디> node scripts/law.mjs law <법령명> [조번호(예: 292의2)] | prec <사건번호> [--full]');
   process.exit(1);
 }
-const BASE = 'http://www.law.go.kr/DRF';
+const BASE = 'https://www.law.go.kr/DRF';
+// 호출은 curl로 한다(세션 프록시를 타야 등록된 IP 대역으로 나간다). 클라우드 세션은 나가는 IP가 요청마다 바뀌어
+// 등록 안 된 IP에 걸리면 "사용자 정보 검증 실패"가 오므로 몇 번 다시 시도한다.
 async function get(path, params) {
   const u = new URL(`${BASE}/${path}`);
   for (const [k, v] of Object.entries({ OC, type: 'JSON', ...params })) u.searchParams.set(k, v);
-  const r = await fetch(u);
-  const t = await r.text();
+  let t = '';
+  for (let i = 0; i < 30; i++) {
+    try { t = execFileSync('curl', ['-s', '-m', '15', u.href], { encoding: 'utf8' }); } catch { t = '검증에 실패(연결 오류)'; } // 일시적 TLS 오류도 다시 시도
+    if (t.includes('검증에 실패')) execFileSync('sleep', ['0.3']);
+    if (!t.includes('검증에 실패')) break;
+  }
+  if (t.includes('검증에 실패')) throw new Error('30번 시도 모두 등록되지 않은 IP로 나감. open.law.go.kr에 서버 IP를 더 등록해야 함(checkip로 확인)');
   try { return JSON.parse(t); } catch { throw new Error(`JSON이 아닌 응답(인증키·파라미터 확인): ${t.slice(0, 200)}`); }
 }
 /** 객체 트리에서 조건에 맞는 값을 문서 순서대로 모은다. */
