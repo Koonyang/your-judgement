@@ -55,11 +55,14 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
 
   let drawer: Drawer = null;
   let lastPhase: Phase | null = null;
-  /** 모두절차가 끝나면 자동 생성된 쟁점 보드를 한 번 보여 준다(읽기 전용, [확인]). UI 전용 상태. */
+  /** 쟁점 보드를 처음 열 때(서랍이든 판단 단계든) 한 번 튜토리얼을 보여 준다(읽기 전용, [확인]). UI 전용 상태. */
   let introOpen = false;
+  let introSeen = false;
+  const showIntro = () => { if (!introSeen) introOpen = introSeen = true; };
   const toggle = (d: Exclude<Drawer, null>) => {
     if (leaving) return;
     if (drawer === d) return putDown();
+    if (d === 'board') showIntro();
     drawer = d;
     render(c.state);
   };
@@ -68,7 +71,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const items: Record<Exclude<Drawer, null>, DeskItem> = {
     docs: { id: 'docs', testid: 'tab-docs', label: '기록', kind: 'pile', open: () => toggle('docs') },
     evidence: { id: 'evidence', testid: 'tab-evidence', label: '증거목록', kind: 'paper', open: () => toggle('evidence') },
-    board: { id: 'board', testid: 'tab-board', label: '쟁점 메모', kind: 'memo', open: () => toggle('board') },
+    board: { id: 'board', testid: 'tab-board', label: '쟁점 보드', kind: 'memo', open: () => toggle('board') },
   };
   const dim = h('div', { class: 'zoom-dim' });
   // 제지: 책상 위 마이크를 누르면 재판장이 "잠깐." 하고 끊는다.
@@ -113,7 +116,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     if (s.phase === 'pretrial') drawer = 'docs';
     else if (s.phase === 'evidence') drawer = 'evidence';
     else if (s.phase === 'opening' || s.phase === 'exam' || isJudgmentStage(s.phase)) drawer = null;
-    if (s.phase === 'evidence' && lastPhase === 'opening') introOpen = true;
+    if (s.phase === 'verdict') showIntro();
     if (s.phase === 'record') {
       const o = c.appealOutcome;
       if (o) {
@@ -132,7 +135,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     const evOk = at(s.phase, 'evidence') && idx(s.phase) <= idx('verdict');
     const boardOk = at(s.phase, 'evidence') && !isJudgmentStage(s.phase);
     if ((drawer === 'docs' && !docsOk) || (drawer === 'evidence' && !evOk) || (drawer === 'board' && !boardOk)) drawer = null;
-    const modal = introOpen && s.phase === 'evidence';
+    const modal = introOpen && (drawer === 'board' || s.phase === 'verdict');
     // 쟁점 보드 회상: 보드·판단 화면을 잠시 걷고 그 증언 장면(법정 + 대사 줄)을 다시 보여 준다.
     const recall = c.recalling;
     document.documentElement.classList.toggle('recall', recall);

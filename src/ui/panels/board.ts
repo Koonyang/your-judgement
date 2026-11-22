@@ -26,7 +26,7 @@ export const CHECK_THOUGHT = '조문에 적합하지 않은 것들은 걸러냈�
 const VERDICT_LABEL = { ok: '신뢰', reject: '배척' } as const;
 const ROUTE_STATE = { proven: '막힘', doubt: '열림', null: '판정 중' } as const;
 
-/** 튜토리얼 설명(모두절차 끝 안내). */
+/** 튜토리얼 설명(쟁점 보드를 처음 열 때). */
 export const TUTORIAL = '검사는 증거물을 통해 피고인의 활로를 막으려 합니다. 당신은 증거가 합당한지 판단하여, 검사가 피고인의 활로를 모두 막는 데 성공하면 유죄를 선고합니다.';
 
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {

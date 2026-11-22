@@ -31,8 +31,14 @@
     { "id": "open_6", "speaker": "judge", "text": "피고인, 공소사실을 인정합니까?" },
     { "id": "open_7", "speaker": "defendant", "text": "네, 인정합니다." },
     { "id": "open_8", "speaker": "defense", "text": "피고인은 공소사실을 모두 인정합니다. 다만 당시 일이 끊겨 끼니를 거르던 사정을 참작해 주시기 바랍니다.", "yieldsCards": ["c_livelihood"] },
-    { "id": "open_8a", "speaker": "thought", "text": "사실관계엔 다툼이 없나 보군. 하지만 자백했다고 끝은 아니다." },
-    { "id": "open_9", "speaker": "thought", "text": "자백만으론 유죄가 안 된다. 뒷받침할 증거가 따로 있어야 해. 형량은 그다음 문제다." }
+    { "id": "open_8a", "speaker": "thought", "text": "사실관계엔 다툼이 없나 보군. 하지만 자백했다는 것만으로 유죄가 성립할 수는 없다." },
+    { "id": "open_9", "speaker": "thought", "text": "뒷받침할 증거가 따로 필요해. 형량은 그다음 문제다. [검사에게 증거 제출을 요구하자.]" },
+    { "id": "open_10", "speaker": "judge", "text": "검사, 증거를 신청하십시오." },
+    { "id": "open_11", "speaker": "prosecutor", "text": "증거목록 기재와 같이 증거를 신청합니다." },
+    { "id": "open_12", "speaker": "judge", "text": "변호인, 검사 신청 증거에 대해 의견 말씀해 주십시오." },
+    { "id": "open_13", "speaker": "defense", "text": "피해자 노은숙의 진술조서는 부동의합니다. 나머지 증거는 모두 동의합니다." },
+    { "id": "open_14", "speaker": "judge", "text": "피고인 측에서 낼 증거가 있습니까?" },
+    { "id": "open_15", "speaker": "defense", "text": "피해자의 처벌불원서를 제출합니다." }
   ],
   "cells": [
     { "id": "corroboration", "name": "자백의 보강", "disputed": false }

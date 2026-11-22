@@ -60,7 +60,7 @@ try {
   const asked = new Set();
   const taken = new Set();
   for (let i = 0; i < 300 && (await text('phase-title')) !== '선고기일 전 재검토'; i++) {
-    if (await vis('board-intro')) { await tid('btn-board-intro-ok').click(); continue; }
+    if (await vis('board-intro')) throw new Error('쟁점 보드를 열기 전에 튜토리얼이 뜸');
     if (await vis('btn-sustain')) { await tid('btn-sustain').click(); continue; }
     if (await vis('btn-supp-end')) {
       const want = ['btn-supp-q_owner_items', 'btn-supp-q_def_meal'].find((id) => !asked.has(id));
@@ -99,7 +99,10 @@ try {
   await tid('panel-docs').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
   // 쟁점 보드(길막기 판): 증언 기물 회상(법정 장면 재생) → 대조(키보드)로 턱 찾기
+  if ((await text('tab-board')) !== '쟁점 보드') throw new Error('책상 라벨이 쟁점 보드가 아님');
   await tid('tab-board').click();
+  if (!(await vis('board-intro'))) throw new Error('쟁점 보드를 처음 열 때 튜토리얼이 안 뜸');
+  await tid('btn-board-intro-ok').click();
   await tid('drawer-board-recall-c_owner_testimony').click();
   if (!(await page.evaluate(() => document.documentElement.classList.contains('recall')))) throw new Error('회상이 시작되지 않음');
   if (await vis('drawer')) throw new Error('회상 중에 보드가 가려지지 않음');
