@@ -113,6 +113,8 @@ try {
   if ((await tid('rub-row-1').getAttribute('class')).includes('snag')) throw new Error('문지르지 않은 줄에 턱이 걸림');
   await shot('4c-rub');
   await tid('btn-rub-close').click();
+  if (!(await vis('drawer-board-memo-m_time'))) throw new Error('대조 기록에 어긋남이 남지 않음');
+  if (await vis('drawer-board-memo-m_count')) throw new Error('대조하지 않은 줄이 기록됨');
   await tid('btn-zoom-close').click();
   await tid('drawer').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   await tid('btn-next').click();

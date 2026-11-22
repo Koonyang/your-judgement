@@ -512,3 +512,7 @@ html.recall #ui-root::before {
 .board-readonly .routes { display: none; }
 .board-readonly .chess-grid { grid-template-columns: repeat(3, 38px); grid-template-rows: repeat(3, 38px); }
 .board-readonly .board-foot { display: none; }
+.memos { align-self: stretch; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; font-size: 9px; }
+.memos-title { width: 100%; font-size: 9px; }
+.memo-note { background: #f3e1a8; color: var(--ink); text-shadow: none; border: 1px dashed var(--ink); padding: 2px 4px; max-width: 48%; transform: rotate(-0.6deg); }
+.memo-note:nth-child(odd) { transform: rotate(0.5deg); }

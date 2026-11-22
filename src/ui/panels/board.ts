@@ -39,6 +39,8 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const thought = (t: string) => h('p', { class: 'board-thought' }, t);
   const check = h('div', { class: 'board-check', testid: 'board-check' });
   const rubSlot = h('div', { class: 'rub-slot' });
+  /** 대조 기록: 대조에서 찾은 어긋남(메모 카드). 판단 참고용. */
+  const memos = h('div', { class: 'memos', testid: `${pre}board-memos` });
   /** 대조 화면(열려 있으면 판 위에 겹친 종이). UI 전용 상태. */
   let rubView: ReturnType<typeof createRubView> | null = null;
 
@@ -48,6 +50,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       h('div', { class: 'tutorial small', testid: 'board-tutorial' }, h('p', {}, TUTORIAL))] : []),
     ...(mode === 'main' ? [check] : []),
     h('div', { class: 'chess-main' }, grid, routes),
+    ...(mode === 'readonly' ? [] : [memos]),
     h('div', { class: 'board-foot' }, status, ...(mode === 'main' ? [confirm] : [])),
     rubSlot,
   );
@@ -103,7 +106,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
         if (c.recallLines(id).length) {
           const r = button(`${pre}board-recall-${id}`, '회상', () => c.recall(id), 'btn sm');
           r.disabled = c.replaying;
-          line.append(r);
+          line.prepend(r); // 회상은 기물 이름 왼쪽, 판정은 오른쪽 끝
         }
         for (const want of ['ok', 'reject'] as const) {
           const b = button(`${pre}board-judge-${cell.id}-${id}-${want}`, VERDICT_LABEL[want], () =>
@@ -135,6 +138,10 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       grid.replaceChildren(...board(s, sc));
       routes.replaceChildren(...routeList(s, sc));
       status.textContent = mode === 'readonly' ? '' : statusText(s);
+      const found = sc.cards.filter((x) => x.kind === 'memo' && s.heldCards.includes(x.id));
+      memos.replaceChildren(h('b', { class: 'memos-title' }, '대조 기록'), ...(found.length
+        ? found.map((m) => h('div', { class: 'memo-note', testid: `${pre}board-memo-${m.id}` }, m.text))
+        : [h('span', { class: 'muted-holo small' }, '아직 대조한 기록이 없다.')]));
       if (mode === 'main') {
         confirm.disabled = !canConfirmVerdict(s.board);
         const dropped = s.boardCheck?.dropped ?? [];
