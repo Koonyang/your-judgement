@@ -22,7 +22,7 @@
     "lawApplied": "형법 제329조(징역형 선택)"
   },
   "opening": [
-    { "id": "open_0", "speaker": "thought", "text": "첫 사건이다. 공소장에 적힌 피해액은 1만 2천 원. 지금 내가 아는 건 공소장과 피고인 의견서뿐이다." },
+    { "id": "open_0", "speaker": "thought", "text": "첫 사건이다. 손끝에 닿는 점자 공소장, 피해액은 1만 2천 원. 지금 내가 아는 건 공소장과 피고인 의견서뿐이다." },
     { "id": "open_1", "speaker": "clerk", "text": "2026고단1043호, 피고인 윤상택. 앞으로 나와 주십시오." },
     { "id": "open_2", "speaker": "judge", "text": "피고인은 진술하지 않거나 개개의 질문에 진술을 거부할 수 있고, 이익이 되는 사실을 진술할 수 있습니다." },
     { "id": "open_3", "speaker": "judge", "text": "피고인, 이름과 생년월일, 직업, 주거를 말씀하십시오." },
@@ -44,7 +44,7 @@
     { "id": "e_interrogation", "label": "피의자신문조서(피고인)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_confession",
       "body": "문: 계산하지 않고 가지고 나간 것이 맞나요?\n답: 네, 맞습니다. 배가 고파서 그랬습니다. 잘못했습니다." },
     { "id": "e_cctv", "label": "편의점 CCTV 영상 캡처", "submittedBy": "prosecutor", "consent": true, "cardId": "c_cctv",
-      "body": "21:38 피고인이 진열대에서 도시락 2개, 우유, 빵을 집어 점퍼 안에 넣는 장면. 21:40 계산대를 지나쳐 출입문으로 나가는 장면." },
+      "body": "[영상 조사 · 검사 설명] 21:38경 피고인이 진열대에서 도시락 2개, 우유, 빵을 집어 점퍼 안에 넣습니다. 21:40경 계산대를 지나쳐 출입문으로 나갑니다. (변호인: 다툼 없음)" },
     { "id": "e_receipt", "label": "피해품 목록 및 영수증", "submittedBy": "prosecutor", "consent": true, "cardId": "c_receipt",
       "body": "도시락 4,500원 × 2, 우유 1,500원, 빵 1,500원. 합계 12,000원. 피해품은 모두 피해자 편의점의 판매용 재고." },
     { "id": "e_owner_stmt", "label": "진술조서(노은숙)", "submittedBy": "prosecutor", "consent": false, "cardId": "c_owner_stmt",
@@ -79,7 +79,7 @@
         { "id": "owner_6a", "speaker": "witness", "text": "그날은 제가 정신이 없었어요. 남편 보내고 열흘 만에 가게를 다시 연 참이라서요." },
         { "id": "owner_7", "speaker": "prosecutor", "text": "증거목록 3번 피해품 목록 및 영수증을 보면 피해액이 12,000원인데, 맞습니까?" },
         { "id": "owner_8", "speaker": "witness", "text": "네, 맞습니다. 그날 영수증하고 재고를 하나하나 맞춰 봤어요. 큰돈은 아니지요.", "yieldsCards": ["c_minor"] },
-        { "id": "owner_8a", "speaker": "thought", "text": "피해액은 영수증과 맞는다. 판단의 근거로 남겨 둘 만하다." },
+        { "id": "owner_8a", "speaker": "thought", "text": "점자로 받은 영수증 금액과 맞는다. 판단의 근거로 남겨 둘 만하다." },
         { "id": "owner_9", "speaker": "prosecutor", "text": "그 전에도 가게에서 물건이 여러 번 없어진 적이 있었지요?",
           "objection": {
             "by": "defense", "correct": "sustain",
