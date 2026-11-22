@@ -5,7 +5,7 @@ import type { GameState } from '../engine/state';
 import { COURT_H, FONT_STACK, SEATS, SPRITE_H, SPRITE_W, type SeatKey } from './seats';
 
 type Spot = { x: number; y: number; scale: number };
-type Actor = { img: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; spot: Spot; shown: boolean; arrive?: () => void; walk?: Phaser.Tweens.Tween; breathe?: Phaser.Tweens.Tween };
+type Actor = { img: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; spot: Spot; shown: boolean; arrive?: () => void; walk?: Phaser.Tweens.Tween; breathe?: Phaser.Tweens.Tween; fx?: Phaser.FX.ColorMatrix };
 
 const spotOf = (key: SeatKey): Spot => ({ x: SEATS[key].x, y: SEATS[key].y, scale: SEATS[key].scale ?? 1 });
 /** 증인이 드나드는 방청석 난간 문. */
@@ -42,7 +42,7 @@ export class CourtroomScene extends Phaser.Scene {
         .setOrigin(0.5, 0)
         .setDepth(5);
       if (seat.back) img.setDepth(4); // 참여관은 자기 책상보다 내 쪽에 앉아 등을 보인다
-      const a: Actor = { img, label, spot: spotOf(key), shown: key !== 'witness' };
+      const a: Actor = { img, label, spot: spotOf(key), shown: key !== 'witness', fx: img.preFX?.addColorMatrix() };
       this.actors.set(key, a);
       this.breathe(a);
     }
@@ -116,10 +116,12 @@ export class CourtroomScene extends Phaser.Scene {
     this.bob?.stop();
     this.actors.forEach((a) => { if (!a.walk) a.img.setY(a.spot.y); });
     const lit = seat && visible[seat] && !SEATS[seat].hidden ? seat : null;
-    // 말하는 사람만 밝은 판(-lit)으로 바꾸고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
+    // 말하는 사람만 밝히고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
     this.actors.forEach((a, key) => {
       a.img.setAlpha(lit === null ? 0.85 : key === lit ? 1 : 0.55);
-      a.img.setTexture(key === lit ? `${key}-lit` : key);
+      // 말하는 사람은 같은 그림을 셰이더로 밝히고 스탠드 빛 색을 얹는다(WebGL). 캔버스 폴백이면 투명도 차이만 남는다.
+      const on = key === lit;
+      if (on) { a.fx?.brightness(1.7); a.img.setTint(0xffe2b8); } else { a.fx?.reset(); a.img.clearTint(); }
     });
     if (!lit) {
       this.waves.setVisible(false);
