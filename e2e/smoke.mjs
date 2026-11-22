@@ -117,13 +117,11 @@ try {
   await tid('drawer').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   await tid('btn-next').click();
 
-  // 유무죄: 4칸에 자백 외 증거 연결 + 증명됨
-  for (const cell of ['property', 'taking', 'intent', 'appropriation']) {
-    // 책상 카드를 끌어 칸에 올린다(끌기 경로), 한 칸은 눌러 고른 뒤 칸 누르기
-    if (cell === 'property') { await tid('board-tray-c_receipt').click(); await tid(`board-cell-${cell}`).click({ position: { x: 4, y: 4 } }); }
-    else await tid('board-tray-c_cctv').dragTo(tid(`board-cell-${cell}`), { targetPosition: { x: 4, y: 4 } });
-    await tid(`board-mark-${cell}-proven`).click();
-  }
+  // 유무죄: 폰 앞 칸(자백의 보강)에 검사의 증거가 자동으로 올라와 있다. 보강증거(CCTV)를 인정하면 체크메이트
+  if (!(await vis('board-judge-corroboration-c_confession-ok'))) throw new Error('검사의 증거가 칸에 자동으로 올라오지 않음');
+  if (await tid('btn-confirm-verdict').isEnabled()) throw new Error('판정 전에 확정 가능');
+  await tid('board-judge-corroboration-c_cctv-ok').click();
+  if (!(await text('board-verdict')).includes('유죄')) throw new Error(`체크메이트 판정 이상: ${await text('board-verdict')}`);
   await shot('5-verdict');
   await tid('btn-confirm-verdict').click();
 

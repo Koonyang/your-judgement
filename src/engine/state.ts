@@ -1,5 +1,5 @@
 // 게임 상태 타입과 초기 상태. phaser/DOM 비의존.
-import { initBoard, type BoardState, type CellMark } from './board';
+import { initBoard, type BoardState, type PieceVerdict } from './board';
 import type { Scenario, Violation } from './scenario/schema';
 
 export const PHASES = [
@@ -57,8 +57,8 @@ export type Action =
   | { type: 'ADVANCE' } | { type: 'INTERRUPT' } | { type: 'RULE_OBJECTION'; ruling: 'sustain' | 'overrule' }
   | { type: 'ASK_SUPP'; questionId: string } | { type: 'END_SUPP' }
   | { type: 'HIGHLIGHT'; docId: string; text: string }
-  | { type: 'LINK_CARD'; cellId: string; cardId: string } | { type: 'UNLINK_CARD'; cellId: string; cardId: string }
-  | { type: 'MARK_CELL'; cellId: string; mark: CellMark } | { type: 'RUB'; rubId: string; row: number } | { type: 'CONFIRM_VERDICT' }
+  | { type: 'JUDGE_PIECE'; cellId: string; cardId: string; verdict: PieceVerdict | null }
+  | { type: 'RUB'; rubId: string; row: number } | { type: 'CONFIRM_VERDICT' }
   | { type: 'SET_SENTENCING'; patch: Partial<GameState['sentencing']> } | { type: 'CONFIRM_SENTENCING' }
   | { type: 'SET_JUDGMENT'; patch: Partial<GameState['judgment']> } | { type: 'CONFIRM_JUDGMENT' }
   | { type: 'FINISH_PRONOUNCE' } | { type: 'FINISH_APPEAL' };

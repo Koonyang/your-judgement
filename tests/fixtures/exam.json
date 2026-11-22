@@ -16,8 +16,8 @@
     { "id": "e_receipt", "label": "영수증", "submittedBy": "defense", "consent": false, "body": "내용", "cardId": "c_receipt" }
   ],
   "cards": [
-    { "id": "c_rem", "title": "점주의 기억", "text": "", "kind": "fact" },
-    { "id": "c_np", "title": "피고인 진술", "text": "", "kind": "evidence", "confession": true },
+    { "id": "c_rem", "proves": ["act", "intent"], "title": "점주의 기억", "text": "", "kind": "fact" },
+    { "id": "c_np", "proves": ["act"], "title": "피고인 진술", "text": "", "kind": "evidence", "confession": true },
     { "id": "c_wit", "title": "점주 진술조서", "text": "", "kind": "evidence" },
     { "id": "c_cctv", "title": "CCTV", "text": "", "kind": "evidence" },
     { "id": "c_receipt", "title": "영수증", "text": "", "kind": "evidence" },

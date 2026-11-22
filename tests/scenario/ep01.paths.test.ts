@@ -4,7 +4,6 @@ import { reviewAppeal } from '../../src/engine/appeal';
 import { currentLine } from '../../src/engine/reducer';
 import { loadScenario } from '../../src/engine/scenario/load';
 import { availableFactors, recommendedRange, suspensionRecommendation } from '../../src/engine/sentencing';
-import type { CellMark } from '../../src/engine/board';
 import type { Action, GameState } from '../../src/engine/state';
 import { adv, play, to, toPhase, toSupp, type Step } from './play';
 
@@ -14,18 +13,16 @@ type Choices = {
   legit: 'hear' | 'cut';
   insult: 'stop' | 'ignore';
   grill: 'hear' | 'cut';
-  board: Record<string, { cards: string[]; mark: Exclude<CellMark, null> }>;
+  /** 칸 → 기물(카드) → 판사의 판정. 판결 단계에 들어선 뒤 내린다. */
+  board: Record<string, Record<string, 'ok' | 'reject'>>;
   /** null이면 무죄라 양형 단계 없음 */
   sentence: { months: number; suspended: boolean } | null;
 };
 
-const CELLS = ['property', 'taking', 'intent', 'appropriation'];
-const fullBoard: Choices['board'] = {
-  property: { cards: ['c_receipt', 'c_owner_stmt'], mark: 'proven' },
-  taking: { cards: ['c_cctv', 'c_confession'], mark: 'proven' },
-  intent: { cards: ['c_cctv', 'c_confession'], mark: 'proven' },
-  appropriation: { cards: ['c_confession', 'c_owner_stmt'], mark: 'proven' },
-};
+const CELLS = ['corroboration'];
+/** 1화는 다툼 없는 자백 사건: 폰 한 칸(자백의 보강). CCTV를 인정하면 막힌다. */
+const fullBoard: Choices['board'] = { corroboration: { c_cctv: 'ok' } };
+const ALL_PIECES = ['c_confession', 'c_cctv', 'c_receipt', 'c_owner_stmt', 'c_owner_testimony', 'c_def_testimony'];
 const base: Choices = {
   legit: 'hear', insult: 'stop', grill: 'hear', board: fullBoard, sentence: { months: 6, suspended: true },
 };
@@ -46,10 +43,8 @@ function actions(c: Choices): Step[] {
   a.push(toSupp(), { type: 'ASK_SUPP', questionId: 'q_def_meal' }, { type: 'END_SUPP' });
   // 결심 → 재검토 → 판단
   a.push(toPhase('verdict'));
-  for (const [cellId, v] of Object.entries(c.board)) {
-    for (const cardId of v.cards) a.push({ type: 'LINK_CARD', cellId, cardId });
-    a.push({ type: 'MARK_CELL', cellId, mark: v.mark });
-  }
+  for (const [cellId, v] of Object.entries(c.board))
+    for (const [cardId, verdict] of Object.entries(v)) a.push({ type: 'JUDGE_PIECE', cellId, cardId, verdict });
   a.push({ type: 'CONFIRM_VERDICT' });
   if (c.sentence) a.push({ type: 'SET_SENTENCING', patch: c.sentence }, { type: 'CONFIRM_SENTENCING' });
   a.push({ type: 'CONFIRM_JUDGMENT' }, { type: 'FINISH_PRONOUNCE' });
@@ -183,9 +178,9 @@ describe('1화 경로', () => {
     expect(out.result).toBe('final');
   });
 
-  it('무죄(고의 의심 남음): 검사 항소, 사실오인 파기, 유죄 자판', () => {
+  it('무죄(기물을 다 인정 못 함): 검사 항소, 사실오인 파기, 유죄 자판', () => {
     const { s, out } = run({
-      board: { ...fullBoard, intent: { cards: ['c_cctv', 'c_confession'], mark: 'doubt' } },
+      board: { corroboration: Object.fromEntries(ALL_PIECES.map((id) => [id, 'reject' as const])) },
       sentence: null,
     });
     expect(s.sentencing.months).toBeNull();
@@ -196,8 +191,7 @@ describe('1화 경로', () => {
   });
 
   it('보강법칙: 자백만 연결해 유죄 → 확정되지만 법리 지적', () => {
-    const board = Object.fromEntries(CELLS.map((id) => [id, { cards: ['c_confession'], mark: 'proven' as const }]));
-    const { out } = run({ board });
+    const { out } = run({ board: { corroboration: { c_confession: 'ok' } } });
     expect(out.result).toBe('final');
     expect(out.hypothetical.some((t) => t.includes('보강법칙'))).toBe(true);
   });
@@ -221,21 +215,27 @@ describe('1화 쟁점 보드 v2', () => {
     return a.slice(0, a.findIndex((x) => 'to' in x && x.to === 'phase:verdict')).concat(toPhase('review'));
   };
 
-  it('판결 직전 자동 점검: 자백만 미리 연결해 두면 verdict 진입 때 떨어진다', () => {
-    const pre: Step[] = CELLS.map((cellId) => ({ type: 'LINK_CARD', cellId, cardId: 'c_confession' }) as Action);
-    const s = play(sc, [...toReview(), ...pre, toPhase('verdict')]);
-    expect(s.boardCheck?.dropped).toHaveLength(4);
-    expect(Object.values(s.board).every((c) => c.cards.length === 0)).toBe(true);
+  it('검사의 증거는 입증취지대로 폰 앞 칸에 자동으로 올라온다', () => {
+    const s = play(sc, toReview());
+    expect([...s.board.corroboration.cards].sort()).toEqual([...ALL_PIECES].sort());
+    expect(s.board.corroboration.mark).toBeNull();
   });
 
-  it('자동 점검은 증명력을 건드리지 않는다: 보강증거가 있으면 그대로', () => {
+  it('판결 직전 자동 점검: 자백만 인정해 두면 verdict 진입 때 그 인정이 풀린다', () => {
+    const pre: Step[] = [{ type: 'JUDGE_PIECE', cellId: 'corroboration', cardId: 'c_confession', verdict: 'ok' }];
+    const s = play(sc, [...toReview(), ...pre, toPhase('verdict')]);
+    expect(s.boardCheck?.dropped).toEqual([{ cellId: 'corroboration', cardId: 'c_confession' }]);
+    expect(s.board.corroboration.mark).toBeNull();
+  });
+
+  it('자동 점검은 증명력을 건드리지 않는다: 보강증거를 인정했으면 그대로', () => {
     const pre: Step[] = [
-      { type: 'LINK_CARD', cellId: 'taking', cardId: 'c_confession' },
-      { type: 'LINK_CARD', cellId: 'taking', cardId: 'c_cctv' },
+      { type: 'JUDGE_PIECE', cellId: 'corroboration', cardId: 'c_confession', verdict: 'ok' },
+      { type: 'JUDGE_PIECE', cellId: 'corroboration', cardId: 'c_cctv', verdict: 'ok' },
     ];
     const s = play(sc, [...toReview(), ...pre, toPhase('verdict')]);
     expect(s.boardCheck?.dropped).toEqual([]);
-    expect(s.board.taking.cards).toEqual(['c_confession', 'c_cctv']);
+    expect(s.board.corroboration.mark).toBe('proven');
   });
 
   it('겹쳐 더듬기: 턱 걸린 줄만 메모 카드가 생기고, 일치하는 줄은 아무 일 없다', () => {
@@ -244,8 +244,8 @@ describe('1화 쟁점 보드 v2', () => {
     expect(() => play(sc, [{ type: 'RUB', rubId: 'r_owner_cctv', row: 2 }], s)).toThrow();
   });
 
-  it('사소한 턱을 의심 근거로 무죄를 내면 항소심에서 사실오인 파기', () => {
-    const a = actions({ ...base, board: { ...fullBoard, taking: { cards: ['m_time'], mark: 'doubt' } }, sentence: null });
+  it('사소한 턱을 보고 증거를 다 인정 못 해 무죄를 내면 항소심에서 사실오인 파기', () => {
+    const a = actions({ ...base, board: { corroboration: Object.fromEntries(ALL_PIECES.map((id) => [id, 'reject' as const])) }, sentence: null });
     const i = a.findIndex((x) => 'to' in x && x.to === 'phase:verdict');
     a.splice(i, 0, { type: 'RUB', rubId: 'r_owner_cctv', row: 0 });
     const s = play(sc, a);

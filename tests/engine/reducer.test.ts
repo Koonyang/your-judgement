@@ -30,8 +30,10 @@ function until(s: GameState, pred: (s: GameState) => boolean, limit = 50): GameS
 }
 const toExam = () => until(initialState(sc), (s) => s.phase === 'exam');
 const toVerdict = () => until(initialState(sc), (s) => s.phase === 'verdict');
+/** 칸마다 올라온 기물을 전부 인정(proven) 또는 전부 인정 못 함(doubt). */
 function markAll(s: GameState, mark: 'proven' | 'doubt'): GameState {
-  for (const c of sc.cells) s = R(s, { type: 'MARK_CELL', cellId: c.id, mark });
+  for (const c of sc.cells)
+    for (const cardId of s.board[c.id].cards) s = R(s, { type: 'JUDGE_PIECE', cellId: c.id, cardId, verdict: mark === 'proven' ? 'ok' : 'reject' });
   return s;
 }
 
@@ -230,35 +232,38 @@ describe('notes and board', () => {
     expect(s.highlights).toEqual([{ docId: 'indictment', text: '공소' }]);
     expect(R(s, { type: 'HIGHLIGHT', docId: 'indictment', text: '공소' })).toBe(s);
   });
-  it('LINK_CARD only with held cards; UNLINK_CARD removes', () => {
-    const s0 = toVerdict();
-    expect(R(s0, { type: 'LINK_CARD', cellId: 'act', cardId: 'c_receipt' })).toBe(s0);
-    expect(R(s0, { type: 'LINK_CARD', cellId: 'nope', cardId: 'c_rem' })).toBe(s0);
-    const s1 = R(s0, { type: 'LINK_CARD', cellId: 'act', cardId: 'c_rem' });
-    expect(s1.board.act.cards).toEqual(['c_rem']);
-    expect(s0.board.act.cards).toEqual([]);
-    expect(R(s1, { type: 'LINK_CARD', cellId: 'act', cardId: 'c_rem' })).toBe(s1);
-    const s2 = R(s1, { type: 'UNLINK_CARD', cellId: 'act', cardId: 'c_rem' });
-    expect(s2.board.act.cards).toEqual([]);
-    expect(R(s2, { type: 'UNLINK_CARD', cellId: 'act', cardId: 'c_rem' })).toBe(s2);
+  it('증거가 나오면 입증취지 칸에 기물이 자동으로 올라간다(검사가 막는다)', () => {
+    const s = toExam();
+    expect(s.board.act.cards).toEqual(['c_np']); // 동의 증거(자백) → act
+    expect(s.board.intent.cards).toEqual([]);
+    expect(s.board.intent.mark).toBe('doubt'); // 막은 기물이 없는 길은 열려 있다
+    const t = until(s, (x) => x.heldCards.includes('c_rem'));
+    expect(t.board.act.cards).toEqual(['c_np', 'c_rem']);
+    expect(t.board.intent.cards).toEqual(['c_rem']);
+    expect(t.board.intent.mark).toBeNull(); // 판정 전
   });
-  it('revoked card is also unlinked from the board', () => {
-    let s = R(toExam(), { type: 'LINK_CARD', cellId: 'act', cardId: 'c_np' });
-    expect(s.board.act.cards).toEqual(['c_np']);
+  it('revoked card is also removed from the board', () => {
+    let s = toExam();
+    expect(s.board.act.cards).toContain('c_np');
     s = until(s, (x) => x.cursor.inSupp); // L3가 c_np 철회
-    expect(s.board.act.cards).toEqual([]);
+    expect(s.board.act.cards).not.toContain('c_np');
   });
-  it('MARK_CELL sets mark; unknown cell ignored', () => {
+  it('JUDGE_PIECE: 인정하면 막힘, 다 인정 못 하면 열림, 다시 누르면 무름. 올라오지 않은 기물·칸은 무시', () => {
     const s0 = toVerdict();
-    const s1 = R(s0, { type: 'MARK_CELL', cellId: 'intent', mark: 'doubt' });
-    expect(s1.board.intent.mark).toBe('doubt');
-    expect(R(s0, { type: 'MARK_CELL', cellId: 'nope', mark: 'doubt' })).toBe(s0);
+    expect(R(s0, { type: 'JUDGE_PIECE', cellId: 'act', cardId: 'c_receipt', verdict: 'ok' })).toBe(s0);
+    expect(R(s0, { type: 'JUDGE_PIECE', cellId: 'nope', cardId: 'c_rem', verdict: 'ok' })).toBe(s0);
+    const s1 = R(s0, { type: 'JUDGE_PIECE', cellId: 'intent', cardId: 'c_rem', verdict: 'ok' });
+    expect(s1.board.intent.mark).toBe('proven');
+    const s2 = R(s1, { type: 'JUDGE_PIECE', cellId: 'intent', cardId: 'c_rem', verdict: 'reject' });
+    expect(s2.board.intent.mark).toBe('doubt');
+    expect(R(s2, { type: 'JUDGE_PIECE', cellId: 'intent', cardId: 'c_rem', verdict: null }).board.intent.mark).toBeNull();
+    expect(s0.board.intent.judged).toBeUndefined();
   });
 });
 
 describe('verdict / sentencing / judgment / pronounce', () => {
   it('CONFIRM_VERDICT with an unmarked cell → phase unchanged', () => {
-    const s = R(toVerdict(), { type: 'MARK_CELL', cellId: 'act', mark: 'proven' });
+    const s = R(toVerdict(), { type: 'JUDGE_PIECE', cellId: 'act', cardId: 'c_rem', verdict: 'reject' });
     expect(R(s, { type: 'CONFIRM_VERDICT' })).toBe(s);
   });
   it('CONFIRM_VERDICT outside verdict phase → same object', () => {

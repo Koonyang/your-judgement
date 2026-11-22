@@ -43,6 +43,8 @@ export const CardS = z.object({
   // memo: 겹쳐 더듬기로 찾은 어긋남(판사 메모). 증거가 아니라 쟁점 칸의 판단 근거로만 쓴다.
   id: z.string(), title: z.string(), text: z.string(), kind: z.enum(['evidence', 'fact', 'memo']),
   confession: z.boolean().optional(),
+  /** 검사의 입증취지: 이 증거가 나오면 자동으로 막으러 올라가는 칸(쟁점) id. */
+  proves: z.array(z.string()).optional(),
   /** 카드를 눌러 회상할 줄 id(들은 것만 재생). 라인 id 또는 보충신문 질문 id. 법정 증언 카드에 쓴다. */
   recall: z.array(z.string()).optional(),
 });

@@ -35,10 +35,7 @@
     { "id": "open_9", "speaker": "thought", "text": "그래도 자백했다고 끝은 아니지. 자백만으론 유죄가 안 된다. 뒷받침할 증거가 따로 있어야 해." }
   ],
   "cells": [
-    { "id": "property", "name": "타인의 재물", "disputed": false },
-    { "id": "taking", "name": "절취(점유 이전)", "disputed": false },
-    { "id": "intent", "name": "고의", "disputed": false },
-    { "id": "appropriation", "name": "불법영득의사", "disputed": false }
+    { "id": "corroboration", "name": "자백의 보강", "disputed": false }
   ],
   "evidence": [
     { "id": "e_interrogation", "label": "피의자신문조서(피고인)", "submittedBy": "prosecutor", "consent": true, "cardId": "c_confession",
@@ -55,24 +52,24 @@
       "body": "피고인이 찾아와 사과하고 물건값을 갚았습니다. 피고인의 처벌을 원하지 않습니다. 2026. 3. 18. 노은숙" }
   ],
   "cards": [
-    { "id": "c_confession", "title": "피고인의 자백", "text": "피의자신문조서에서 피고인이 범행을 인정했다.", "kind": "evidence", "confession": true },
-    { "id": "c_cctv", "title": "CCTV 영상 캡처", "text": "피고인이 물건을 점퍼에 넣고 계산대를 지나쳐 나가는 장면.", "kind": "evidence" },
-    { "id": "c_receipt", "title": "피해품 목록·영수증", "text": "편의점 판매용 재고, 합계 12,000원.", "kind": "evidence" },
-    { "id": "c_owner_stmt", "title": "점주 진술조서", "text": "재고가 맞지 않아 CCTV로 확인했고, 가져가도 된다고 허락한 적 없다.", "kind": "evidence" },
+    { "id": "c_confession", "title": "피고인의 자백", "text": "피의자신문조서에서 피고인이 범행을 인정했다.", "kind": "evidence", "proves": ["corroboration"], "confession": true },
+    { "id": "c_cctv", "title": "CCTV 영상 캡처", "text": "피고인이 물건을 점퍼에 넣고 계산대를 지나쳐 나가는 장면.", "kind": "evidence", "proves": ["corroboration"] },
+    { "id": "c_receipt", "title": "피해품 목록·영수증", "text": "편의점 판매용 재고, 합계 12,000원.", "kind": "evidence", "proves": ["corroboration"] },
+    { "id": "c_owner_stmt", "title": "점주 진술조서", "text": "재고가 맞지 않아 CCTV로 확인했고, 가져가도 된다고 허락한 적 없다.", "kind": "evidence", "proves": ["corroboration"] },
     { "id": "c_record", "title": "동종 전과", "text": "최근 5년 내 절도 벌금형 3회.", "kind": "evidence" },
     { "id": "c_nonpunish", "title": "처벌불원", "text": "피해자가 피고인의 처벌을 원하지 않는다는 서면.", "kind": "evidence" },
     { "id": "c_livelihood", "title": "생계형 범행", "text": "석 달째 일이 끊겨 끼니를 거르던 중 먹을 것을 가져갔다.", "kind": "fact" },
     { "id": "c_repaid", "title": "변제", "text": "사건 나흘 뒤 피해자를 찾아가 사과하고 물건값을 갚았다.", "kind": "fact" },
     { "id": "c_remorse", "title": "진지한 반성", "text": "최후진술에서 전과를 스스로 언급하며 잘못을 인정했다.", "kind": "fact" },
     { "id": "c_minor", "title": "피해 경미", "text": "피해액 12,000원.", "kind": "fact" },
-    { "id": "c_owner_testimony", "title": "점주 법정 증언", "text": "다음 날 아침 재고가 맞지 않아 CCTV로 알았다. 시각·물건은 '열 시쯤', '도시락 세 개였나'로 기억이 흐리다.", "kind": "evidence", "recall": ["owner_5", "owner_6", "owner_6a", "owner_6c", "owner_6d", "owner_7", "owner_8"] },
-    { "id": "c_def_testimony", "title": "피고인 법정 진술", "text": "전과를 인정하고, 배가 고파 가져갔다고 진술했다.", "kind": "evidence", "confession": true, "recall": ["def_2", "def_3", "def_4", "def_5", "def_7", "def_8"] },
+    { "id": "c_owner_testimony", "title": "점주 법정 증언", "text": "다음 날 아침 재고가 맞지 않아 CCTV로 알았다. 시각·물건은 '열 시쯤', '도시락 세 개였나'로 기억이 흐리다.", "kind": "evidence", "proves": ["corroboration"], "recall": ["owner_5", "owner_6", "owner_6a", "owner_6c", "owner_6d", "owner_7", "owner_8"] },
+    { "id": "c_def_testimony", "title": "피고인 법정 진술", "text": "전과를 인정하고, 배가 고파 가져갔다고 진술했다.", "kind": "evidence", "proves": ["corroboration"], "confession": true, "recall": ["def_2", "def_3", "def_4", "def_5", "def_7", "def_8"] },
     { "id": "m_time", "title": "메모: 시각 차이", "text": "CCTV는 21:38, 증언은 '열 시쯤'. 다음 날 화면으로 알게 된 사람의 기억이다.", "kind": "memo" },
     { "id": "m_count", "title": "메모: 개수 차이", "text": "CCTV는 도시락 2개, 증언은 '세 개였나'. 정확한 건 영수증과 맞춰 봤다고 본인이 말했다.", "kind": "memo" }
   ],
   "rubs": [
     {
-      "id": "r_owner_cctv", "cellId": "taking", "title": "CCTV 캡처 ↔ 점주 법정 증언",
+      "id": "r_owner_cctv", "cellId": "corroboration", "title": "CCTV 캡처 ↔ 점주 법정 증언",
       "a": { "label": "CCTV 영상 캡처(검사 설명)" }, "b": { "label": "증인 노은숙 법정 증언" },
       "requires": { "cards": ["c_cctv", "c_owner_testimony"] },
       "rows": [
@@ -125,9 +122,9 @@
         { "id": "owner_18a", "speaker": "thought", "text": "사과도 했고 돈도 갚았다. 그럼 뭘 가져갔고 언제 갚았는지. 직접 물어볼 수 있는 건 지금뿐이야." }
       ],
       "supplementary": [
-        { "id": "q_owner_items", "cellId": "appropriation", "kind": "clarify", "text": "피고인이 가져간 물건이 정확히 무엇이었습니까?",
+        { "id": "q_owner_items", "cellId": "corroboration", "kind": "clarify", "text": "피고인이 가져간 물건이 정확히 무엇이었습니까?",
           "answer": [ { "id": "owner_q1_1", "speaker": "witness", "text": "도시락 두 개, 우유 하나, 빵 하나입니다. 전부 먹을 것이었어요." } ] },
-        { "id": "q_owner_when", "cellId": "property", "kind": "clarify", "text": "물건값을 돌려받은 것은 사건 며칠 뒤였습니까?",
+        { "id": "q_owner_when", "cellId": "corroboration", "kind": "clarify", "text": "물건값을 돌려받은 것은 사건 며칠 뒤였습니까?",
           "answer": [ { "id": "owner_q2_1", "speaker": "witness", "text": "나흘 뒤였던 걸로 기억합니다." } ] }
       ],
       "unlocksEvidence": [ { "evidenceId": "e_owner_stmt" } ]
@@ -152,7 +149,7 @@
         { "id": "def_9a", "speaker": "thought", "text": "먹고살 길이 막막했다는 사정, 그리고 벌금 전과 세 번. 둘 다 기록에 있는 사실이다. 어느 쪽에 무게를 둘지는 내가 정할 일이다." }
       ],
       "supplementary": [
-        { "id": "q_def_meal", "cellId": "appropriation", "kind": "clarify", "text": "가져간 도시락은 어떻게 했습니까?",
+        { "id": "q_def_meal", "cellId": "corroboration", "kind": "clarify", "text": "가져간 도시락은 어떻게 했습니까?",
           "answer": [ { "id": "def_q1_1", "speaker": "defendant", "text": "가게 앞 공원 벤치에서… 먹었습니다. 거기 늘 앉아 있는 양반이 있어서, 그 옆에서요." } ] }
       ]
     }
@@ -173,10 +170,7 @@
     ]
   },
   "appealView": [
-    { "cellId": "property", "proven": true },
-    { "cellId": "taking", "proven": true },
-    { "cellId": "intent", "proven": true },
-    { "cellId": "appropriation", "proven": true }
+    { "cellId": "corroboration", "proven": true }
   ],
   "sentencing": {
     "guidelineName": "절도범죄 > 일반재산 절도 > 제2유형(일반절도)",

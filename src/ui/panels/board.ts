@@ -1,13 +1,14 @@
-// 쟁점 보드(체스판): 가운데 킹 = 공소사실 속 피고인, 둘러싼 칸 = 구성요건(탈출 칸).
-// 검사가 낸 증거 카드(기물)를 칸에 올려 그 칸을 막는다. 판사는 두는 사람이 아니라 체크메이트를 판정하는 심판:
-// 칸마다 [막힘](증명됨)/[탈출](의심 남음)을 정한다. 모든 칸이 막히면 체크메이트 = 유죄, 탈출 칸이 하나라도 있으면 무죄.
-// 책상에 떨어진 카드: 끌어서 칸에 올리기(또는 눌러 고른 뒤 칸 누르기), 카드 위에 카드를 겹치면 겹쳐 더듬기, [회상]은 그 증언 재생.
+// 쟁점 보드(체스판): 피고인은 판 위의 기물 하나. 갈 수 있는 방향 = 빠져나갈 길(쟁점). 다툴 게 없으면 폰(앞 한 칸).
+// 검사는 증거(기물)로 길을 막아 피고인이 더 이상 움직일 수 없게(체크메이트) 하려 한다. 증거는 입증취지대로 자동으로 올라온다.
+// 판사는 두는 사람이 아니라 심판: 기물마다 [인정]/[인정 못 함]. 인정한 기물이 있는 길은 막히고, 없으면 열린다.
+// 모든 길이 막히면 체크메이트 = 유죄. 책상 카드: [회상]은 그 증언 재생, 카드끼리 겹치면 겹쳐 더듬기(메모는 판단 참고용).
 // mode: 'main'(유무죄 판단, [판단 확정]) | 'drawer'(심리 중) | 'readonly'(모두절차 끝 안내)
 import type { Controller } from '../../game/controller';
 import { canConfirmVerdict, verdictOf } from '../../engine/board';
 import { rubOpen } from '../../engine/reducer';
 import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
+import { arrowOf, layoutFor, SIZE } from '../chess';
 import { button, h } from '../dom';
 import { createDnd } from '../drag';
 import { createRubView } from './rub';
@@ -24,16 +25,22 @@ export const FIRST_USE_THOUGHT = [
 /** 판결 직전 자동 점검에서 연결이 떨어졌을 때 */
 export const CHECK_THOUGHT = '조문에 적합하지 않은 것들은 걸러냈다. 나머지는 스스로 판단해야 해.';
 
-/** 3×3 판에서 구성요건 칸 자리(행, 열). 위·오른쪽·아래·왼쪽 다음 대각선. 가운데(2,2)는 킹. */
-// shortcut: 구성요건 8개까지, 넘는 회차가 생기면 판을 키운다
-const SQUARES: [number, number][] = [[1, 2], [2, 3], [3, 2], [2, 1], [1, 3], [3, 3], [3, 1], [1, 1]];
-const MARK_LABEL = { proven: '막힘', doubt: '탈출' } as const;
+const VERDICT_LABEL = { ok: '인정', reject: '인정 못 함' } as const;
+const ROUTE_STATE = { proven: '막힘', doubt: '열림', null: '판정 중' } as const;
+
+/** 튜토리얼 설명(모두절차 끝 안내). */
+export const TUTORIAL = [
+  '검사는 증거들을 통해 체크메이트를 선언하려 한다. 당신은 증거가 합당한지를 판단해서, 검사가 체크메이트에 성공한다면 유죄를 선고하면 된다.',
+  '판 위의 피고인 기물이 더 이상 움직일 수 없으면 체크메이트다. 기물이 갈 수 있는 방향이 곧 빠져나갈 길(쟁점)이고, 다툴 것이 없는 사건은 앞으로만 가는 폰이다.',
+  '검사의 증거는 길을 막는 기물로 자동으로 올라온다. 기물마다 [인정] 또는 [인정 못 함]을 정한다. 인정한 기물이 하나도 없는 길은 열린 채 남는다.',
+];
 
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   // 서랍 인스턴스는 유무죄 판단 화면과 testid가 겹치지 않게 접두어를 붙인다.
   const pre = mode === 'drawer' ? 'drawer-' : mode === 'readonly' ? 'intro-' : '';
   const dnd = createDnd();
   const grid = h('div', { class: 'chess-grid', testid: `${pre}chess` });
+  const routes = h('div', { class: 'routes', testid: `${pre}board-routes` });
   const desk = h('div', { class: 'chess-desk', testid: `${pre}board-tray` });
   const status = h('p', { class: 'chess-status', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
   const hint = h('p', { class: 'chess-hint small', testid: `${pre}board-hint` });
@@ -47,9 +54,9 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const el = h('section', { class: `panel board chess board-${mode}`, testid: `panel-board-${mode}` },
     h('h2', {}, '쟁점 보드'),
     ...(mode === 'readonly' ? [h('div', { class: 'board-thoughts', testid: 'board-first-thought' }, ...FIRST_USE_THOUGHT.map(thought)),
-      h('p', { class: 'small chess-hint' }, '가운데 킹은 공소사실 속 피고인, 둘러싼 칸은 구성요건입니다. 증거로 모든 칸이 막히면 체크메이트(유죄), 빠져나갈 칸이 하나라도 남으면 무죄입니다.')] : []),
+      h('div', { class: 'tutorial small', testid: 'board-tutorial' }, ...TUTORIAL.map((t) => h('p', {}, t)))] : []),
     ...(mode === 'main' ? [check] : []),
-    grid,
+    h('div', { class: 'chess-main' }, grid, routes),
     ...(mode === 'readonly' ? [] : [hint, desk]),
     h('div', { class: 'board-foot' }, status, ...(mode === 'main' ? [confirm] : [])),
     rubSlot,
@@ -74,35 +81,50 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     hint.textContent = '겹쳐 봐도 맞대 볼 내용이 없다.';
   }
 
-  function square(s: GameState, sc: Scenario, i: number): HTMLElement {
-    const cell = sc.cells[i];
-    const [row, col] = SQUARES[i];
-    const sq = h('div', { class: 'sq', style: `grid-row:${row};grid-column:${col}` });
-    if (!cell) return sq;
-    const st = s.board[cell.id] ?? { cards: [], mark: null };
-    sq.classList.add('cell', st.mark ?? 'unmarked');
-    sq.dataset.testid = `${pre}board-cell-${cell.id}`;
-    const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
-    sq.append(h('div', { class: 'sq-name' }, cell.name));
-    if (mode === 'readonly') return sq;
-    // 칸에 올린 기물: 누르면 내린다.
-    sq.append(h('div', { class: 'pieces' }, ...st.cards.map((id) => {
-      const memo = sc.cards.find((x) => x.id === id)?.kind === 'memo';
-      return button(`${pre}board-piece-${cell.id}-${id}`, title(id), () => c.dispatch({ type: 'UNLINK_CARD', cellId: cell.id, cardId: id }), `piece${memo ? ' memo' : ''}`);
-    })));
-    const marks = h('div', { class: 'sq-marks' });
-    for (const m of ['proven', 'doubt'] as const) {
-      const b = button(`${pre}board-mark-${cell.id}-${m}`, MARK_LABEL[m], () =>
-        c.dispatch({ type: 'MARK_CELL', cellId: cell.id, mark: st.mark === m ? null : m }), `btn mark ${m}`);
-      b.classList.toggle('on', st.mark === m);
-      b.setAttribute('aria-pressed', String(st.mark === m));
-      marks.append(b);
-    }
-    sq.append(marks);
-    dnd.target(sq, (cardId) => {
-      if (!(c.state.board[cell.id]?.cards ?? []).includes(cardId)) c.dispatch({ type: 'LINK_CARD', cellId: cell.id, cardId });
+  /** 3×3 판: 피고인 기물과, 길마다 바로 옆 칸(길 이름·막힘 상태). */
+  function board(s: GameState, sc: Scenario): HTMLElement[] {
+    const l = layoutFor(sc.cells.length);
+    const at = new Map<string, HTMLElement>();
+    l.dirs.forEach(([dr, dc], i) => {
+      const cell = sc.cells[i];
+      const mark = s.board[cell.id]?.mark ?? null;
+      const n = (s.board[cell.id]?.cards ?? []).length;
+      at.set(`${l.at[0] + dr},${l.at[1] + dc}`, h('div', { class: `blocker ${mark ?? 'open-q'}`, title: cell.name, testid: `${pre}board-block-${cell.id}` },
+        h('span', { class: 'blk-glyph' }, mark === 'proven' ? '■' : mark === 'doubt' ? arrowOf([dr, dc]) : n ? '?' : ''), h('span', { class: 'blk-name' }, cell.name)));
     });
-    return sq;
+    at.set(`${l.at[0]},${l.at[1]}`, h('div', { class: `defendant${s.board && canConfirmVerdict(s.board) && verdictOf(s.board) === 'guilty' ? ' mated' : ''}`, testid: `${pre}board-king`, title: '피고인' }, l.glyph));
+    const out: HTMLElement[] = [];
+    for (let r = 0; r < SIZE; r++) for (let col = 0; col < SIZE; col++) {
+      out.push(h('div', { class: `bsq${(r + col) % 2 ? ' dark' : ''}` }, ...(at.has(`${r},${col}`) ? [at.get(`${r},${col}`)!] : [])));
+    }
+    return out;
+  }
+
+  /** 길 목록: 길마다 검사가 올린 기물과 판사의 판정. */
+  function routeList(s: GameState, sc: Scenario): HTMLElement[] {
+    const l = layoutFor(sc.cells.length);
+    const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
+    return sc.cells.map((cell, i) => {
+      const st = s.board[cell.id] ?? { cards: [], mark: null };
+      const row = h('div', { class: `route ${st.mark ?? 'pending'}`, testid: `${pre}board-cell-${cell.id}` },
+        h('div', { class: 'route-head' }, h('span', { class: 'route-arrow' }, arrowOf(l.dirs[i])), h('b', {}, cell.name),
+          h('span', { class: 'route-state' }, ROUTE_STATE[String(st.mark) as keyof typeof ROUTE_STATE])));
+      if (mode === 'readonly') return row;
+      if (!st.cards.length) row.append(h('div', { class: 'small muted-holo' }, '검사가 막은 기물이 없다.'));
+      for (const id of st.cards) {
+        const v = st.judged?.[id] ?? null;
+        const line = h('div', { class: `rpiece ${v ?? ''}` }, h('span', { class: 'rpiece-title' }, title(id)));
+        for (const want of ['ok', 'reject'] as const) {
+          const b = button(`${pre}board-judge-${cell.id}-${id}-${want}`, VERDICT_LABEL[want], () =>
+            c.dispatch({ type: 'JUDGE_PIECE', cellId: cell.id, cardId: id, verdict: v === want ? null : want }), `btn mark ${want}`);
+          b.classList.toggle('on', v === want);
+          b.setAttribute('aria-pressed', String(v === want));
+          line.append(b);
+        }
+        row.append(line);
+      }
+      return row;
+    });
   }
 
   function deskCards(s: GameState, sc: Scenario): HTMLElement[] {
@@ -124,8 +146,8 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   }
 
   function statusText(s: GameState): string {
-    if (!canConfirmVerdict(s.board)) return '아직 판정하지 않은 칸이 있다.';
-    return verdictOf(s.board) === 'guilty' ? '체크메이트. 빠져나갈 칸이 없다: 유죄' : '탈출 칸이 남았다: 무죄';
+    if (!canConfirmVerdict(s.board)) return '아직 판정하지 않은 기물이 있다.';
+    return verdictOf(s.board) === 'guilty' ? '체크메이트. 피고인은 더 이상 움직일 수 없다: 유죄' : '빠져나갈 길이 남았다: 무죄';
   }
 
   let lastKey: unknown[] = [];
@@ -137,24 +159,20 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       lastKey = key;
       el.classList.toggle('rubbing', !!rubView);
       rubView?.paint(s, sc);
-      const ok = canConfirmVerdict(s.board);
-      const mate = ok && verdictOf(s.board) === 'guilty';
-      const king = h('div', { class: `sq king${mate ? ' mated' : ''}`, style: 'grid-row:2;grid-column:2', testid: `${pre}board-king` },
-        h('div', { class: 'king-glyph' }, '♚'), h('div', { class: 'sq-name' }, '피고인'));
-      grid.replaceChildren(...SQUARES.map((_, i) => square(s, sc, i)), king);
+      grid.replaceChildren(...board(s, sc));
+      routes.replaceChildren(...routeList(s, sc));
       status.textContent = mode === 'readonly' ? '' : statusText(s);
       if (mode !== 'readonly') {
         dnd.clear(); // 다시 그리면 고른 카드 요소가 바뀐다
         desk.replaceChildren(...deskCards(s, sc));
-        if (!rubView) hint.textContent = '카드를 칸에 올려 막는다. 카드끼리 겹치면 겹쳐 더듬기.';
+        if (!rubView) hint.textContent = '기물마다 인정 여부를 정한다. 증언 카드는 [회상], 카드끼리 겹치면 겹쳐 더듬기.';
       }
       if (mode === 'main') {
-        confirm.disabled = !ok;
+        confirm.disabled = !canConfirmVerdict(s.board);
         const dropped = s.boardCheck?.dropped ?? [];
         const title = (id: string) => sc.cards.find((x) => x.id === id)?.title ?? id;
-        const cellName = (id: string) => sc.cells.find((x) => x.id === id)?.name ?? id;
         check.replaceChildren(...(dropped.length ? [
-          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 보강할 증거가 올라가 있지 않아 반칙 기물로 내렸습니다(자백만으로는 유죄를 인정할 수 없음). ${dropped.map((d) => `${cellName(d.cellId)} ← ${title(d.cardId)}`).join(', ')}`),
+          h('div', { class: 'clerk-note' }, `참여관: 자백 말고는 인정한 증거가 없어 자백의 인정을 무릅니다(자백만으로는 유죄를 인정할 수 없음). ${[...new Set(dropped.map((d) => title(d.cardId)))].join(', ')}`),
           thought(CHECK_THOUGHT),
         ] : []));
       }

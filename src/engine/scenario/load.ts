@@ -70,6 +70,11 @@ export function loadScenario(raw: unknown): Scenario {
   const needAnyLine = (id: string, where: string) => {
     if (!anyLine.has(id)) errors.push(`${where}: 알 수 없는 줄 id '${id}'`);
   };
+  for (const c of s.cards) c.proves?.forEach((id) => {
+    if (!cellIds.has(id)) errors.push(`card ${c.id}.proves: 알 수 없는 셀 id '${id}'`);
+  });
+  // 쟁점 수는 피고인 기물·자리로 나타낼 수 있어야 한다(src/ui/chess.ts layoutFor)
+  if (![1, 2, 3, 4, 5, 8].includes(s.cells.length)) errors.push(`cells: 쟁점 ${s.cells.length}개는 판에 놓을 수 없음(1·2·3·4·5·8개만)`);
   for (const c of s.cards) c.recall?.forEach((id) => needAnyLine(id, `card ${c.id}.recall`));
   const kindOf = new Map(s.cards.map((c) => [c.id, c.kind]));
   for (const r of s.rubs) {

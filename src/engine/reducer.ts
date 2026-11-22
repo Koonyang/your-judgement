@@ -6,7 +6,7 @@
 //   opening·closing은 라인이 소진되면(currentLine === null) 다음 ADVANCE로 다음 단계.
 //   exam은 라인이 소진되면 즉시 보충신문(inSupp)이 열리고, ADVANCE는 무시, END_SUPP로 다음 Exam(마지막이면 closing).
 // - verdict 이후는 확정 액션(CONFIRM_*, FINISH_*)으로만 진행.
-import { canConfirmVerdict, verdictOf } from './board';
+import { canConfirmVerdict, verdictOf, withCell } from './board';
 import { evalCond } from './cond';
 import type { Scenario } from './scenario/schema';
 import { validateSentence } from './sentencing';
@@ -93,16 +93,37 @@ function rub(sc: Scenario, s: GameState, rubId: string, row: number): GameState 
   return addCards(addFlags(s, [rubFlag(snag.id)]), [snag.cardId]);
 }
 
-function linkCard(s: GameState, cellId: string, cardId: string, link: boolean): GameState {
+/** 판사의 기물 판정. 칸에 올라와 있는 기물만. null이면 판정을 무른다. */
+function judgePiece(s: GameState, cellId: string, cardId: string, verdict: 'ok' | 'reject' | null): GameState {
   const cell = s.board[cellId];
-  if (!boardEditable(s) || !cell) return s;
-  const has = cell.cards.includes(cardId);
-  if (link ? has || !s.heldCards.includes(cardId) : !has) return s;
-  const cards = link ? [...cell.cards, cardId] : cell.cards.filter((id) => id !== cardId);
-  return { ...s, board: { ...s.board, [cellId]: { ...cell, cards } } };
+  if (!boardEditable(s) || !cell || !cell.cards.includes(cardId) || (cell.judged?.[cardId] ?? null) === verdict) return s;
+  const judged = { ...cell.judged };
+  if (verdict) judged[cardId] = verdict;
+  else delete judged[cardId];
+  return { ...s, board: { ...s.board, [cellId]: withCell(cell, { judged }) } };
+}
+
+/**
+ * 검사가 증거를 내면 그 입증취지(card.proves) 칸에 기물이 자동으로 올라간다. 판결 확정 전까지만.
+ * 칸 mark도 여기서 맞춘다(기물 없는 칸은 처음부터 열린 길). 바뀐 게 없으면 같은 객체.
+ */
+function fillBoard(sc: Scenario, s: GameState): GameState {
+  if (!boardEditable(s)) return s;
+  let board = s.board;
+  for (const [cellId, cell] of Object.entries(s.board)) {
+    const add = sc.cards.filter((c) => c.proves?.includes(cellId) && s.heldCards.includes(c.id) && !cell.cards.includes(c.id)).map((c) => c.id);
+    const next = withCell(cell, { cards: [...cell.cards, ...add] });
+    if (add.length || next.mark !== cell.mark) board = { ...board, [cellId]: next };
+  }
+  return board === s.board ? s : { ...s, board };
 }
 
 export function reduce(sc: Scenario, s: GameState, a: Action): GameState {
+  const t = step(sc, s, a);
+  return t === s ? s : fillBoard(sc, t);
+}
+
+function step(sc: Scenario, s: GameState, a: Action): GameState {
   switch (a.type) {
     case 'ADVANCE': return advance(sc, s);
     case 'INTERRUPT': return interrupt(sc, s);
@@ -112,14 +133,8 @@ export function reduce(sc: Scenario, s: GameState, a: Action): GameState {
     case 'HIGHLIGHT':
       if (s.highlights.some((h) => h.docId === a.docId && h.text === a.text)) return s;
       return { ...s, highlights: [...s.highlights, { docId: a.docId, text: a.text }] };
-    case 'LINK_CARD': return linkCard(s, a.cellId, a.cardId, true);
-    case 'UNLINK_CARD': return linkCard(s, a.cellId, a.cardId, false);
+    case 'JUDGE_PIECE': return judgePiece(s, a.cellId, a.cardId, a.verdict);
     case 'RUB': return rub(sc, s, a.rubId, a.row);
-    case 'MARK_CELL': {
-      const cell = s.board[a.cellId];
-      if (!boardEditable(s) || !cell || cell.mark === a.mark) return s;
-      return { ...s, board: { ...s.board, [a.cellId]: { ...cell, mark: a.mark } } };
-    }
     case 'CONFIRM_VERDICT':
       if (s.phase !== 'verdict' || !canConfirmVerdict(s.board)) return s;
       return { ...s, phase: verdictOf(s.board) === 'guilty' ? 'sentencing' : 'judgment' };

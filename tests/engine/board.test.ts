@@ -57,12 +57,15 @@ describe('board', () => {
 
 describe('corroborationCheck', () => {
   const memo: Card = { id: 'memo', title: '메모', text: '', kind: 'memo' };
-  it('자백만 있으면 자백을 떼고, 메모는 보강증거로 치지 않는다', () => {
+  it('인정한 기물이 자백뿐이면 자백의 인정을 무르고(기물은 남음), 메모는 보강증거로 치지 않는다', () => {
     const b = initBoard(cells);
-    b.act.cards = ['conf', 'memo']; b.intent.cards = ['conf'];
+    b.act = { cards: ['conf', 'memo'], mark: 'proven', judged: { conf: 'ok', memo: 'ok' } };
+    b.intent = { cards: ['conf', 'cctv'], mark: 'proven', judged: { conf: 'ok', cctv: 'reject' } };
     const r = corroborationCheck(b, [...cards, memo]);
     expect(r.dropped).toEqual([{ cellId: 'act', cardId: 'conf' }, { cellId: 'intent', cardId: 'conf' }]);
-    expect(r.board.act.cards).toEqual(['memo']);
+    expect(r.board.act.cards).toEqual(['conf', 'memo']);
+    expect(r.board.act.judged).toEqual({ memo: 'ok' });
+    expect(r.board.intent.mark).toBeNull(); // 자백 판정이 풀려 다시 판정해야 한다
   });
   it('다른 증거가 하나라도 있으면 그대로', () => {
     const b = initBoard(cells);

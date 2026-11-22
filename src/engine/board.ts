@@ -2,7 +2,29 @@ import type { AppealView, Card, Cell } from './scenario/schema';
 import { evalCond } from './cond';
 
 export type CellMark = 'proven' | 'doubt' | null;
-export type BoardState = Record<string, { cards: string[]; mark: CellMark }>;
+/** 판사가 기물(검사가 칸에 올린 증거)마다 내린 판정. */
+export type PieceVerdict = 'ok' | 'reject';
+/**
+ * 칸 = 피고인 기물이 빠져나갈 수 있는 길(쟁점). cards = 검사가 그 길을 막으려 올린 증거(입증취지 `proves`로 자동).
+ * mark는 judged에서 파생: 인정한 기물이 있으면 막힘(proven), 기물이 없거나 다 인정 못 하면 열림(doubt), 그 밖은 미정(null).
+ */
+export type BoardCell = { cards: string[]; mark: CellMark; judged?: Record<string, PieceVerdict> };
+export type BoardState = Record<string, BoardCell>;
+
+/** 칸에서 판사가 인정한 기물(판정 기록이 없는 옛 상태는 올라온 기물 전부). */
+export const acceptedPieces = (c: BoardCell): string[] => (c.judged ? c.cards.filter((id) => c.judged![id] === 'ok') : c.cards);
+
+export function deriveMark(c: BoardCell): CellMark {
+  if (!c.cards.length) return 'doubt';
+  if (c.cards.some((id) => c.judged?.[id] === 'ok')) return 'proven';
+  return c.cards.every((id) => c.judged?.[id] === 'reject') ? 'doubt' : null;
+}
+
+/** 칸 하나를 고친 뒤 mark를 다시 계산한 새 칸. */
+export function withCell(c: BoardCell, patch: Partial<BoardCell>): BoardCell {
+  const next = { ...c, ...patch };
+  return { ...next, mark: deriveMark(next) };
+}
 export type BoardFindings = {
   factMisfinding: string[];
   corroborationViolation: boolean;
@@ -34,17 +56,19 @@ const isEvidence = (c: Card | undefined) => !!c && c.kind !== 'memo';
  */
 export function corroborationCheck(b: BoardState, cards: Card[]): { board: BoardState; dropped: { cellId: string; cardId: string }[] } {
   const byId = new Map(cards.map((c) => [c.id, c]));
-  const linked = Object.values(b).flatMap((c) => c.cards.map((id) => byId.get(id))).filter(isEvidence);
-  if (!linked.length || !linked.every((c) => c!.confession === true)) return { board: b, dropped: [] };
+  const accepted = Object.values(b).flatMap((c) => acceptedPieces(c).map((id) => byId.get(id))).filter(isEvidence);
+  if (!accepted.length || !accepted.every((c) => c!.confession === true)) return { board: b, dropped: [] };
+  // 자백 기물의 [인정]을 무른다(기물은 판에 남고 다시 판정해야 한다).
   const dropped: { cellId: string; cardId: string }[] = [];
   const board: BoardState = {};
   for (const [cellId, c] of Object.entries(b)) {
-    const keep = c.cards.filter((id) => {
-      const drop = byId.get(id)?.confession === true;
-      if (drop) dropped.push({ cellId, cardId: id });
-      return !drop;
-    });
-    board[cellId] = { ...c, cards: keep };
+    const judged = { ...c.judged };
+    for (const id of acceptedPieces(c)) {
+      if (byId.get(id)?.confession !== true) continue;
+      dropped.push({ cellId, cardId: id });
+      delete judged[id];
+    }
+    board[cellId] = withCell(c, { judged });
   }
   return { board, dropped };
 }
@@ -57,12 +81,12 @@ export function boardFindings(
 ): BoardFindings {
   const byId = new Map(cards.map((c) => [c.id, c]));
   const factMisfinding = Object.entries(b)
-    .filter(([, c]) => c.mark === 'proven' && !c.cards.some((id) => isEvidence(byId.get(id))))
+    .filter(([, c]) => c.mark === 'proven' && !acceptedPieces(c).some((id) => isEvidence(byId.get(id))))
     .map(([id]) => id);
 
   const linked = new Set<Card>();
   for (const c of Object.values(b)) {
-    for (const id of c.cards) {
+    for (const id of acceptedPieces(c)) {
       const card = byId.get(id);
       if (isEvidence(card)) linked.add(card!);
     }
