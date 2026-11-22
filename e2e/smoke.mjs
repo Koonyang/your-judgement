@@ -98,21 +98,21 @@ try {
   await tid('btn-zoom-close').click();
   await tid('panel-docs').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
-  // 쟁점 보드(체스판): 증언 카드 회상(법정 장면 재생) → 카드 겹치기로 겹쳐 더듬기(키보드) → 메모 카드
+  // 쟁점 보드(길막기 판): 증언 기물 회상(법정 장면 재생) → 겹쳐 더듬기(키보드)로 턱 찾기
   await tid('tab-board').click();
   await tid('drawer-board-recall-c_owner_testimony').click();
   if (!(await page.evaluate(() => document.documentElement.classList.contains('recall')))) throw new Error('회상이 시작되지 않음');
   if (await vis('drawer')) throw new Error('회상 중에 보드가 가려지지 않음');
   for (let i = 0; i < 20 && (await page.evaluate(() => document.documentElement.classList.contains('recall'))); i++) await tid('btn-next').click();
   if (!(await vis('panel-board-drawer'))) throw new Error('회상 뒤 보드로 돌아오지 않음');
-  await tid('drawer-board-tray-c_cctv').click(); // 고르고
-  await tid('drawer-board-tray-c_owner_testimony').click(); // 위에 겹친다
+  await tid('drawer-board-rub-r_owner_cctv').click();
   await tid('rub-row-0').focus(); await page.keyboard.press('Enter');
   await tid('rub-row-2').focus(); await page.keyboard.press('Enter');
+  if (!(await tid('rub-row-0').getAttribute('class')).includes('snag')) throw new Error('턱이 걸리지 않음');
+  if (!(await tid('rub-row-2').getAttribute('class')).includes('smooth')) throw new Error('일치하는 줄이 매끈하지 않음');
+  if ((await tid('rub-row-1').getAttribute('class')).includes('snag')) throw new Error('문지르지 않은 줄에 턱이 걸림');
   await shot('4c-rub');
   await tid('btn-rub-close').click();
-  if (!(await vis('drawer-board-tray-m_time'))) throw new Error('턱에서 메모 카드가 생기지 않음');
-  if (await vis('drawer-board-tray-m_count')) throw new Error('문지르지 않은 줄의 메모가 생김');
   await tid('btn-zoom-close').click();
   await tid('drawer').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   await tid('btn-next').click();

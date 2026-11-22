@@ -1,7 +1,6 @@
-// 쟁점 보드(체스판): 피고인은 판 위의 기물 하나. 갈 수 있는 방향 = 빠져나갈 길(쟁점). 다툴 게 없으면 폰(앞 한 칸).
-// 검사는 증거(기물)로 길을 막아 피고인이 더 이상 움직일 수 없게(체크메이트) 하려 한다. 증거는 입증취지대로 자동으로 올라온다.
-// 판사는 두는 사람이 아니라 심판: 기물마다 [인정]/[인정 못 함]. 인정한 기물이 있는 길은 막히고, 없으면 열린다.
-// 모든 길이 막히면 체크메이트 = 유죄. 책상 카드: [회상]은 그 증언 재생, 카드끼리 겹치면 겹쳐 더듬기(메모는 판단 참고용).
+// 쟁점 보드(길막기 판): 피고인은 3×3 판 위의 기물 하나. 갈 수 있는 방향 = 활로(쟁점). 다툴 게 없으면 폰(앞 한 칸).
+// 검사의 증거는 입증취지대로 활로에 자동으로 올라온다. 판사는 기물마다 [인정]/[인정 못 함]만 한다(증언 기물은 [회상]).
+// 인정한 기물이 있는 활로는 막히고, 모든 활로가 막히면 유죄.
 // mode: 'main'(유무죄 판단, [판단 확정]) | 'drawer'(심리 중) | 'readonly'(모두절차 끝 안내)
 import type { Controller } from '../../game/controller';
 import { canConfirmVerdict, verdictOf } from '../../engine/board';
@@ -10,7 +9,6 @@ import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
 import { arrowOf, layoutFor, SIZE } from '../chess';
 import { button, h } from '../dom';
-import { createDnd } from '../drag';
 import { createRubView } from './rub';
 import type { Panel } from './types';
 
@@ -29,21 +27,14 @@ const VERDICT_LABEL = { ok: '인정', reject: '인정 못 함' } as const;
 const ROUTE_STATE = { proven: '막힘', doubt: '열림', null: '판정 중' } as const;
 
 /** 튜토리얼 설명(모두절차 끝 안내). */
-export const TUTORIAL = [
-  '검사는 증거들을 통해 체크메이트를 선언하려 한다. 당신은 증거가 합당한지를 판단해서, 검사가 체크메이트에 성공한다면 유죄를 선고하면 된다.',
-  '판 위의 피고인 기물이 더 이상 움직일 수 없으면 체크메이트다. 기물이 갈 수 있는 방향이 곧 빠져나갈 길(쟁점)이고, 다툴 것이 없는 사건은 앞으로만 가는 폰이다.',
-  '검사의 증거는 길을 막는 기물로 자동으로 올라온다. 기물마다 [인정] 또는 [인정 못 함]을 정한다. 인정한 기물이 하나도 없는 길은 열린 채 남는다.',
-];
+export const TUTORIAL = '검사는 증거물을 통해 피고인의 활로를 막으려 합니다. 당신은 증거가 합당한지 판단하여, 검사가 피고인의 활로를 모두 막는 데 성공하면 유죄를 선고합니다.';
 
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   // 서랍 인스턴스는 유무죄 판단 화면과 testid가 겹치지 않게 접두어를 붙인다.
   const pre = mode === 'drawer' ? 'drawer-' : mode === 'readonly' ? 'intro-' : '';
-  const dnd = createDnd();
   const grid = h('div', { class: 'chess-grid', testid: `${pre}chess` });
   const routes = h('div', { class: 'routes', testid: `${pre}board-routes` });
-  const desk = h('div', { class: 'chess-desk', testid: `${pre}board-tray` });
   const status = h('p', { class: 'chess-status', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
-  const hint = h('p', { class: 'chess-hint small', testid: `${pre}board-hint` });
   const confirm = button('btn-confirm-verdict', '판단 확정', () => c.dispatch({ type: 'CONFIRM_VERDICT' }), 'btn primary');
   const thought = (t: string) => h('p', { class: 'board-thought' }, t);
   const check = h('div', { class: 'board-check', testid: 'board-check' });
@@ -54,10 +45,9 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const el = h('section', { class: `panel board chess board-${mode}`, testid: `panel-board-${mode}` },
     h('h2', {}, '쟁점 보드'),
     ...(mode === 'readonly' ? [h('div', { class: 'board-thoughts', testid: 'board-first-thought' }, ...FIRST_USE_THOUGHT.map(thought)),
-      h('div', { class: 'tutorial small', testid: 'board-tutorial' }, ...TUTORIAL.map((t) => h('p', {}, t)))] : []),
+      h('div', { class: 'tutorial small', testid: 'board-tutorial' }, h('p', {}, TUTORIAL))] : []),
     ...(mode === 'main' ? [check] : []),
     h('div', { class: 'chess-main' }, grid, routes),
-    ...(mode === 'readonly' ? [] : [hint, desk]),
     h('div', { class: 'board-foot' }, status, ...(mode === 'main' ? [confirm] : [])),
     rubSlot,
   );
@@ -68,17 +58,6 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     rubSlot.replaceChildren(...(rubView ? [rubView.el] : []));
     lastKey = [];
     panel.render(c.state, c.sc);
-  }
-
-  /** 카드 위에 카드를 겹쳤다: 짝이 맞는 겹쳐 더듬기가 열려 있으면 연다. */
-  function overlap(a: string, b: string): void {
-    if (a === b) return;
-    const r = c.sc.rubs.find((x) => {
-      const need = x.requires.cards ?? [];
-      return need.length === 2 && need.includes(a) && need.includes(b);
-    });
-    if (r && rubOpen(c.sc, c.state, r.id)) return openRub(r.id);
-    hint.textContent = '겹쳐 봐도 맞대 볼 내용이 없다.';
   }
 
   /** 3×3 판: 피고인 기물과, 길마다 바로 옆 칸(길 이름·막힘 상태). */
@@ -110,10 +89,22 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
         h('div', { class: 'route-head' }, h('span', { class: 'route-arrow' }, arrowOf(l.dirs[i])), h('b', {}, cell.name),
           h('span', { class: 'route-state' }, ROUTE_STATE[String(st.mark) as keyof typeof ROUTE_STATE])));
       if (mode === 'readonly') return row;
+      // 겹쳐 더듬기: 두 기록이 다 확보되면 열린다(턱에서 나온 메모는 판단 참고용).
+      for (const r of sc.rubs.filter((x) => x.cellId === cell.id)) {
+        const b = button(`${pre}board-rub-${r.id}`, '겹쳐 더듬기', () => openRub(r.id), 'btn sm');
+        b.disabled = !rubOpen(sc, s, r.id);
+        b.title = r.title;
+        row.firstElementChild!.append(b);
+      }
       if (!st.cards.length) row.append(h('div', { class: 'small muted-holo' }, '검사가 막은 기물이 없다.'));
       for (const id of st.cards) {
         const v = st.judged?.[id] ?? null;
         const line = h('div', { class: `rpiece ${v ?? ''}` }, h('span', { class: 'rpiece-title' }, title(id)));
+        if (c.recallLines(id).length) {
+          const r = button(`${pre}board-recall-${id}`, '회상', () => c.recall(id), 'btn sm');
+          r.disabled = c.replaying;
+          line.append(r);
+        }
         for (const want of ['ok', 'reject'] as const) {
           const b = button(`${pre}board-judge-${cell.id}-${id}-${want}`, VERDICT_LABEL[want], () =>
             c.dispatch({ type: 'JUDGE_PIECE', cellId: cell.id, cardId: id, verdict: v === want ? null : want }), `btn mark ${want}`);
@@ -127,27 +118,9 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
     });
   }
 
-  function deskCards(s: GameState, sc: Scenario): HTMLElement[] {
-    return sc.cards.filter((x) => (x.kind === 'evidence' || x.kind === 'memo') && s.heldCards.includes(x.id)).map((card, i) => {
-      const t = h('div', { class: `desk-card${card.kind === 'memo' ? ' memo' : ''}`, testid: `${pre}board-tray-${card.id}`, title: card.text, style: `--tilt:${(i % 3) - 1}deg` },
-        h('span', { class: 'dc-title' }, card.title));
-      if (c.recallLines(card.id).length) {
-        const r = button(`${pre}board-recall-${card.id}`, '회상', () => c.recall(card.id), 'btn sm dc-recall');
-        r.addEventListener('click', (e) => e.stopPropagation()); // 카드 고르기로 번지지 않게
-        r.disabled = c.replaying;
-        r.addEventListener('pointerdown', (e) => e.stopPropagation()); // 회상 버튼은 끌기를 시작하지 않는다
-        t.append(r);
-      }
-      // 카드 위에 카드를 겹치면 겹쳐 더듬기. target을 source보다 먼저 달아 고른 카드를 누르면 겹치기로 친다.
-      dnd.target(t, (other) => overlap(other, card.id));
-      dnd.source(t, card.id, { select: true });
-      return t;
-    });
-  }
-
   function statusText(s: GameState): string {
     if (!canConfirmVerdict(s.board)) return '아직 판정하지 않은 기물이 있다.';
-    return verdictOf(s.board) === 'guilty' ? '체크메이트. 피고인은 더 이상 움직일 수 없다: 유죄' : '빠져나갈 길이 남았다: 무죄';
+    return verdictOf(s.board) === 'guilty' ? '피고인의 활로가 모두 막혔다: 유죄' : '열린 활로가 남았다: 무죄';
   }
 
   let lastKey: unknown[] = [];
@@ -162,11 +135,6 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
       grid.replaceChildren(...board(s, sc));
       routes.replaceChildren(...routeList(s, sc));
       status.textContent = mode === 'readonly' ? '' : statusText(s);
-      if (mode !== 'readonly') {
-        dnd.clear(); // 다시 그리면 고른 카드 요소가 바뀐다
-        desk.replaceChildren(...deskCards(s, sc));
-        if (!rubView) hint.textContent = '기물마다 인정 여부를 정한다. 증언 카드는 [회상], 카드끼리 겹치면 겹쳐 더듬기.';
-      }
       if (mode === 'main') {
         confirm.disabled = !canConfirmVerdict(s.board);
         const dropped = s.boardCheck?.dropped ?? [];
