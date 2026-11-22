@@ -49,9 +49,9 @@
 .btn:focus-visible { outline: 1px solid var(--mark); outline-offset: 1px; }
 
 /* 상단 바 */
-/* 책상 (y200–360) + 스탠드 빛 */
+/* 책상 (y170–290) + 스탠드 빛. 판사실(.chambers)에서는 띠를 지우고 Phaser가 그린 책상 위에 서류만 놓는다 */
 .desk {
-  position: absolute; left: 0; right: 0; top: 150px; height: 140px; background: var(--desk);
+  position: absolute; left: 0; right: 0; top: 170px; height: 120px; background: var(--desk);
   border-top: 2px solid var(--desk-top); overflow: hidden;
 }
 .desk::after { /* 계단식 스탠드 빛 */
@@ -66,7 +66,7 @@
   position: absolute; left: 8px; top: 8px; z-index: 2; background: var(--ink); color: var(--accent);
   border: 1px solid var(--desk-top); padding: 1px 6px;
 }
-.desk-items { position: absolute; left: 0; right: 0; top: 24px; bottom: 0; display: flex; justify-content: center; gap: 22px; z-index: 2; }
+.desk-items { position: absolute; left: 0; right: 0; top: 16px; bottom: 0; display: flex; justify-content: center; gap: 22px; z-index: 2; }
 .desk-item {
   font: inherit; cursor: pointer; width: 74px; height: 96px; border: 1px solid var(--ink); border-radius: 0;
   background: var(--hanji); color: var(--ink); box-shadow: 3px 3px 0 rgb(0 0 0 / 0.45);
@@ -96,7 +96,9 @@
 #ui-root.dl-on .main, #ui-root.dl-on .drawer, #ui-root.dl-on .stage { bottom: 76px; }
 /* 기록·증거목록·쟁점 메모: 화면을 덮지 않는 종이. 넘치는 내용은 종이 안에서 스크롤 */
 #ui-root.paper .drawer { left: 110px; right: 110px; top: 6px; transform: rotate(-0.4deg); box-shadow: 4px 4px 0 rgb(0 0 0 / 0.5); }
-#ui-root.paper .zoom-dim, #ui-root.ar .zoom-dim { top: 150px; background: rgb(7 8 10 / 0.35); }
+#ui-root.chambers .desk { background: none; border-top: 0; }
+#ui-root.chambers .desk::after { display: none; }
+#ui-root.paper .zoom-dim, #ui-root.ar .zoom-dim { top: 170px; background: rgb(7 8 10 / 0.35); }
 .docket { text-align: center; }
 .case-file {
   margin: 4px auto 10px; width: 150px; padding: 10px; background: var(--hanji);

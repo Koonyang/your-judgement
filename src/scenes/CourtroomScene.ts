@@ -1,8 +1,8 @@
-// 법정 장면(판사 시점, 위 150px 띠): 좌석 플레이스홀더를 그리고 현재 화자만 밝힌다. 상태는 컨트롤러 구독으로 받는다.
+// 법정 장면(판사 시점, 위 170px 띠(그리는 좌표 150)): 좌석 플레이스홀더를 그리고 현재 화자만 밝힌다. 상태는 컨트롤러 구독으로 받는다.
 import Phaser from 'phaser';
 import type { Controller } from '../game/controller';
 import type { GameState } from '../engine/state';
-import { COURT_H, FONT_STACK, SEATS, SPRITE_H, type SeatKey } from './seats';
+import { COURT_H, COURT_SCREEN_H, FONT_STACK, SEATS, SPRITE_H, type SeatKey } from './seats';
 
 type Spot = { x: number; y: number; scale: number };
 type Actor = { img: Phaser.GameObjects.Image; label: Phaser.GameObjects.Text; spot: Spot; shown: boolean; arrive?: () => void; walk?: Phaser.Tweens.Tween; breathe?: Phaser.Tweens.Tween; fx?: Phaser.FX.ColorMatrix };
@@ -27,6 +27,10 @@ export class CourtroomScene extends Phaser.Scene {
 
   create(): void {
     const c = this.registry.get('controller') as Controller;
+    // 법정을 화면 위 170px에 꽉 차게 확대(그리는 좌표는 640×150 그대로). 위 끝을 화면 위 끝에 맞춘다.
+    const zoom = COURT_SCREEN_H / COURT_H;
+    this.cameras.main.setZoom(zoom).centerOn(320, 180 / zoom);
+    this.scene.launch('chambers');
     this.drawRoom();
     // 말소리: 머리 위로 번지는 호 세 줄. 소리를 내는 사람이 상대적으로 또렷이 잡힌다.
     this.waves = this.add.container(0, 0, [0, 1, 2].map((i) => {
@@ -108,6 +112,8 @@ export class CourtroomScene extends Phaser.Scene {
     d.label.setText(defendantAtStand ? c.speakerName('defendant') : SEATS.defendant.label);
 
     this.dim.setVisible(!COURT_PHASES.has(s.phase));
+    // 법정 밖 단계는 판사실로 장면을 바꾼다(선고는 별도 장면).
+    this.scene.setVisible(!COURT_PHASES.has(s.phase) && s.phase !== 'pronounce', 'chambers');
     // 양형 숙고는 법정 위에 떠 있는 생각이라 법정을 희미하게 남긴다.
     this.dim.setFillStyle(0x07080a, s.phase === 'sentencing' ? 0.55 : 0.85);
     // 선고 연출은 별도 장면. 끝나면(FINISH_PRONOUNCE·건너뛰기) 장면이 스스로 멈춘다.

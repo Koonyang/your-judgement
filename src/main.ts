@@ -3,6 +3,7 @@ import raw from '../data/scenarios/ep01.json';
 import { loadScenario } from './engine/scenario/load';
 import { Controller } from './game/controller';
 import { BootScene } from './scenes/BootScene';
+import { ChambersScene } from './scenes/ChambersScene';
 import { CourtroomScene } from './scenes/CourtroomScene';
 import { PronounceScene } from './scenes/PronounceScene';
 import { mountOverlay } from './ui/overlay';
@@ -27,7 +28,7 @@ const game = new Phaser.Game({
   zoom: 2,
   backgroundColor: '#0e0f13',
   pixelArt: true,
-  scene: [BootScene, CourtroomScene, PronounceScene],
+  scene: [BootScene, CourtroomScene, ChambersScene, PronounceScene],
   callbacks: { preBoot: (g) => g.registry.set('controller', controller) },
 });
 

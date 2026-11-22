@@ -21,5 +21,7 @@ export const SEATS: Record<SeatKey, { x: number; y: number; label: string; color
 
 export const SPRITE_W = 14;
 export const SPRITE_H = 22;
-/** 법정 띠 높이(논리 픽셀). 그 아래는 HTML 대사 줄과 책상. */
+/** 법정 띠 높이(논리 픽셀, 그리는 좌표). 그 아래는 HTML 대사 줄과 책상. */
 export const COURT_H = 150;
+/** 화면에서 법정 띠가 차지하는 높이. 그리는 좌표(150)를 카메라 확대로 키워 채운다(양옆은 조금 잘림). CSS .desk top과 맞춤. */
+export const COURT_SCREEN_H = 170;

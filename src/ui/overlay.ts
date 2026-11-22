@@ -24,6 +24,7 @@ const PHASE_TITLES: Record<Phase, string> = {
   exam: '신문', closing: '결심', review: '선고기일 전 재검토', verdict: '유무죄 판단', sentencing: '양형',
   judgment: '판결서', pronounce: '선고', appeal: '항소', record: '판결 기록실',
 };
+const COURT_PHASES = new Set<Phase>(['opening', 'evidence', 'exam', 'closing']);
 const idx = (p: Phase) => PHASES.indexOf(p);
 const at = (p: Phase, from: Phase) => idx(p) >= idx(from);
 const isJudgmentStage = (p: Phase) => at(p, 'verdict');
@@ -136,6 +137,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     title.textContent = phaseTitle(c, s);
     show(title, s.phase !== 'docket' && s.phase !== 'pronounce');
     show(desk.el, s.phase !== 'pronounce'); // 선고 연출은 Phaser 화면 전체를 쓴다
+    root.classList.toggle('chambers', !COURT_PHASES.has(s.phase) && s.phase !== 'pronounce'); // 판사실: 책상 띠 없이 방 안의 책상
     // 마이크는 증인·피고인 신문 중(보충신문 제외)에만. 재판장 자신이 말할 때는 누를 수 없다.
     const line = c.shownLine();
     const micOn = s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line;
