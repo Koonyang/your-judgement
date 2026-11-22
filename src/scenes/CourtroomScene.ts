@@ -15,7 +15,7 @@ const COURT_PHASES = new Set<GameState['phase']>(['opening', 'evidence', 'exam',
 export class CourtroomScene extends Phaser.Scene {
   private actors = new Map<SeatKey, Actor>();
   private witnessOf = -1;
-  private glow!: Phaser.GameObjects.Ellipse;
+  private glow!: Phaser.GameObjects.Container;
   private dim!: Phaser.GameObjects.Rectangle;
   private bob?: Phaser.Tweens.Tween;
   private unsubscribe?: () => void;
@@ -28,8 +28,13 @@ export class CourtroomScene extends Phaser.Scene {
   create(): void {
     const c = this.registry.get('controller') as Controller;
     this.drawRoom();
-    // 화자 자리에 비치는 스탠드 빛 (#ffc478)
-    this.glow = this.add.ellipse(0, 0, 46, 30, 0xffc478, 0.14).setVisible(false);
+    // 화자에게 떨어지는 스포트라이트(#ffc478, 책상 스탠드 빛처럼 계단식). ADD라 인물·책상 위에 얹혀 밝힌다.
+    this.glow = this.add.container(0, 0, [
+      this.add.ellipse(0, 0, 76, 64, 0xffc478, 0.1),
+      this.add.ellipse(0, 0, 52, 46, 0xffc478, 0.12),
+      this.add.ellipse(0, -2, 32, 32, 0xffc478, 0.12),
+    ]).setDepth(6).setVisible(false);
+    this.glow.each((e: Phaser.GameObjects.Ellipse) => e.setBlendMode(Phaser.BlendModes.ADD));
     for (const key of Object.keys(SEATS) as SeatKey[]) {
       const seat = SEATS[key];
       const img = this.add.image(seat.x, seat.y, key).setScale(seat.scale ?? 1);
@@ -50,16 +55,16 @@ export class CourtroomScene extends Phaser.Scene {
   }
 
   private drawRoom(): void {
-    this.add.rectangle(320, 34, 640, 68, 0x0e0f13); // 뒷벽
+    this.add.rectangle(320, 34, 640, 68, 0x1a1c22); // 뒷벽
     for (let r = 0; r < 2; r++) // 방청석 (실루엣)
-      for (let x = 24 + r * 9; x < 620; x += 22) if ((x + r) % 5) this.add.rectangle(x, 34 + r * 14, 9, 9, 0x15161c);
-    this.add.rectangle(320, 66, 640, 3, 0x1d1f26); // 방청석 난간
-    this.add.rectangle(320, 109, 640, 82, 0x0b0c0f); // 바닥
+      for (let x = 24 + r * 9; x < 620; x += 22) if ((x + r) % 5) this.add.rectangle(x, 34 + r * 14, 9, 9, 0x262830);
+    this.add.rectangle(320, 66, 640, 3, 0x363841); // 방청석 난간
+    this.add.rectangle(320, 109, 640, 82, 0x16171c); // 바닥
   }
 
   private drawDesks(): void {
     const desk = (x: number, y: number, w: number, h: number) =>
-      this.add.rectangle(x, y, w, h, 0x2a2018).setStrokeStyle(1, 0x3a2c20);
+      this.add.rectangle(x, y, w, h, 0x35281d).setStrokeStyle(1, 0x4a3828);
     desk(92, 112, 120, 14); // 검사석
     desk(540, 112, 120, 14); // 변호인·피고인석
     desk(320, 116, 52, 16); // 증언대
@@ -113,13 +118,13 @@ export class CourtroomScene extends Phaser.Scene {
     this.actors.forEach((a) => { if (!a.walk) a.img.setY(a.spot.y); });
     const lit = seat && visible[seat] && !SEATS[seat].hidden ? seat : null;
     // 말하는 사람만 밝고 나머지는 어둠 속에 둔다. 화자가 없거나 재판장이면 모두 중간 밝기.
-    this.actors.forEach((a, key) => a.img.setAlpha(lit === null ? 0.7 : key === lit ? 1 : 0.35));
+    this.actors.forEach((a, key) => a.img.setAlpha(lit === null ? 0.85 : key === lit ? 1 : 0.55));
     if (!lit) {
       this.glow.setVisible(false);
       return;
     }
     const a = this.actors.get(lit)!;
-    this.glow.setPosition(a.spot.x, a.spot.y + 4).setVisible(true);
+    this.glow.setPosition(a.spot.x, a.spot.y + 6).setVisible(true);
     if (!a.walk) this.bob = this.tweens.add({ targets: a.img, y: a.spot.y - 1, duration: 180, yoyo: true, repeat: 1 });
   }
 

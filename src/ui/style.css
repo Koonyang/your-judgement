@@ -2,9 +2,9 @@
 :root {
   --font: "Galmuri11", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   /* 스탠드 빛 팔레트 (설계 5.5) */
-  --court: #0e0f13;
-  --court-2: #15161c;
-  --court-line: #1d1f26;
+  --court: #1a1c22;
+  --court-2: #262830;
+  --court-line: #363841;
   --desk: #3b2a1c;
   --desk-top: #4f3926;
   --hanji: #e8dcc2;

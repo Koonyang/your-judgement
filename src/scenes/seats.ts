@@ -12,11 +12,11 @@ export const FONT_STACK =
  */
 export const SEATS: Record<SeatKey, { x: number; y: number; label: string; color: number; hidden?: boolean; back?: boolean; scale?: number }> = {
   judge: { x: 320, y: 160, label: '재판장', color: 0x16171c, hidden: true },
-  clerk: { x: 320, y: 140, label: '참여관', color: 0x1d2028, back: true },
-  prosecutor: { x: 92, y: 98, label: '검사', color: 0x1d2633 },
-  defense: { x: 520, y: 98, label: '변호인', color: 0x2a2620 },
-  defendant: { x: 566, y: 100, label: '피고인', color: 0x3a3a3a },
-  witness: { x: 320, y: 92, label: '증인', color: 0x2f3440, scale: 1.5 },
+  clerk: { x: 320, y: 140, label: '참여관', color: 0x2a2e38, back: true },
+  prosecutor: { x: 92, y: 98, label: '검사', color: 0x2c3a4d },
+  defense: { x: 520, y: 98, label: '변호인', color: 0x3d372e },
+  defendant: { x: 566, y: 100, label: '피고인', color: 0x4e4e4e },
+  witness: { x: 320, y: 92, label: '증인', color: 0x434a5a, scale: 1.5 },
 };
 
 export const SPRITE_W = 14;

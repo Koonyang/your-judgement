@@ -15,7 +15,7 @@ export class BootScene extends Phaser.Scene {
       if (seat.back) {
         g.fillStyle(0x0b0b0e, 1).fillRect(3, 0, SPRITE_W - 6, 9); // 뒤통수
       } else {
-        g.fillStyle(0x6d625a, 1).fillRect(3, 0, SPRITE_W - 6, 9); // 얼굴
+        g.fillStyle(0x8a7d70, 1).fillRect(3, 0, SPRITE_W - 6, 9); // 얼굴
         g.fillStyle(0x0b0b0e, 1).fillRect(3, 0, SPRITE_W - 6, 3).fillRect(5, 4, 1, 1).fillRect(SPRITE_W - 6, 4, 1, 1);
       }
       g.generateTexture(key, SPRITE_W, SPRITE_H);
