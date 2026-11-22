@@ -118,6 +118,14 @@
 
 /* 서랍 (기록·증거목록) */
 .drawer { overflow: hidden; }
+/* 집어 들기: 책상에서 서류가 올라온다. 내려놓기는 반대로(.leaving, overlay.ts의 220ms와 맞춤). */
+.drawer:not([hidden]) { animation: paper-up 0.22s ease-out; }
+.drawer.leaving { animation: paper-down 0.22s ease-in forwards; }
+#ui-root .zoom-dim:not([hidden]) { animation: dim-in 0.22s ease-out; }
+@keyframes paper-up { from { translate: 0 110%; } }
+@keyframes paper-down { to { translate: 0 110%; } }
+@keyframes dim-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .drawer:not([hidden]), .drawer.leaving, #ui-root .zoom-dim:not([hidden]) { animation: none; } }
 .btn.zoom-close { position: absolute; right: 6px; top: 5px; padding: 0 6px; font-size: 9px; }
 .drawer > .panel { height: 100%; }
 .doc-body { white-space: pre-wrap; background: #f1e8d4; border: 1px solid var(--hanji-2); padding: 4px 5px; }

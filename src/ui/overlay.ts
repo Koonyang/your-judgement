@@ -57,7 +57,9 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   /** 모두절차가 끝나면 자동 생성된 쟁점 보드를 한 번 보여 준다(읽기 전용, [확인]). UI 전용 상태. */
   let introOpen = false;
   const toggle = (d: Exclude<Drawer, null>) => {
-    drawer = drawer === d ? null : d;
+    if (leaving) return;
+    if (drawer === d) return putDown();
+    drawer = d;
     render(c.state);
   };
   const desk = createDesk();
@@ -83,7 +85,15 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
       sayTimer = window.setTimeout(() => { say.hidden = true; btn?.classList.remove('on'); }, 900);
     },
   };
-  const putDown = () => { drawer = null; render(c.state); };
+  // 내려놓기: 서류가 책상으로 내려가는 애니메이션이 끝난 뒤 닫는다(움직임 줄이기 설정이면 바로).
+  let leaving = 0;
+  const putDown = () => {
+    if (leaving || drawer === null) return;
+    const done = () => { leaving = 0; drawerEl.classList.remove('leaving'); drawer = null; render(c.state); };
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
+    drawerEl.classList.add('leaving');
+    leaving = window.setTimeout(done, 220);
+  };
   const close = button('btn-zoom-close', '내려놓기', putDown, 'btn zoom-close');
   const drawerEl = h('div', { class: 'drawer', testid: 'drawer' }, docs.el, evidence.el, boardDrawer.el, close);
   dim.addEventListener('click', () => { if (drawer !== null) putDown(); }); // 확대 서류 바깥을 누르면 내려놓는다

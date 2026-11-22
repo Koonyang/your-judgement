@@ -95,6 +95,7 @@ try {
   if (!(await vis('panel-docs'))) throw new Error('기록 확대 보기가 열리지 않음');
   await shot('4b-review-transcript');
   await tid('btn-zoom-close').click();
+  await tid('panel-docs').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
   if (await vis('panel-docs')) throw new Error('내려놓기가 확대 보기를 닫지 않음');
   await tid('btn-next').click();
 
