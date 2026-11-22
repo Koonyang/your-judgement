@@ -3,7 +3,7 @@ import raw from '../../data/scenarios/ep01.json';
 import { loadScenario } from '../../src/engine/scenario/load';
 import { initialState, type Action } from '../../src/engine/state';
 import { transcriptText } from '../../src/ui/panels/docs';
-import { adv, play } from '../scenario/play';
+import { play, to, toSupp, type Step } from '../scenario/play';
 
 const sc = loadScenario(raw);
 const text = (id: string) => {
@@ -16,9 +16,9 @@ const text = (id: string) => {
 
 describe('transcriptText', () => {
   // 점주 신문: 여죄 질문 이의 인용 → 정당 대목 제지 → 모욕 제지 → 보충신문 1개
-  const a: Action[] = [
-    ...adv(15), ...adv(10), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2),
-    { type: 'INTERRUPT' }, { type: 'INTERRUPT' }, ...adv(4),
+  const a: Step[] = [
+    to('owner_9'), { type: 'RULE_OBJECTION', ruling: 'sustain' }, to('owner_13'),
+    { type: 'INTERRUPT' }, { type: 'INTERRUPT' }, toSupp(),
     { type: 'ASK_SUPP', questionId: 'q_owner_items' },
   ];
   const s = play(sc, a);

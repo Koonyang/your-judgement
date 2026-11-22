@@ -6,7 +6,7 @@ import { loadScenario } from '../../src/engine/scenario/load';
 import { availableFactors, recommendedRange, suspensionRecommendation } from '../../src/engine/sentencing';
 import type { CellMark } from '../../src/engine/board';
 import type { Action, GameState } from '../../src/engine/state';
-import { adv, play } from './play';
+import { adv, play, to, toPhase, toSupp, type Step } from './play';
 
 const sc = loadScenario(raw);
 
@@ -31,25 +31,21 @@ const base: Choices = {
 };
 
 /** 개정 전 ~ 증인 점주 Exam 시작 */
-const toOwner: Action[] = [
-  ...adv(2), // 사건 배당 → 공판 전 → 모두절차
-  ...adv(11), // 모두절차 라인
-  ...adv(2), // 모두절차 → 증거조사 → 증인신문
-];
+const toOwner: Step[] = [to('owner_1')];
 
-function actions(c: Choices): Action[] {
-  const a: Action[] = [...toOwner];
+function actions(c: Choices): Step[] {
+  const a: Step[] = [...toOwner];
   // 점주: 선서·주신문 → 여죄 질문 이의 인용 → 반대신문
-  a.push(...adv(10), { type: 'RULE_OBJECTION', ruling: 'sustain' }, ...adv(2));
-  a.push(...(c.legit === 'hear' ? adv(4) : [{ type: 'INTERRUPT' } as const]));
-  a.push(...(c.insult === 'stop' ? [{ type: 'INTERRUPT' } as const, ...adv(4)] : adv(4)));
-  a.push({ type: 'ASK_SUPP', questionId: 'q_owner_items' }, { type: 'END_SUPP' });
+  a.push(to('owner_9'), { type: 'RULE_OBJECTION', ruling: 'sustain' }, to('owner_13'));
+  a.push(c.legit === 'hear' ? to('owner_16') : { type: 'INTERRUPT' });
+  if (c.insult === 'stop') a.push({ type: 'INTERRUPT' });
+  a.push(toSupp(), { type: 'ASK_SUPP', questionId: 'q_owner_items' }, { type: 'END_SUPP' });
   // 피고인: 검사 추궁 → 변호인 생활 사정
-  a.push(...adv(1));
-  a.push(...(c.grill === 'hear' ? adv(10) : [{ type: 'INTERRUPT' } as const, ...adv(6)]));
-  a.push({ type: 'ASK_SUPP', questionId: 'q_def_meal' }, { type: 'END_SUPP' });
-  // 결심 8라인 → 재검토 → 판단
-  a.push(...adv(8), ...adv(2));
+  a.push(to('def_2'));
+  if (c.grill === 'cut') a.push({ type: 'INTERRUPT' });
+  a.push(toSupp(), { type: 'ASK_SUPP', questionId: 'q_def_meal' }, { type: 'END_SUPP' });
+  // 결심 → 재검토 → 판단
+  a.push(toPhase('verdict'));
   for (const [cellId, v] of Object.entries(c.board)) {
     for (const cardId of v.cards) a.push({ type: 'LINK_CARD', cellId, cardId });
     a.push({ type: 'MARK_CELL', cellId, mark: v.mark });
@@ -98,7 +94,7 @@ describe('1화 데이터', () => {
   });
 
   it('부동의 점주 진술조서는 점주 증언 뒤에 해금된다', () => {
-    const atEvidence = play(sc, [...adv(2), ...adv(11), ...adv(1)]);
+    const atEvidence = play(sc, [toPhase('evidence')]);
     expect(atEvidence.phase).toBe('evidence');
     expect(atEvidence.unlockedEvidence).not.toContain('e_owner_stmt');
     expect(atEvidence.heldCards).toEqual(expect.arrayContaining(['c_confession', 'c_nonpunish', 'c_livelihood']));
@@ -107,7 +103,7 @@ describe('1화 데이터', () => {
   });
 
   it('여죄 질문을 기각하면 판결 영향 없는 위반 1건', () => {
-    const s = play(sc, [...toOwner, ...adv(10), { type: 'RULE_OBJECTION', ruling: 'overrule' }]);
+    const s = play(sc, [...toOwner, to('owner_9'), { type: 'RULE_OBJECTION', ruling: 'overrule' }]);
     expect(s.violations).toHaveLength(1);
     expect(s.violations[0].affectsJudgment).toBe(false);
   });
@@ -209,8 +205,8 @@ describe('1화 경로', () => {
   it('결심 최후진술은 검사 추궁을 들었는지에 따라 갈린다', () => {
     const lastWords = (grill: 'hear' | 'cut') => {
       const a = actions({ ...base, grill });
-      const toClosing = a.findIndex((x, i) => i > 0 && x.type === 'END_SUPP' && a.slice(0, i).some((y) => y.type === 'END_SUPP'));
-      const s = play(sc, [...a.slice(0, toClosing + 1), ...adv(4)]);
+      const toClosing = a.findIndex((x) => 'to' in x && x.to === 'phase:verdict');
+      const s = play(sc, [...a.slice(0, toClosing), to('close_4'), ...adv(1)]);
       return currentLine(sc, s);
     };
     expect(lastWords('hear')?.yieldsCards).toEqual(['c_remorse']);
