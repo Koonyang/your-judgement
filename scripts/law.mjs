@@ -46,16 +46,16 @@ const joCode = (s) => { const [a, b = '0'] = s.split('의'); return a.padStart(4
 if (kind === 'law') {
   const res = await get('lawSearch.do', { target: 'law', query });
   const names = findAll(res, '법령명한글'), ids = findAll(res, '법령일련번호');
-  const i = Math.max(0, names.indexOf(query));
-  if (!ids[i]) throw new Error(`법령을 찾지 못함: ${query}`);
+  const i = names.indexOf(query); // 이름이 정확히 같은 것만(첫 결과로 대신하면 엉뚱한 법령을 읽는다)
+  if (i < 0) throw new Error(`법령을 찾지 못함: ${query} (검색 결과: ${names.slice(0, 5).join(', ')})`);
   const body = await get('lawService.do', { target: 'law', MST: ids[i], ...(jo ? { JO: joCode(jo) } : {}) });
   console.log(`# ${names[i]} ${jo ? `제${jo.replace('의', '조의')}${jo.includes('의') ? '' : '조'}` : ''} (법령일련번호 ${ids[i]})`);
   for (const [, v] of collect(body, (k) => /내용$/.test(k))) console.log(v);
 } else {
   const res = await get('lawSearch.do', { target: 'prec', query });
   const nos = findAll(res, '사건번호'), ids = findAll(res, '판례일련번호');
-  const i = Math.max(0, nos.indexOf(query));
-  if (!ids[i]) throw new Error(`판례를 찾지 못함: ${query}`);
+  const i = nos.indexOf(query);
+  if (i < 0) throw new Error(`판례를 찾지 못함: ${query} (검색 결과: ${nos.slice(0, 5).join(', ')})`);
   const body = await get('lawService.do', { target: 'prec', ID: ids[i] });
   const keys = ['사건명', '사건번호', '선고일자', '법원명', '판시사항', '판결요지', '참조조문', '참조판례', ...(full ? ['판례내용'] : [])];
   for (const k of keys) for (const v of findAll(body, k)) console.log(`## ${k}\n${v.replace(/<br\s*\/?>/g, '\n')}\n`);
