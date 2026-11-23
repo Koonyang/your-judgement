@@ -525,3 +525,4 @@ html.recall #ui-root::before {
 .memos-title { width: 100%; font-size: 9px; }
 .memo-note { background: #f3e1a8; color: var(--ink); text-shadow: none; border: 1px dashed var(--ink); padding: 2px 4px; max-width: 48%; transform: rotate(-0.6deg); }
 .memo-note:nth-child(odd) { transform: rotate(0.5deg); }
+.board-readonly .tutorial { margin-top: 12px; }
