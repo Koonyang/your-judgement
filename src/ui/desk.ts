@@ -2,7 +2,7 @@
 // 물건 testid는 예전 탭 testid를 그대로 쓴다(tab-docs 등).
 import { h, show } from './dom';
 
-export type DeskItem = { id: string; testid: string; label: string; kind: 'paper' | 'pile' | 'memo' | 'mic'; open: () => void; disabled?: boolean };
+export type DeskItem = { id: string; testid: string; label: string; kind: 'paper' | 'pile' | 'memo' | 'mic'; open: () => void; disabled?: boolean; attention?: boolean };
 
 export function createDesk(): { el: HTMLElement; plate: HTMLElement; setItems(items: DeskItem[], openId: string | null): void } {
   const plate = h('div', { class: 'nameplate', testid: 'phase-title' });
@@ -27,6 +27,7 @@ export function createDesk(): { el: HTMLElement; plate: HTMLElement; setItems(it
         show(b, true);
         b.classList.toggle('lifted', it.id === openId);
         b.disabled = !!it.disabled;
+        b.classList.toggle('call', !!it.attention);
         b.setAttribute('aria-label', it.label);
         b.setAttribute('aria-pressed', String(it.id === openId));
       }

@@ -40,7 +40,7 @@ describe('Controller', () => {
     // 증인신문 보충신문까지 진행
     for (let i = 0; i < 200 && !(c.state.phase === 'exam' && c.state.cursor.inSupp); i++) {
       const line = c.shownLine();
-      c.dispatch(line?.objection ? { type: 'RULE_OBJECTION', ruling: line.objection.correct } : { type: 'ADVANCE' });
+      c.dispatch(line?.objection ? { type: 'RULE_OBJECTION', ruling: line.objection.correct } : line?.speak ? { type: 'SPEAK', speakId: line.speak.id } : { type: 'ADVANCE' });
     }
     expect(c.state.cursor.inSupp).toBe(true);
     const q = sc.exams[0].supplementary[0];
@@ -60,7 +60,7 @@ describe('Controller', () => {
     const c = new Controller(sc);
     for (let i = 0; i < 200 && !(c.state.phase === 'exam' && c.state.cursor.inSupp); i++) {
       const line = c.shownLine();
-      c.dispatch(line?.objection ? { type: 'RULE_OBJECTION', ruling: line.objection.correct } : { type: 'ADVANCE' });
+      c.dispatch(line?.objection ? { type: 'RULE_OBJECTION', ruling: line.objection.correct } : line?.speak ? { type: 'SPEAK', speakId: line.speak.id } : { type: 'ADVANCE' });
     }
     const before = c.state.heard.length;
     const q = sc.exams[0].supplementary[0];

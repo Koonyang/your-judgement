@@ -42,7 +42,7 @@ function advance(sc: Scenario, s: GameState): GameState {
   if (!LINE_PHASES.has(s.phase) || s.cursor.inSupp) return s;
   const line = currentLine(sc, s);
   if (!line) return nextPhase(sc, s);
-  if (line.objection) return s; // RULE_OBJECTION 전까지 진행 불가
+  if (line.objection || line.speak) return s; // RULE_OBJECTION·SPEAK 전까지 진행 불가
   return stepPast(sc, hear(s, line), line.id);
 }
 
@@ -127,6 +127,10 @@ function step(sc: Scenario, s: GameState, a: Action): GameState {
   switch (a.type) {
     case 'ADVANCE': return advance(sc, s);
     case 'INTERRUPT': return interrupt(sc, s);
+    case 'SPEAK': {
+      const line = currentLine(sc, s);
+      return line?.speak?.id === a.speakId ? stepPast(sc, hear(s, line), line.id) : s;
+    }
     case 'RULE_OBJECTION': return ruleObjection(sc, s, a.ruling);
     case 'ASK_SUPP': return askSupp(sc, s, a.questionId);
     case 'END_SUPP': return s.phase === 'exam' && s.cursor.inSupp ? finishExam(sc, s) : s;

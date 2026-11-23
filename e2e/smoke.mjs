@@ -73,7 +73,7 @@ try {
     }
     const cur = await text('dialogue-text');
     // 재판장이 말하는 중에는 마이크(제지)를 누를 수 없다.
-    if (await vis('btn-interrupt') && (await text('dialogue-speaker')) === '재판장' && (await tid('btn-interrupt').isEnabled())) throw new Error('재판장 대사 중에 제지 가능');
+    if (await vis('btn-mic') && (await text('dialogue-speaker')) === '재판장' && (await tid('btn-mic').isEnabled())) throw new Error('재판장 대사 중에 제지 가능');
     // 대사는 화면(법정)을 눌러 넘길 수 있다. 신문 첫 대사에서 한 번 확인.
     if (title.startsWith('증인신문') && !taken.has('tap')) {
       taken.add('tap');
@@ -87,7 +87,17 @@ try {
       if ((await text('phase-title')) === title) throw new Error('모두절차 끝 안내에서 화면을 눌러도 넘어가지 않음');
       continue;
     }
-    if (cur.startsWith('솔직히 사장님도')) { await tid('btn-interrupt').click(); continue; }
+    // 필수 발언(증거신청 요구): ▼가 없고 마이크 표시등이 켜진다. 마이크를 눌러야 진행.
+    if (await page.locator('[data-testid="btn-mic"].call').isVisible()) {
+      if (await vis('btn-next')) throw new Error('필수 발언 줄에서 ▼로 넘길 수 있음');
+      await tid('btn-mic').click();
+      if ((await text('dialogue-text')) === cur) throw new Error('마이크를 눌러도 필수 발언이 안 됨');
+      continue;
+    }
+    if (cur.startsWith('솔직히 사장님도')) {
+      if (!(await text('dialogue-note')).startsWith('[제지]')) throw new Error('제지 설명이 안 뜸');
+      await tid('btn-mic').click(); continue;
+    }
     if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
     await tid('btn-next').click();
   }

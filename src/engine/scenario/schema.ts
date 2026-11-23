@@ -18,6 +18,10 @@ export const LineS = z.object({
   interrupt: z.object({
     legit: z.boolean(), resumeAt: z.string(), sets: z.array(FlagS).optional(), violation: ViolationS.optional(),
   }).optional(),
+  /** 재판장이 꼭 해야 하는 발언: 마이크로 하기 전엔 진행이 멈춘다. */
+  speak: z.object({ id: z.string(), label: z.string() }).optional(),
+  /** 이 줄이 뜰 때 대사 줄 아래 보이는 안내(조작 설명). */
+  tutorial: z.string().optional(),
   objection: z.object({
     by: z.enum(['prosecutor', 'defense']),
     correct: z.enum(['sustain', 'overrule']),

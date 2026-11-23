@@ -2,7 +2,7 @@
 import { verdictOf } from '../../src/engine/board';
 import raw from '../../data/scenarios/ep01.json';
 import { reviewAppeal } from '../../src/engine/appeal';
-import { currentLine } from '../../src/engine/reducer';
+import { currentLine, reduce } from '../../src/engine/reducer';
 import { loadScenario } from '../../src/engine/scenario/load';
 import { availableFactors, recommendedRange, suspensionRecommendation } from '../../src/engine/sentencing';
 import type { Action, GameState } from '../../src/engine/state';
@@ -87,6 +87,13 @@ describe('1화 데이터', () => {
     expect(sc.closing.demandMonths).toBe(12);
     expect(sc.sentencing.suspensionDeviation).toBe(30);
     expect(sc.appealView.map((v) => [v.cellId, v.proven])).toEqual(CELLS.map((id) => [id, true]));
+  });
+
+  it('증거신청 요구는 마이크로 해야 넘어간다(필수 발언)', () => {
+    const s = play(sc, [to('open_9')]);
+    expect(reduce(sc, s, { type: 'ADVANCE' })).toBe(s);
+    expect(reduce(sc, s, { type: 'SPEAK', speakId: 'nope' })).toBe(s);
+    expect(currentLine(sc, reduce(sc, s, { type: 'SPEAK', speakId: 'ask_evidence' }))?.id).toBe('open_10');
   });
 
   it('부동의 점주 진술조서는 점주 증언 뒤에 해금된다', () => {

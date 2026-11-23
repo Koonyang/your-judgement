@@ -54,7 +54,7 @@ export type GameState = {
 };
 
 export type Action =
-  | { type: 'ADVANCE' } | { type: 'INTERRUPT' } | { type: 'RULE_OBJECTION'; ruling: 'sustain' | 'overrule' }
+  | { type: 'ADVANCE' } | { type: 'INTERRUPT' } | { type: 'SPEAK'; speakId: string } | { type: 'RULE_OBJECTION'; ruling: 'sustain' | 'overrule' }
   | { type: 'ASK_SUPP'; questionId: string } | { type: 'END_SUPP' }
   | { type: 'HIGHLIGHT'; docId: string; text: string }
   | { type: 'JUDGE_PIECE'; cellId: string; cardId: string; verdict: PieceVerdict | null }

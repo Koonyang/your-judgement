@@ -74,19 +74,31 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     board: { id: 'board', testid: 'tab-board', label: '쟁점 보드', kind: 'memo', open: () => toggle('board') },
   };
   const dim = h('div', { class: 'zoom-dim' });
-  // 제지: 책상 위 마이크를 누르면 재판장이 "잠깐." 하고 끊는다.
+  // 마이크: 재판장이 법정 인물에게 하는 발언은 전부 여기로(제지·필수 발언). 지금 할 수 있는 발언이 하나면 바로, 여럿이면 목록.
   const say = h('div', { class: 'mic-say', testid: 'judge-say' }, '재판장: 잠깐.');
   say.hidden = true;
   let sayTimer = 0;
-  const mic: DeskItem = {
-    id: 'mic', testid: 'btn-interrupt', label: '마이크(제지)', kind: 'mic',
-    open: () => {
+  type Speech = { id: string; label: string; run: () => void };
+  const interruptSpeech: Speech = {
+    id: 'interrupt', label: '제지',
+    run: () => {
       c.dispatch({ type: 'INTERRUPT' });
       say.hidden = false;
-      const btn = root.querySelector('[data-testid="btn-interrupt"]');
+      const btn = root.querySelector('[data-testid="btn-mic"]');
       btn?.classList.add('on'); // 표시등이 켜진다
       clearTimeout(sayTimer);
       sayTimer = window.setTimeout(() => { say.hidden = true; btn?.classList.remove('on'); }, 900);
+    },
+  };
+  let speeches: Speech[] = [];
+  const micMenu = h('div', { class: 'mic-menu', testid: 'mic-menu' });
+  micMenu.hidden = true;
+  const mic: DeskItem = {
+    id: 'mic', testid: 'btn-mic', label: '마이크', kind: 'mic',
+    open: () => {
+      if (speeches.length === 1) return speeches[0].run();
+      micMenu.replaceChildren(...speeches.map((sp) => button(`btn-speak-${sp.id}`, sp.label, () => { micMenu.hidden = true; sp.run(); }, 'btn sm')));
+      micMenu.hidden = !micMenu.hidden;
     },
   };
   // 내려놓기: 서류가 책상으로 내려가는 애니메이션이 끝난 뒤 닫는다(움직임 줄이기 설정이면 바로).
@@ -109,7 +121,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const skip = button('btn-skip-pronounce', '건너뛰기', () => c.dispatch({ type: 'FINISH_PRONOUNCE' }), 'btn skip');
   docket.el.classList.add('main');
   boardMain.el.classList.add('stage');
-  root.append(desk.el, say, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
+  root.append(desk.el, say, micMenu, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
 
   function enter(s: GameState): void {
     // 단계에 들어설 때 그 단계의 주 패널을 서랍으로 연다.
@@ -146,8 +158,16 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     root.classList.toggle('chambers', !COURT_PHASES.has(s.phase) && s.phase !== 'pronounce' && !recall); // 판사실: 책상 띠 없이 방 안의 책상
     // 마이크는 증인·피고인 신문 중(보충신문 제외)에만. 재판장 자신이 말할 때는 누를 수 없다.
     const line = c.shownLine();
-    const micOn = s.phase === 'exam' && !c.replaying && !s.cursor.inSupp && !!line;
-    mic.disabled = line?.speaker === 'judge' || line?.speaker === 'thought';
+    const live = !c.replaying && !s.cursor.inSupp && line ? line : null;
+    const micOn = !!live && (s.phase === 'opening' || s.phase === 'exam' || s.phase === 'closing');
+    // 필수 발언 줄에서는 그 발언만. 제지는 신문 중 재판장·독백이 아닌 줄에서. 표시등은 필수 발언에만 켠다(제지 타이밍은 알려 주지 않는다).
+    const sp = live?.speak;
+    speeches = !micOn ? []
+      : sp ? [{ id: sp.id, label: sp.label, run: () => c.dispatch({ type: 'SPEAK', speakId: sp.id }) }]
+      : s.phase === 'exam' && live!.speaker !== 'judge' && live!.speaker !== 'thought' ? [interruptSpeech] : [];
+    mic.disabled = !speeches.length;
+    mic.attention = !!sp;
+    micMenu.hidden = true;
     desk.setItems([...(boardOk ? [items.board] : []), ...(docsOk ? [items.docs] : []), ...(evOk ? [items.evidence] : []), ...(micOn ? [mic] : [])], drawer);
     show(docket.el, s.phase === 'docket');
     show(boardMain.el, s.phase === 'verdict' && !recall);

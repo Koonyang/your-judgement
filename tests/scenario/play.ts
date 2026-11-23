@@ -3,7 +3,7 @@ import { currentLine, reduce } from '../../src/engine/reducer';
 import type { Scenario } from '../../src/engine/scenario/schema';
 import { initialState, type Action, type GameState, type Phase } from '../../src/engine/state';
 
-/** 목적지까지 ADVANCE를 반복하는 단계. 대사가 늘거나 줄어도 테스트를 고칠 필요가 없게 줄 id·보충신문·단계로 가리킨다. */
+/** 목적지까지 ADVANCE(필수 발언 줄이면 SPEAK)를 반복하는 단계. 대사가 늘거나 줄어도 테스트를 고칠 필요가 없게 줄 id·보충신문·단계로 가리킨다. */
 export type To = { to: string };
 export type Step = Action | To;
 
@@ -31,7 +31,8 @@ export function play(sc: Scenario, steps: Step[], from: GameState = initialState
   steps.forEach((a, i) => {
     if ('to' in a) {
       for (let n = 0; !reached(sc, s, a.to); n++) {
-        const next = reduce(sc, s, { type: 'ADVANCE' });
+        const sp = s.cursor.inSupp ? undefined : currentLine(sc, s)?.speak; // 필수 발언은 진행의 일부로 친다
+        const next = reduce(sc, s, sp ? { type: 'SPEAK', speakId: sp.id } : { type: 'ADVANCE' });
         if (next === s || n > 500) throw new Error(`단계 #${i} ${a.to}에 닿지 못함 (위치 ${where(sc, s)})`);
         s = next;
       }

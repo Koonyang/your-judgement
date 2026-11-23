@@ -69,8 +69,10 @@ export function createDialoguePanel(c: Controller): Panel {
       else text.textContent = NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
       text.classList.toggle('narration', !spoken);
 
-      note.textContent = objection ? `${objection.by === 'defense' ? '변호인이' : '검사가'} 이의를 제기했습니다.` : '';
-      show(note, !!objection);
+      const tutorial = !c.replaying && !objection ? line?.tutorial ?? '' : '';
+      note.textContent = objection ? `${objection.by === 'defense' ? '변호인이' : '검사가'} 이의를 제기했습니다.` : tutorial;
+      note.classList.toggle('tutorial', !!tutorial);
+      show(note, !!note.textContent);
 
       show(supp, examSupp);
       if (examSupp) {
@@ -90,7 +92,7 @@ export function createDialoguePanel(c: Controller): Panel {
       show(suppEnd, examSupp);
       const closingStmt = s.phase === 'closing' && line?.speaker === 'defendant';
       show(hlClosing, closingStmt);
-      show(next, !objection && !examSupp);
+      show(next, !objection && !examSupp && !(line?.speak && !c.replaying));
       // 대사는 화면을 눌러 넘긴다(▼는 그 표시). 절차를 바꾸는 버튼만 글자로.
       next.textContent = !line && NARRATION[s.phase] ? NARRATION[s.phase]!.next : '▼';
       next.classList.toggle('tap', next.textContent === '▼');

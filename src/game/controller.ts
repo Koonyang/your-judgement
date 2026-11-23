@@ -7,7 +7,7 @@ import type { Exam, Line, Scenario, Speaker } from '../engine/scenario/schema';
 import { initialState, type Action, type AppealOutcome, type GameState } from '../engine/state';
 
 /** 화면에 보여 줄 한 줄. 엔진 라인이거나, 보충신문 재생용 줄(질문·답변). */
-export type ShownLine = Pick<Line, 'speaker' | 'text'> & Partial<Pick<Line, 'id' | 'objection'>>;
+export type ShownLine = Pick<Line, 'speaker' | 'text'> & Partial<Pick<Line, 'id' | 'objection' | 'speak' | 'tutorial'>>;
 
 type Listener = (s: GameState) => void;
 
