@@ -56,6 +56,7 @@ node .claude/skills/dialogue-review/scripts/dialogue-stats.mjs data/scenarios/<e
 - `objection`: 이의 대상 질문이 실제로 이의 사유(유도·여죄·의견 요구 등)에 해당하는가. 인용 시 `onSustain.resumeAt` 이음매가 자연스러운가
 - `yieldsCards`: 카드를 주는 줄이 그 카드 내용을 실제로 말하는가. 카드 제목과 대사의 사실이 일치하는가
 - 보충신문 질문(`kind`: clarify·burden·bias 등)은 그 성격에 맞는 말투인가. 선입견 질문은 플레이어가 유혹을 느끼되 선을 넘는다는 걸 알아챌 수 있어야 한다
+- 튜토리얼(줄의 `tutorial`, `src/ui/panels/board.ts`의 `TUTORIAL` 등): ① 판사인 당신과의 관계 ② 효과 ③ 주의할 점을 모두 담는가. 짧게 줄이느라 부정확해지면 안 된다
 - 복선(`storyline.md` §4)이 이 회차에 심겨야 하면 해당 대사가 있는지, 너무 티 나지 않는지 본다
 
 ## 3. 보고 형식
