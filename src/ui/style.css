@@ -490,6 +490,7 @@
 .panel.chess .btn.mark.ok.on { background: rgb(255 196 120 / 0.55); color: var(--ink); text-shadow: none; }
 .panel.chess .btn.mark.reject.on { background: #ff8a70; color: var(--ink); text-shadow: none; }
 .tutorial p { margin: 0 0 3px; color: var(--holo); white-space: pre-line; }
+.tutorial p.tutorial-note { font-size: 0.85em; opacity: 0.8; margin-top: 6px; }
 .chess-status { margin: 0; font-weight: bold; }
 .panel.chess .board-foot { align-self: stretch; margin-top: 0; }
 .panel.chess .btn.primary { color: var(--ink); text-shadow: none; }

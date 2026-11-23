@@ -27,7 +27,7 @@ const VERDICT_LABEL = { ok: '신뢰', reject: '배척' } as const;
 const ROUTE_STATE = { proven: '막힘', doubt: '열림', null: '판정 중' } as const;
 
 /** 튜토리얼 설명(쟁점 보드를 처음 열 때). */
-export const TUTORIAL = '검사는 증거물을 통해 피고인의 활로를 막으려 합니다. 당신은 증거마다 신뢰할지 배척할지 판단합니다. 신뢰한 증거로 활로가 모두 막히면 유죄, 하나라도 열려 있으면 무죄를 선고합니다.\n주의: 자백 말고 신뢰한 증거가 없으면 유죄를 선고할 수 없습니다. 믿을 만한 증거를 배척해 무죄를 선고하면, 검사가 항소해 항소심에서 사실오인으로 뒤집힐 수 있습니다.';
+export const TUTORIAL = '검사는 증거물을 통해 피고인의 범행을 입증하려 합니다. 당신은 제출된 증거를 신뢰할지 배척할지 판단하고, 신뢰한 증거는 피고인 기물의 진로를 막습니다. 피고인 기물이 더 이상 움직일 수 없을 때 유죄를 선고할 수 있습니다.';
 
 export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   // 서랍 인스턴스는 유무죄 판단 화면과 testid가 겹치지 않게 접두어를 붙인다.
@@ -47,7 +47,8 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const el = h('section', { class: `panel board chess board-${mode}`, testid: `panel-board-${mode}` },
     h('h2', {}, '쟁점 보드'),
     ...(mode === 'readonly' ? [h('div', { class: 'board-thoughts', testid: 'board-first-thought' }, ...FIRST_USE_THOUGHT.map(thought)),
-      h('div', { class: 'tutorial small', testid: 'board-tutorial' }, h('p', {}, TUTORIAL))] : []),
+      h('div', { class: 'tutorial small', testid: 'board-tutorial' }, h('p', {}, TUTORIAL),
+        ...(c.sc.meta.boardNote ? [h('p', { class: 'tutorial-note', testid: 'board-tutorial-note' }, c.sc.meta.boardNote)] : []))] : []),
     ...(mode === 'main' ? [check] : []),
     h('div', { class: 'chess-main' }, grid, routes),
     ...(mode === 'readonly' ? [] : [memos]),

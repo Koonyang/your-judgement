@@ -78,6 +78,8 @@ export const ScenarioS = z.object({
   meta: z.object({
     id: z.string(), title: z.string(), court: z.enum(['single', 'panel']),
     biasType: z.enum(['none', 'harsh', 'lenient']), truthMemo: z.string(), tutorial: z.boolean(),
+    /** 쟁점 보드 튜토리얼 아래 작은 글씨로 붙는 이 사건만의 주의 */
+    boardNote: z.string().optional(),
   }),
   documents: z.object({
     indictment: z.string(), defenseOpinion: z.string(), facts: z.string(), lawApplied: z.string(),

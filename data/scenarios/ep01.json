@@ -1,6 +1,7 @@
 {
   "meta": {
     "id": "ep01",
+    "boardNote": "주의 : 피고인의 자백 이외에 신뢰한 증거가 없다면 유죄를 선고할 수 없습니다.",
     "title": "도시락 두 개",
     "court": "single",
     "biasType": "none",
