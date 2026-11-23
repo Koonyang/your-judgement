@@ -211,7 +211,7 @@
 @keyframes mic-call { 50% { filter: drop-shadow(0 0 4px var(--accent)) drop-shadow(0 0 12px var(--accent)) brightness(1.4); } }
 @media (prefers-reduced-motion: reduce) { .desk-item.mic.call { animation: none; filter: drop-shadow(0 0 4px var(--accent)) drop-shadow(0 0 12px var(--accent)) brightness(1.4); } }
 /* 조작 안내: 대사창 바로 위에 뜬 띠(대사가 길어도 잘리지 않게 대사창 밖에) */
-.note.tutorial { position: absolute; left: 8px; right: 150px; bottom: 100%; margin-bottom: 4px; color: var(--hanji); font-size: 12px; background: var(--box); border: 1px solid var(--box-line); border-left: 3px solid var(--accent); padding: 4px 8px; }
+.note.tutorial { white-space: pre-line; position: absolute; left: 8px; right: 150px; bottom: 100%; margin-bottom: 4px; color: var(--hanji); font-size: 12px; background: var(--box); border: 1px solid var(--box-line); border-left: 3px solid var(--accent); padding: 4px 8px; }
 
 /* ── 판단 단계(Task 10) ── */
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }

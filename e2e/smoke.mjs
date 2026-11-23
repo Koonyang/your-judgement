@@ -95,7 +95,7 @@ try {
       continue;
     }
     if (cur.startsWith('솔직히 사장님도')) {
-      if (!(await text('dialogue-note')).startsWith('[제지]')) throw new Error('제지 설명이 안 뜸');
+      if (!(await text('dialogue-note')).startsWith('[제지] 당신은 판사로서')) throw new Error('제지 설명이 안 뜸');
       await tid('btn-mic').click(); continue;
     }
     if (await vis('btn-highlight-closing') && (await tid('btn-highlight-closing').isEnabled())) await tid('btn-highlight-closing').click();
