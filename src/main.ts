@@ -6,6 +6,7 @@ import { BootScene } from './scenes/BootScene';
 import { ChambersScene } from './scenes/ChambersScene';
 import { CourtroomScene } from './scenes/CourtroomScene';
 import { PronounceScene } from './scenes/PronounceScene';
+import { installAudioUnlock } from './ui/audio';
 import { mountOverlay } from './ui/overlay';
 import './ui/style.css';
 import g11 from 'galmuri/dist/Galmuri11.woff2?url';
@@ -32,6 +33,7 @@ const game = new Phaser.Game({
   callbacks: { preBoot: (g) => g.registry.set('controller', controller) },
 });
 
+installAudioUnlock();
 mountOverlay(document.getElementById('ui-root')!, controller, sc);
 
 // 개발 중 콘솔 디버깅용.

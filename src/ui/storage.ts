@@ -55,3 +55,30 @@ export function saveNickname(name: string): void {
     // 저장 못 해도 이번 판에서는 입력값을 그대로 쓴다
   }
 }
+
+/** 소리 설정: 효과음·대사 소리 켜기/끄기, 글자 속도. */
+export type SoundSettings = { sfx: boolean; voice: boolean; speed: 'normal' | 'fast' | 'instant' };
+const SETTINGS_KEY = 'yourJudgement.sound.v1';
+export const DEFAULT_SETTINGS: SoundSettings = { sfx: true, voice: true, speed: 'normal' };
+
+export function loadSettings(): SoundSettings {
+  try {
+    const raw = globalThis.localStorage?.getItem(SETTINGS_KEY);
+    const p = raw ? (JSON.parse(raw) as Partial<SoundSettings>) : {};
+    return {
+      sfx: typeof p.sfx === 'boolean' ? p.sfx : DEFAULT_SETTINGS.sfx,
+      voice: typeof p.voice === 'boolean' ? p.voice : DEFAULT_SETTINGS.voice,
+      speed: p.speed === 'fast' || p.speed === 'instant' || p.speed === 'normal' ? p.speed : DEFAULT_SETTINGS.speed,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function saveSettings(s: SoundSettings): void {
+  try {
+    globalThis.localStorage?.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch {
+    // 저장 못 해도 이번 판에서는 설정을 그대로 쓴다
+  }
+}

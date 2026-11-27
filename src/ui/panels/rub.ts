@@ -1,5 +1,6 @@
 // 대조(두 기록 겹쳐 쓸기): 두 기록을 줄마다 겹쳐 놓고 손가락(포인터)으로 문지른다. 어긋난 줄은 "턱" 걸리고 메모 카드가 생긴다.
 // 턱이 사소한지 본질적인지는 알려 주지 않는다(증명력은 플레이어 몫). 키보드: 줄에 포커스 후 Enter/Space.
+import { play } from '../audio';
 import type { Controller } from '../../game/controller';
 import { rubFlag } from '../../engine/reducer';
 import type { Rub, Scenario } from '../../engine/scenario/schema';
@@ -38,6 +39,7 @@ export function createRubView(c: Controller, rub: Rub, onClose: () => void): { e
     if (snag) {
       c.dispatch({ type: 'RUB', rubId: rub.id, row: i });
       navigator.vibrate?.(30);
+      play('snag');
       rows[i].el.classList.add('bump');
     }
     paint(c.state, sc!);

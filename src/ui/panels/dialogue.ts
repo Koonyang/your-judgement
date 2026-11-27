@@ -5,6 +5,7 @@ import { suppFlag } from '../../engine/reducer';
 import type { GameState } from '../../engine/state';
 import { button, h, show } from '../dom';
 import { SEATS, type SeatKey } from '../../scenes/seats';
+import { blip, getSettings, play } from '../audio';
 import type { Panel } from './types';
 
 /** 라인이 없는 단계의 안내문과 [다음] 버튼 문구. */
@@ -20,14 +21,69 @@ const BLOCK_END: Partial<Record<GameState['phase'], string>> = {
   opening: '모두절차를 마칩니다.',
 };
 
+const MS_PER_CHAR = { normal: 32, fast: 14, instant: 0 } as const;
+/** 문장 부호 뒤 숨 고르기(ms). 말투의 호흡이 된다. */
+const PAUSE: Record<string, number> = { ',': 90, '、': 90, '.': 170, '?': 190, '!': 170, '…': 220, ':': 100 };
+const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
 export function createDialoguePanel(c: Controller): Panel {
   const speaker = h('div', { class: 'speaker', testid: 'dialogue-speaker' });
   const text = h('div', { class: 'text', testid: 'dialogue-text' });
   const note = h('div', { class: 'note', testid: 'dialogue-note' });
   const supp = h('div', { class: 'supp', testid: 'supp-list' });
-  const next = button('btn-next', '▼', () => (c.replaying ? c.ack() : c.dispatch({ type: 'ADVANCE' })), 'btn primary');
-  const sustain = button('btn-sustain', '인용', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'sustain' }));
-  const overrule = button('btn-overrule', '기각', () => c.dispatch({ type: 'RULE_OBJECTION', ruling: 'overrule' }));
+  // 글자 타이핑: DOM에는 늘 전체 글이 있고(레이아웃·읽기 도구가 흔들리지 않게) 아직 안 찍힌 부분만 투명하다.
+  let typedKey = '';
+  let timer = 0;
+  let full = '';
+  let shown = 0;
+  const untyped = h('span', { class: 'untyped' });
+  const typing = () => timer !== 0;
+  const paint = () => {
+    if (shown >= full.length) return text.replaceChildren(full);
+    untyped.textContent = full.slice(shown);
+    text.replaceChildren(full.slice(0, shown), untyped);
+  };
+  const finishTyping = () => {
+    clearTimeout(timer);
+    timer = 0;
+    shown = full.length;
+    paint();
+  };
+  function startTyping(key: string, str: string, who: string): void {
+    typedKey = key;
+    clearTimeout(timer);
+    timer = 0;
+    full = str;
+    shown = 0;
+    const per = reducedMotion() ? 0 : MS_PER_CHAR[getSettings().speed];
+    if (!per || !str) {
+      shown = str.length;
+      paint();
+      if (str) blip(who, str[0]); // 즉시 표시여도 말하는 소리는 한 번
+      return;
+    }
+    paint();
+    let n = 0;
+    const tick = () => {
+      if (el.hidden) return finishTyping();
+      const ch = full[shown++];
+      paint();
+      if (ch.trim() && !(ch in PAUSE) && n++ % 2 === 0) blip(who, ch); // 두 글자에 한 번
+      if (shown >= full.length) { timer = 0; return; }
+      timer = window.setTimeout(tick, per + (PAUSE[ch] ?? 0));
+    };
+    timer = window.setTimeout(tick, per);
+  }
+  /** 이 줄에서 새로 울릴 신호음(이의·필수 발언)은 한 번만. */
+  let cueKey = '';
+
+  const next = button('btn-next', '▼', () => {
+    if (typing()) return finishTyping(); // 첫 입력은 글을 끝까지 보여 주고, 다음 입력이 넘긴다
+    return c.replaying ? c.ack() : c.dispatch({ type: 'ADVANCE' });
+  }, 'btn primary');
+  const rule = (ruling: 'sustain' | 'overrule') => () => { play('ruling'); c.dispatch({ type: 'RULE_OBJECTION', ruling }); };
+  const sustain = button('btn-sustain', '인용', rule('sustain'));
+  const overrule = button('btn-overrule', '기각', rule('overrule'));
   // 결심의 최후진술은 형광펜으로 표시할 수 있다(문장 일부를 드래그하거나, 선택이 없으면 대사 전체).
   const hlClosing = button('btn-highlight-closing', '형광펜', () => {
     const line = c.shownLine();
@@ -64,9 +120,21 @@ export function createDialoguePanel(c: Controller): Panel {
         portrait.style.background = `#${SEATS[line.speaker as SeatKey].color.toString(16).padStart(6, '0')}`;
         portrait.textContent = speaker.textContent.slice(0, 1);
       }
-      if (line) text.textContent = line.text;
-      else if (examSupp) text.textContent = '보충신문. 재판장이 직접 물어볼 것이 있으면 고르십시오.';
-      else text.textContent = NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
+      if (line) {
+        // 같은 줄이 다시 그려져도(상태가 바뀌어도) 타이핑을 처음부터 다시 하지 않는다.
+        const key = `${c.replaying ? 'r' : 's'}|${line.id ?? ''}|${line.speaker}|${line.text}`;
+        if (key !== typedKey) startTyping(key, line.text, line.speaker);
+        if (key !== cueKey) {
+          cueKey = key;
+          if (!c.replaying && line.objection) play('objection');
+          else if (!c.replaying && line.speak) play('call');
+        }
+      } else {
+        const str = examSupp
+          ? '보충신문. 재판장이 직접 물어볼 것이 있으면 고르십시오.'
+          : NARRATION[s.phase]?.text ?? BLOCK_END[s.phase] ?? '';
+        if (typedKey !== `n|${str}`) { typedKey = `n|${str}`; cueKey = ''; finishTyping(); full = str; shown = str.length; paint(); }
+      }
       text.classList.toggle('narration', !spoken);
 
       const tutorial = !c.replaying && !objection ? line?.tutorial ?? '' : '';

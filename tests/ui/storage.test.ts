@@ -57,3 +57,16 @@ describe('storage', () => {
     expect(loadRecords()).toEqual([entry]);
   });
 });
+
+describe('소리 설정', () => {
+  it('저장·읽기, 깨진 값은 기본값', async () => {
+    const { loadSettings, saveSettings, DEFAULT_SETTINGS } = await import('../../src/ui/storage');
+    vi.stubGlobal('localStorage', memoryStorage());
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    saveSettings({ sfx: false, voice: true, speed: 'fast' });
+    expect(loadSettings()).toEqual({ sfx: false, voice: true, speed: 'fast' });
+    localStorage.setItem('yourJudgement.sound.v1', '{"sfx":1,"speed":"x"}');
+    expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    vi.unstubAllGlobals();
+  });
+});

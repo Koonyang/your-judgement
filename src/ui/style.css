@@ -526,3 +526,8 @@ html.recall #ui-root::before {
 .memo-note { background: #f3e1a8; color: var(--ink); text-shadow: none; border: 1px dashed var(--ink); padding: 2px 4px; max-width: 48%; transform: rotate(-0.6deg); }
 .memo-note:nth-child(odd) { transform: rotate(0.5deg); }
 .board-readonly .tutorial { margin-top: 12px; }
+.untyped { visibility: hidden; }
+/* 소리 설정: 왼쪽 위 구석(법정 위, 항상 눌러 볼 수 있게) */
+.sound-box { position: absolute; left: 6px; top: 6px; z-index: 40; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.sound-btn { opacity: 0.7; }
+.sound-menu { display: flex; flex-direction: column; gap: 3px; background: var(--box); border: 1px solid var(--box-line); padding: 4px; }

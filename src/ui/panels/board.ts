@@ -5,6 +5,7 @@
 import type { Controller } from '../../game/controller';
 import { canConfirmVerdict, confessionOnly, verdictOf } from '../../engine/board';
 import { rubOpen } from '../../engine/reducer';
+import { play } from '../audio';
 import type { Scenario } from '../../engine/scenario/schema';
 import type { GameState } from '../../engine/state';
 import { arrowOf, layoutFor, SIZE } from '../chess';
@@ -35,7 +36,7 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
   const grid = h('div', { class: 'chess-grid', testid: `${pre}chess` });
   const routes = h('div', { class: 'routes', testid: `${pre}board-routes` });
   const status = h('p', { class: 'chess-status', testid: mode === 'main' ? 'board-verdict' : `board-verdict-${mode}` });
-  const confirm = button('btn-confirm-verdict', '판단 확정', () => c.dispatch({ type: 'CONFIRM_VERDICT' }), 'btn primary');
+  const confirm = button('btn-confirm-verdict', '판단 확정', () => { play('confirm'); c.dispatch({ type: 'CONFIRM_VERDICT' }); }, 'btn primary');
   const thought = (t: string) => h('p', { class: 'board-thought' }, t);
   const check = h('div', { class: 'board-check', testid: 'board-check' });
   const rubSlot = h('div', { class: 'rub-slot' });
@@ -106,13 +107,15 @@ export function createBoardPanel(c: Controller, mode: BoardMode): Panel {
         const v = st.judged?.[id] ?? null;
         const line = h('div', { class: `rpiece ${v ?? ''}` }, h('span', { class: 'rpiece-title' }, title(id)));
         if (c.recallLines(id).length) {
-          const r = button(`${pre}board-recall-${id}`, '회상', () => c.recall(id), 'btn sm');
+          const r = button(`${pre}board-recall-${id}`, '회상', () => { play('recall'); c.recall(id); }, 'btn sm');
           r.disabled = c.replaying;
           line.prepend(r); // 회상은 기물 이름 왼쪽, 판정은 오른쪽 끝
         }
         for (const want of ['ok', 'reject'] as const) {
-          const b = button(`${pre}board-judge-${cell.id}-${id}-${want}`, VERDICT_LABEL[want], () =>
-            c.dispatch({ type: 'JUDGE_PIECE', cellId: cell.id, cardId: id, verdict: v === want ? null : want }), `btn mark ${want}`);
+          const b = button(`${pre}board-judge-${cell.id}-${id}-${want}`, VERDICT_LABEL[want], () => {
+            if (v !== want) play(want === 'ok' ? 'trust' : 'reject');
+            c.dispatch({ type: 'JUDGE_PIECE', cellId: cell.id, cardId: id, verdict: v === want ? null : want });
+          }, `btn mark ${want}`);
           b.classList.toggle('on', v === want);
           b.setAttribute('aria-pressed', String(v === want));
           line.append(b);

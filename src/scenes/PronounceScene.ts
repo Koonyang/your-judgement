@@ -7,8 +7,8 @@ import { assembleJudgment } from '../engine/judgment';
 import { FONT_STACK } from './seats';
 import { normalizeNickname, sealBox, sealLayout } from '../ui/seal';
 import { loadNickname } from '../ui/storage';
+import { play } from '../ui/audio';
 
-export const SFX = { stamp: 'sfx-stamp', gavel: 'sfx-gavel' } as const;
 /** 박자 간격(ms) */
 export const BEAT_MS = 700;
 
@@ -53,7 +53,7 @@ export class PronounceScene extends Phaser.Scene {
   }
 
   private stamp(): void {
-    this.sfx(SFX.stamp);
+    play('stamp');
     this.cameras.main.shake(180, 0.006);
     // 판결서 서명날인(형소법 §41 [확인필요]) 자리. 승인/거절 도장 동작이 아니라 선고 연출이다.
     const box = this.add.container(465, 235).setAngle(-8);
@@ -72,11 +72,7 @@ export class PronounceScene extends Phaser.Scene {
   }
 
   private gavel(): void {
-    this.sfx(SFX.gavel);
+    play('gavel');
     this.cameras.main.flash(140, 255, 196, 120);
-  }
-
-  private sfx(key: string): void {
-    if (this.cache.audio.exists(key)) this.sound.play(key);
   }
 }

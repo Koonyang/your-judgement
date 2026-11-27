@@ -16,6 +16,8 @@ import { createSentencingPanel } from './panels/sentencing';
 import type { Panel } from './panels/types';
 import { loadRecords, saveRecord } from './storage';
 import { createDesk, type DeskItem } from './desk';
+import { play } from './audio';
+import { createSoundMenu } from './soundMenu';
 
 export type { Panel } from './panels/types';
 
@@ -63,6 +65,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     if (leaving) return;
     if (drawer === d) return putDown();
     if (d === 'board') showIntro();
+    play('paperUp');
     drawer = d;
     render(c.state);
   };
@@ -82,6 +85,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const interruptSpeech: Speech = {
     id: 'interrupt', label: '제지',
     run: () => {
+      play('interrupt');
       c.dispatch({ type: 'INTERRUPT' });
       say.hidden = false;
       const btn = root.querySelector('[data-testid="btn-mic"]');
@@ -105,6 +109,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   let leaving = 0;
   const putDown = () => {
     if (leaving || drawer === null) return;
+    play('paperDown');
     const done = () => { leaving = 0; drawerEl.classList.remove('leaving'); drawer = null; render(c.state); };
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
     drawerEl.classList.add('leaving');
@@ -121,7 +126,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
   const skip = button('btn-skip-pronounce', '건너뛰기', () => c.dispatch({ type: 'FINISH_PRONOUNCE' }), 'btn skip');
   docket.el.classList.add('main');
   boardMain.el.classList.add('stage');
-  root.append(desk.el, say, micMenu, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
+  root.append(createSoundMenu(), desk.el, say, micMenu, dim, docket.el, boardMain.el, sentencing.el, judgment.el, result.el, record.el, drawerEl, dialogue.el, intro, skip);
 
   function enter(s: GameState): void {
     // 단계에 들어설 때 그 단계의 주 패널을 서랍으로 연다.
@@ -163,7 +168,7 @@ export function mountOverlay(root: HTMLElement, c: Controller, sc: Scenario): vo
     // 필수 발언 줄에서는 그 발언만. 제지는 신문 중 재판장·독백이 아닌 줄에서. 표시등은 필수 발언에만 켠다(제지 타이밍은 알려 주지 않는다).
     const sp = live?.speak;
     speeches = !micOn ? []
-      : sp ? [{ id: sp.id, label: sp.label, run: () => c.dispatch({ type: 'SPEAK', speakId: sp.id }) }]
+      : sp ? [{ id: sp.id, label: sp.label, run: () => { play('mic'); c.dispatch({ type: 'SPEAK', speakId: sp.id }); } }]
       : s.phase === 'exam' && live!.speaker !== 'judge' && live!.speaker !== 'thought' ? [interruptSpeech] : [];
     mic.disabled = !speeches.length;
     mic.attention = !!sp;
