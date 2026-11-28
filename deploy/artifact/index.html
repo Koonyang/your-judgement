@@ -95,13 +95,13 @@ ul.items.todo li::before { content: "□"; }
 
   <article class="receipt" aria-label="패치 내역과 현재 상황">
     <p class="r-title">검 수 영 수 증</p>
-    <p class="r-sub">2026. 11. 23. 반영 · 커밋 32df861</p>
+    <p class="r-sub">2026. 11. 28. 반영 · 커밋 f3d4c0d</p>
     <hr class="cut">
 
     <p class="r-h">현재 상황</p>
     <dl class="kv">
       <dt>진행 범위</dt><dd>1화 사건 대기열 → 판결 기록실</dd>
-      <dt>단위 테스트</dt><dd class="ok">174 / 174 통과</dd>
+      <dt>단위 테스트</dt><dd class="ok">175 / 175 통과</dd>
       <dt>1화 자동 진행(e2e)</dt><dd class="ok">통과</dd>
       <dt>브랜치</dt><dd>ccr-2d3777f9-6euads</dd>
       <dt>main 병합</dt><dd>대기</dd>
@@ -109,6 +109,13 @@ ul.items.todo li::before { content: "□"; }
     <hr class="cut">
 
     <p class="r-h">패치 내역</p>
+    <div class="day"><span>2026. 11. 28.</span><span>대사 소리와 효과음</span></div>
+    <ul class="items">
+      <li>대사가 한 글자씩 나옴: 쉼표·마침표·말줄임표에서 잠깐 쉼. 화면을 처음 누르면 글이 끝까지 나오고, 한 번 더 누르면 다음 대사</li>
+      <li>인물마다 다른 말소리: 재판장은 낮고 부드럽게, 검사는 거칠게, 증인은 높고 맑게. 글자에 따라 음이 흔들려 뭉뚱그린 말소리처럼 들림. 재판장 속생각에도 아주 작은 소리</li>
+      <li>효과음: 법봉·도장, 서류 집기/내려놓기, 마이크(발언·제지·필수 발언 신호), 이의 제기, 인용/기각, 증거 신뢰/배척, 회상, 대조에서 걸림, 판단 확정</li>
+      <li>왼쪽 위 [소리] 버튼: 효과음·대사 소리 켜기/끄기, 글자 속도(보통/빠르게/즉시). 설정은 저장됨</li>
+    </ul>
     <div class="day"><span>2026. 11. 23.</span><span>마이크와 안내</span></div>
     <ul class="items">
       <li>자백만 신뢰하면 다시 신뢰로 바꿔도 유죄가 되지 않음: 판정이 무죄로 계산되고, 판결서 무죄 이유에 "보강할 증거 없음(형사소송법 제310조)"</li>
@@ -202,6 +209,8 @@ ul.items.todo li::before { content: "□"; }
 
     <p class="r-h">검수해 볼 것</p>
     <ul class="items todo">
+      <li>소리: 말소리가 인물마다 구분되는지, 너무 시끄럽거나 거슬리지 않는지, 재판장 속생각 소리가 작고 부드러운지. 폰은 첫 터치 뒤부터 소리가 남</li>
+      <li>글자 속도가 답답하지 않은지(답답하면 [소리]에서 속도 변경), 화면을 눌러 끝까지 보여 주고 넘기는 흐름이 자연스러운지</li>
       <li>마이크: 증거신청 대목에서 깜빡이는 표시등을 보고 마이크를 눌러야 한다는 걸 바로 알겠는지. 폰에서 대사창 위 안내 띠가 잘리지 않는지</li>
       <li>쟁점 보드: 첫 안내만 읽고 [신뢰] / [배척]으로 무엇을 하는지 바로 알겠는지</li>
       <li>[대조]에서 손끝으로 쓸 때 걸리는 느낌(폰은 진동)이 괜찮은지, 사소한 어긋남을 보고 배척하고 싶어지는지</li>
@@ -231,7 +240,7 @@ ul.items.todo li::before { content: "□"; }
     </ul>
     <hr class="cut">
 
-    <div class="total"><span>이번 반영</span><span>커밋 9건</span></div>
+    <div class="total"><span>이번 반영</span><span>커밋 2건</span></div>
     <div class="foot"><span class="stamp">검 수 대 기</span></div>
   </article>
 </div>
